@@ -19,8 +19,9 @@ mkdir Model
 mkdir Output
 # $(seq 5 5 40)
 
-for i in 20 30; do
-  for j in 3 5; do
+
+for i in 40 50 60; do
+  for j in 5 7; do
     echo "${i} ${j}"
     "../lightgbm" config=train.conf num_trees=$i max_depth=$j output_model=Model/model_trees${i}_depth${j}.txt > Output/train_trees${i}_depth${j}.output
   done
