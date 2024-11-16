@@ -250,7 +250,6 @@ Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians
     gradient_discretizer_->RenewIntGradTreeOutput(tree.get(), config_, data_partition_.get(), gradients_, hessians_,
       [this] (int leaf_index) { return GetGlobalDataCountInLeaf(leaf_index); });
   }
-  mrf_->printForest();
   return tree.release();
 }
 
@@ -292,6 +291,7 @@ Tree* SerialTreeLearner::FitByExistingTree(const Tree* old_tree, const score_t* 
 
 void SerialTreeLearner::updateMemoryForLeaf(double val) {
   if (MemoryRestrictedForest::IsEnable(config_)) {
+#pragma omp critical
     mrf_->InsertLeafInformation(val);
   }
 }
@@ -1025,7 +1025,7 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     consumed_memory con_mem = {};
     const BinMapper* bin_mapper = train_data_->FeatureBinMapper(feature_index);
     double threshold = bin_mapper->BinToValue(new_split.threshold);
-    float alt_threshold = mrf_->CalculateSplitMemoryConsumption(con_mem, threshold, real_fidx, bin_mapper);
+    mrf_->CalculateSplitMemoryConsumption(con_mem, threshold, real_fidx);
     if (con_mem.new_threshold) {
       if (con_mem.new_feature)
         new_split.gain *= config_->tinygbdt_penalty_feature;
