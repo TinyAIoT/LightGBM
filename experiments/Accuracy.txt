@@ -1,0 +1,12 @@
+Accuracy: 0.6989
+Max Depth: None
+Number of Trees: 30
+Accuracy: 0.6989
+Max Depth: None
+Number of Trees: 30
+Accuracy: 0.6941
+Max Depth: None
+Number of Trees: 21
+Accuracy: 0.7025
+Max Depth: None
+Number of Trees: 21
