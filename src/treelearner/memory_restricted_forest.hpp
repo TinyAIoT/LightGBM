@@ -29,7 +29,11 @@ namespace LightGBM {
   std::ostream & operator << (std::ostream & outs, const ref_tree & ref_t) {
     outs << ref_t.tree_id << " -> ";
     for (double feature : ref_t.feature_ids) {
-      outs << feature << " " << ref_t.thresholds[feature] << " ";
+      outs << feature << " ";
+    }
+    outs << "\n";
+    for (double threshold : ref_t.thresholds) {
+      outs << threshold << " ";
     }
     return outs;
   }
@@ -54,6 +58,9 @@ namespace LightGBM {
     void UpdateMemoryForTree(Tree* tree) {
 #pragma omp critical
       tree_size_.push_back(tree->getNumberNodes());
+      ref_trees_.push_back({});
+      treecounter++;
+      ref_trees_[treecounter].tree_id = treecounter;
     }
     void InsertSplitInfo(const Tree *tree, const Dataset *train_data_) {
       const int last_node_id = tree->num_leaves_ - 2;
@@ -63,18 +70,20 @@ namespace LightGBM {
       consumed_memory con_mem = {};
       CalculateSplitMemoryConsumption(con_mem, threshold, feature);
 
-      ref_trees_[treecounter].feature_ids.push_back(con_mem.findex);
-      ref_trees_[treecounter].thresholds.push_back(con_mem.tindex);
-
       if (con_mem.new_feature) {
+        Log::Info("Insert new feature");
         features_used_global_[fcounter] = (feature);
         ref_trees_[treecounter].feature_ids.push_back(fcounter);
         fcounter++;
+      } else {
+        ref_trees_[treecounter].feature_ids.push_back(con_mem.findex);
       }
       if (con_mem.new_threshold) {
 #pragma omp critical
         thresholds_used_global_.push_back(threshold);
         ref_trees_[treecounter].thresholds.push_back(thresholds_used_global_.size()-1);
+      } else {
+        ref_trees_[treecounter].thresholds.push_back(con_mem.tindex);
       }
       // Always the predict value adds to one double.
       est_leftover_memory -= con_mem.bits;
