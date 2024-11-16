@@ -29,7 +29,7 @@ namespace LightGBM {
   std::ostream & operator << (std::ostream & outs, const ref_tree & ref_t) {
     outs << ref_t.tree_id << " -> ";
     for (double feature : ref_t.feature_ids) {
-      outs << feature << " ";
+      outs << feature << " " << ref_t.thresholds[feature] << " ";
     }
     return outs;
   }
@@ -62,13 +62,19 @@ namespace LightGBM {
       const BinMapper *bin_mapper = train_data_->FeatureBinMapper(feature);
       consumed_memory con_mem = {};
       CalculateSplitMemoryConsumption(con_mem, threshold, feature);
+
+      ref_trees_[treecounter].feature_ids.push_back(con_mem.findex);
+      ref_trees_[treecounter].thresholds.push_back(con_mem.tindex);
+
       if (con_mem.new_feature) {
         features_used_global_[fcounter] = (feature);
+        ref_trees_[treecounter].feature_ids.push_back(fcounter);
         fcounter++;
       }
       if (con_mem.new_threshold) {
 #pragma omp critical
         thresholds_used_global_.push_back(threshold);
+        ref_trees_[treecounter].thresholds.push_back(thresholds_used_global_.size()-1);
       }
       // Always the predict value adds to one double.
       est_leftover_memory -= con_mem.bits;
@@ -98,14 +104,15 @@ namespace LightGBM {
       for (int i = 0; i < size; i++) {
         if (threshold == thresholds_used_global_[i]) {
           foundthrehold = true;
+          con_mem.tindex = i;
         }
       }
-      //auto itf = std::find(features_used_global_.begin(), features_used_global_.end(), feature);
       int sizef = features_used_global_.size();
       bool foundfeature = false;
       for (int i = 0; i < sizef; i++) {
         if (feature == features_used_global_[i]) {
           foundfeature = true;
+          con_mem.findex = i;
         }
       }
       // In case the feature is not used 8 bits are added for representing a bits_single and bits_ref.
@@ -154,6 +161,10 @@ namespace LightGBM {
     void printForest() {
       std::stringstream out;
       out << "Leftover memory: " << est_leftover_memory;
+      out << "\n";
+      for (int i = 0; i < ref_trees_.size(); i++) {
+        out << ref_trees_[i];
+      }
       out << "\n";
       std::cout << out.str();
     }
