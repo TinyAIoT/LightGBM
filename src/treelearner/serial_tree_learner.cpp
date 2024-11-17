@@ -1030,15 +1030,55 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     double threshold = bin_mapper->BinToValue(new_split.threshold);
 #pragma omp critical
     mrf_->CalculateSplitMemoryConsumption(con_mem, threshold, real_fidx);
-    if (con_mem.new_threshold) {
-      if (con_mem.new_feature)
-        new_split.gain *= config_->tinygbdt_penalty_feature;
-      else 
-        new_split.gain *= config_->tinygbdt_penalty_split;
-    } else {
-      if (con_mem.new_feature)
-        new_split.gain *= config_->tinygbdt_penalty_feature;
+
+    // if (con_mem.new_threshold) {
+    //   if (con_mem.new_feature)
+    //     new_split.gain *= config_->tinygbdt_penalty_feature;
+    //   else 
+    //     new_split.gain *= config_->tinygbdt_penalty_split;
+    // } else {
+    //   if (con_mem.new_feature)
+    //     new_split.gain *= config_->tinygbdt_penalty_feature;
+    // }
+        // Let's just assume for a first try that we reduce the the gain only by the last 90 % ...
+    // TODO find some fancy way to include the leftovermemory.
+    // TODO In case we are using a "new" threshold it needs to be saved in the new_split.
+    // However, the new_split just saves the bin id for the upper bound.
+    
+    // if (con_mem.new_threshold) {
+    //   if (con_mem.new_feature)
+    //     new_split.gain *= 0.95;
+    //   else 
+    //     new_split.gain *= 0.97;
+    // } else {
+    //   if (con_mem.new_feature)
+    //     new_split.gain *= 0.99;
+    // }
+
+    // if (con_mem.new_threshold) {
+    //   printf("tindex %i ", con_mem.tindex);
+    //   printf("findex %i ", con_mem.findex);
+    //   if (con_mem.new_feature)
+    //     new_split.gain -= (con_mem.findex * con_mem.findex * con_mem.tindex);
+    //   else 
+    //     new_split.gain -= con_mem.tindex * 10;
+    // } else {
+    //   if (con_mem.new_feature)
+    //     new_split.gain -= (con_mem.findex * con_mem.findex * 80);
+    // }
+
+    printf("# thresholds global %i ", mrf_->thresholds_used_global_.size());
+    if (con_mem.new_feature) {
+      // new_split.gain *= (config_->tinygbdt_penalty_feature);
+      new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
     }
+    if (con_mem.new_threshold) {
+      // new_split.gain -= (config_->tinygbdt_penalty_split * con_mem.tindex);
+      new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
+    }
+      
+    // new_split.gain -= (sizeof(mrf_->features_used_global_) * config_->tinygbdt_penalty_feature + sizeof(mrf_->thresholds_used_global_) * config_->tinygbdt_penalty_split);
+
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
     if (mrf_->est_leftover_memory < 0) {
       new_split.gain = 0;
