@@ -2,6 +2,9 @@ import os
 import re
 import matplotlib.pyplot as plt
 
+import lightgbm as lgb
+from sklearn.metrics import accuracy_score, roc_auc_score
+
 def GetAccuracyFromLightGBM(filename, key):
 	input = open(filename, "r")
 	ret = 0.0
@@ -23,18 +26,36 @@ def GetValueFromTXT(filename, key):
 			ret = float(line.split(key+': ')[-1][:-2])
 	return ret
 
+def calcAccuracy(model_path, data_path):
+	model = lgb.Booster(model_file=model_path)
+
+	test_data = lgb.Dataset(data_path)
+	test_data.construct()
+
+	y_pred = model.predict(data_path, predict_disable_shape_check=True)
+
+	# Calculate accuracy and ROC AUC score
+	accuracy = accuracy_score(test_data.get_label(), (y_pred > 0.5).astype(int))
+	roc_auc = roc_auc_score(test_data.get_label(), y_pred)
+
+	return accuracy, roc_auc
+ 
+
 def plotMetrics(keyword):
 	sorted_dir = sorted(os.listdir("../results"), key=lambda x: int(x.split(".")[1]))
 	setting_value = []
 	accuracies = []
+	auc = []
 	no_features = []
 	no_thresholds = []
 	no_leaves = []
 	no_trees = []
 	for fn in sorted_dir:
 		if fn.endswith(keyword+".out"):
-			accuracies.append(GetAccuracyFromLightGBM('../results/'+fn, 'auc'))
+			auc.append(GetAccuracyFromLightGBM('../results/'+fn, 'auc'))
 		if fn.endswith(keyword+".txt"):
+			accuracy, roc = calcAccuracy('../results/'+fn, '../covtype.libsvm.binary.test')
+			accuracies.append(accuracy)	
 			no_trees.append(GetValueFromTXT('../results/'+fn, 'Tree'))
 			setting_value.append(GetValueFromTXT('../results/'+fn, keyword))
 			no_features.append(GetValueFromTXT('../results/'+fn, 'tt_feature_count'))
@@ -46,8 +67,10 @@ def plotMetrics(keyword):
 
 	color = 'tab:red'
 	ax1.set_xlabel(keyword)
-	ax1.set_ylabel('AUC')
-	ax1.plot(setting_value, accuracies, color=color)
+	ax1.set_ylabel('AUC/Accuracies')
+	ax1.plot(setting_value, auc, color=color, label='AUC')
+	ax1.plot(setting_value, accuracies, color='tab:purple', label='Accuracy')
+	plt.legend(loc='lower center')
 	ax1.tick_params(axis='y', labelcolor=color)
 
 	ax2 = ax1.twinx()  # instantiate a second Axes that shares the same x-axis

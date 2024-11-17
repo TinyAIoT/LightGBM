@@ -466,3 +466,4 @@ dask-worker-space/
 
 # Nina
 *.output
+*results*
