@@ -41,7 +41,7 @@ def calcAccuracy(model_path, data_path):
 	return accuracy, roc_auc
  
 
-def plotMetrics(keyword):
+def plotMetrics(keyword, log_scale=False):
 	sorted_dir = sorted(os.listdir("../results"), key=lambda x: (int(x.split(".")[1]), int(x.split(".")[2])))
 	setting_value = []
 	accuracies = []
@@ -52,6 +52,13 @@ def plotMetrics(keyword):
 	no_trees = []
 	our_bits = []
 	lgb_bits = []
+	num_iterations = 0
+	max_depth = 0
+	tinygbdt_penalty_feature = 0
+	tinygbdt_penalty_split = 0
+	tinygbdt_forestsize = 0
+	tinygbdt_precision = 0
+
 	for fn in sorted_dir:
 		if fn.endswith(keyword+".out"):
 			auc.append(GetValueFromOut('../results/'+fn, 'auc'))
@@ -67,6 +74,12 @@ def plotMetrics(keyword):
 			# no_thresholds.append(GetValueFromTXT('../results/'+fn, 'tt_threshold_count'))
 			no_leaves.append(GetValueFromTXT('../results/'+fn, 'num_leaves', sum_up=True))
 			lgb_bits.append(GetValueFromTXT('../results/'+fn, 'model_size', sum_up=True))
+			num_iterations = GetValueFromTXT('../results/'+fn, 'num_iterations')
+			max_depth =  GetValueFromTXT('../results/'+fn, 'max_depth')
+			tinygbdt_penalty_feature =  GetValueFromTXT('../results/'+fn, 'tinygbdt_penalty_feature')
+			tinygbdt_penalty_split =  GetValueFromTXT('../results/'+fn, 'tinygbdt_penalty_split')
+			tinygbdt_forestsize =  GetValueFromTXT('../results/'+fn, 'tinygbdt_forestsize')
+			tinygbdt_precision =  GetValueFromTXT('../results/'+fn, 'tinygbdt_precision')
 		else:
 			continue
 	
@@ -86,6 +99,8 @@ def plotMetrics(keyword):
 
 
 	ax2.set_ylabel('count')  # we already handled the x-label with ax1
+	if log_scale:
+		ax2.set_yscale('log')
 	# ax2.set_yscale('log')
 	ax2.plot(setting_value, no_thresholds, label="no. thresholds")
 	ax2.plot(setting_value, no_leaves, label="no. leaves")
@@ -100,11 +115,26 @@ def plotMetrics(keyword):
 
 	fig1.tight_layout()  # otherwise the right y-label is slightly clipped
 	plt.legend(loc='upper left')
+
+	plt.savefig(
+		'../plots/'+keyword
+		+'_maxtrees'+str(num_iterations)
+		+'_maxdepth'+str(max_depth)
+		+'_penF'+str(tinygbdt_penalty_feature)
+		+'_penT'+str(tinygbdt_penalty_split)
+		+ '_maxsize'+str(tinygbdt_forestsize)
+		+'_precision'+str(tinygbdt_precision)
+		+'_logscale'+str(log_scale)
+		+'.png'
+		)
+
 	plt.show()
 
-plotMetrics('num_iterations')
-plotMetrics('max_depth')
-plotMetrics('tinygbdt_forestsize')
-plotMetrics('tinygbdt_penalty_feature')
-plotMetrics('tinygbdt_penalty_split')
+log_scale = False
+
+plotMetrics('num_iterations', log_scale = log_scale)
+plotMetrics('max_depth', log_scale = log_scale)
+plotMetrics('tinygbdt_forestsize', log_scale = log_scale)
+plotMetrics('tinygbdt_penalty_feature', log_scale = log_scale)
+plotMetrics('tinygbdt_penalty_split', log_scale = log_scale)
 
