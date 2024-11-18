@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import lightgbm as lgb
 from sklearn.metrics import accuracy_score, roc_auc_score
 
-def GetAccuracyFromLightGBM(filename, key):
+def GetValueFromOut(filename, key):
 	input = open(filename, "r")
 	ret = 0.0
 	for line in input.readlines():
@@ -42,7 +42,7 @@ def calcAccuracy(model_path, data_path):
  
 
 def plotMetrics(keyword):
-	sorted_dir = sorted(os.listdir("../results"), key=lambda x: int(x.split(".")[1]))
+	sorted_dir = sorted(os.listdir("../results"), key=lambda x: (int(x.split(".")[1]), int(x.split(".")[2])))
 	setting_value = []
 	accuracies = []
 	auc = []
@@ -52,14 +52,16 @@ def plotMetrics(keyword):
 	no_trees = []
 	for fn in sorted_dir:
 		if fn.endswith(keyword+".out"):
-			auc.append(GetAccuracyFromLightGBM('../results/'+fn, 'auc'))
+			auc.append(GetValueFromOut('../results/'+fn, 'auc'))
+			no_features.append(GetValueFromOut('../results/'+fn, '#features'))
+			no_thresholds.append(GetValueFromOut('../results/'+fn, '#thresholds'))
 		if fn.endswith(keyword+".txt"):
 			accuracy, roc = calcAccuracy('../results/'+fn, '../covtype.libsvm.binary.test')
 			accuracies.append(accuracy)	
 			no_trees.append(GetValueFromTXT('../results/'+fn, 'Tree'))
 			setting_value.append(GetValueFromTXT('../results/'+fn, keyword))
-			no_features.append(GetValueFromTXT('../results/'+fn, 'tt_feature_count'))
-			no_thresholds.append(GetValueFromTXT('../results/'+fn, 'tt_threshold_count'))
+			# no_features.append(GetValueFromTXT('../results/'+fn, 'tt_feature_count'))
+			# no_thresholds.append(GetValueFromTXT('../results/'+fn, 'tt_threshold_count'))
 			no_leaves.append(GetValueFromTXT('../results/'+fn, 'num_leaves'))
 		else:
 			continue
@@ -93,4 +95,6 @@ def plotMetrics(keyword):
 plotMetrics('num_iterations')
 plotMetrics('max_depth')
 plotMetrics('tinygbdt_forestsize')
+plotMetrics('tinygbdt_penalty_feature')
+plotMetrics('tinygbdt_penalty_split')
 
