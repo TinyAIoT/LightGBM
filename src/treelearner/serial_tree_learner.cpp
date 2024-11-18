@@ -291,7 +291,6 @@ Tree* SerialTreeLearner::FitByExistingTree(const Tree* old_tree, const score_t* 
 
 void SerialTreeLearner::updateMemoryForLeaf(double val) {
   if (MemoryRestrictedForest::IsEnable(config_)) {
-#pragma omp critical
     mrf_->InsertLeafInformation(val);
   }
 }
@@ -1086,7 +1085,6 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
     if (mrf_->est_leftover_memory < 0) {
       new_split.gain = 0;
-      // Log::Debug(mrf_->printForest().c_str());
     }
   }
   /*[tinygbdt] END */

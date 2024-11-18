@@ -11,6 +11,8 @@
 #include <LightGBM/dataset.h>
 #include <LightGBM/utils/log.h>
 #include <vector>
+
+const bool CHECK_QUANTIZATION = false;
 namespace LightGBM {
   struct consumed_memory {
     int bits;
@@ -27,19 +29,34 @@ namespace LightGBM {
     std::vector<double> thresholds;
   };
   std::ostream & operator << (std::ostream & outs, const ref_tree & ref_t) {
-    outs << ref_t.tree_id << " -> ";
+    outs << ref_t.tree_id << ": features: ";
     for (double feature : ref_t.feature_ids) {
       outs << feature << " ";
     }
+    outs << "\n\tthresholds:\t";
+    for (double threshold : ref_t.thresholds) {
+      outs << threshold << " ";
+    }
+    outs << "\n";
     return outs;
   }
 
   struct threshold_info {
     std::vector<double> thresholds_;
     uint32_t feature;
-    bool used;
+    int bits;
+    threshold_info(int featureid) {
+      feature = featureid;
+    }
   };
-
+  std::ostream & operator << (std::ostream & outs, const threshold_info & thres_inf) {
+    outs << thres_inf.feature << ": thresholds: ";
+    for (double threshold : thres_inf.thresholds_) {
+      outs << threshold << " ";
+    }
+    outs << "\n";
+    return outs;
+  }
   class MemoryRestrictedForest {
   public:
     explicit MemoryRestrictedForest(const SerialTreeLearner *tree_learner)
@@ -47,13 +64,30 @@ namespace LightGBM {
     }
     void InsertLeafInformation(double leaf_value) {
       est_leftover_memory -= sizeof(float);
+      int tcounter = -1;
+      for (int i =0; i< thresholds_used_global_.size(); i++) {
+        if (thresholds_used_global_[i] == leaf_value)
+          tcounter = i;
+      }
 #pragma omp critical
-      thresholds_used_global_.push_back(leaf_value);
+      ref_trees_[treecounter].feature_ids.push_back(-1);
+      if (tcounter != -1) {
+#pragma omp critical
+        ref_trees_[treecounter].thresholds.push_back(tcounter);
+      } else {
+#pragma omp critical
+        thresholds_used_global_.push_back(leaf_value);
+#pragma omp critical
+        ref_trees_[treecounter].thresholds.push_back(thresholds_used_global_.size()-1);
+      }
     }
 
     void UpdateMemoryForTree(Tree* tree) {
 #pragma omp critical
       tree_size_.push_back(tree->getNumberNodes());
+      ref_trees_.push_back({});
+      treecounter++;
+      ref_trees_[treecounter].tree_id = treecounter;
     }
     void InsertSplitInfo(const Tree *tree, const Dataset *train_data_) {
       const int last_node_id = tree->num_leaves_ - 2;
@@ -62,26 +96,40 @@ namespace LightGBM {
       const BinMapper *bin_mapper = train_data_->FeatureBinMapper(feature);
       consumed_memory con_mem = {};
       CalculateSplitMemoryConsumption(con_mem, threshold, feature);
+      int feature_to_insert;
       if (con_mem.new_feature) {
+        feature_to_insert = feature;
         features_used_global_[fcounter] = (feature);
+#pragma omp critical
+        ref_trees_[treecounter].feature_ids.push_back(fcounter);
+#pragma omp critical
+        threshold_per_feature.push_back({static_cast<int>(feature)});
         fcounter++;
+      } else {
+        feature_to_insert = con_mem.findex;
+#pragma omp critical
+        ref_trees_[treecounter].feature_ids.push_back(con_mem.findex);
       }
       if (con_mem.new_threshold) {
+        for (int i = 0; i < threshold_per_feature.size(); i++) {
+          if (threshold_per_feature[i].feature == feature_to_insert) {
+#pragma omp critical
+            threshold_per_feature[i].thresholds_.push_back(threshold);
+          }
+        }
 #pragma omp critical
         thresholds_used_global_.push_back(threshold);
+#pragma omp critical
+        ref_trees_[treecounter].thresholds.push_back(thresholds_used_global_.size()-1);
+      } else {
+#pragma omp critical
+        ref_trees_[treecounter].thresholds.push_back(con_mem.tindex);
       }
+
       // Always the predict value adds to one double.
       est_leftover_memory -= con_mem.bits;
     }
 
-    bool isAllBool(const std::vector<double>& column) {
-      for (const auto& value : column) {
-        if (value != 0.0 && value != 1.0) {
-          return false;
-        }
-      }
-      return true;
-    }
     bool isAllInteger(const std::vector<double>& column) {
       bool isInteger = true;
       for (const auto& value : column) {
@@ -93,29 +141,60 @@ namespace LightGBM {
     }
 
     void CalculateSplitMemoryConsumption(consumed_memory &con_mem, double threshold, uint32_t feature) {
-      int size = thresholds_used_global_.size();
-      bool foundthreshold = false;
-      for (int i = 0; i < size; i++) {
-        if (threshold == thresholds_used_global_[i]) {
-          foundthreshold = true;
-        }
+      con_mem.new_threshold = true;
+      int currentsize = 0;
+      for (int i = 0; i < threshold_per_feature.size(); i++) {
+        if (threshold_per_feature[i].feature == feature) {
+          currentsize = threshold_per_feature[i].thresholds_.size();
+          for (int j = 0; j < threshold_per_feature[i].thresholds_.size(); j++) {
+            if (threshold_per_feature[i].thresholds_[j] == threshold) {
+              con_mem.new_threshold = false;
+              con_mem.tindex = j;
+              // Size of inserting Bit or Float
+              if (threshold != 0.0 && threshold != 1.0) {
+                con_mem.bits += 1;
+              } else { con_mem.bits += 16;}
+              break;
+            }}}}
+
+      con_mem.bits += std::ceil(std::log2(currentsize + 1));
+
+      if (con_mem.new_threshold) {
+        // Check if current size +1 exceeds the next power of two
+        if (CHECK_QUANTIZATION) {
+          size_t next_power_of_two = static_cast<size_t>(std::pow(2, std::ceil(std::log2(currentsize + 1))));
+          if (currentsize + 1 > next_power_of_two) {
+            // Every feature reference in every tree would consume + 1 bit
+            for (int i = 0; i < ref_trees_.size(); i++) {
+              for (int j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
+                if (ref_trees_[i].feature_ids[j] == feature) {
+                  con_mem.bits += 1;
+                }}}}}
       }
-      //auto itf = std::find(features_used_global_.begin(), features_used_global_.end(), feature);
       int sizef = features_used_global_.size();
       bool foundfeature = false;
       for (int i = 0; i < sizef; i++) {
         if (feature == features_used_global_[i]) {
           foundfeature = true;
+          con_mem.findex = i;
         }
       }
       // In case the feature is not used 8 bits are added for representing a bits_single and bits_ref.
+      con_mem.bits += std::ceil(std::log2(features_used_global_.size() + 1));
       if (!foundfeature) {
-        con_mem.bits += 4;
+        // TODO Size of inserting a feature -> a feature needs the bits size and the number of thresholds + column it references.
+        con_mem.bits += 4 + 1 + static_cast<int>(std::ceil(std::log2(this->tree_learner_->train_data_->num_features())));
         con_mem.new_feature = true;
-      }
-      if (!foundthreshold) {
-        con_mem.bits += 16;
-        con_mem.new_threshold = true;
+        // Check if current size +1 exceeds the next power of two
+        if (CHECK_QUANTIZATION){
+          size_t next_power_of_two = static_cast<size_t>(std::pow(2, std::ceil(std::log2(features_used_global_.size() + 1))));
+          if (features_used_global_.size() + 1 > next_power_of_two) {
+            // Every feature reference in every tree would consume + 1 bit
+            for (int i = 0; i < ref_trees_.size(); i++) {
+              for (int j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
+                if (ref_trees_[i].feature_ids[j] != -1) {
+                  con_mem.bits += 1;
+        }}}}}
       }
     }
 
@@ -159,6 +238,14 @@ namespace LightGBM {
       out << "\n";
       out << "#thresholds : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
       out << "\n";
+      for (int i = 0; i < ref_trees_.size()-1; i++) {
+        out << ref_trees_[i];
+      }
+      out << "\n";
+      for (int i = 0; i < threshold_per_feature.size(); i++) {
+        out << threshold_per_feature[i];
+      }
+      out << "\n";
       std::cout << out.str();
     }
     bool init_;
@@ -172,6 +259,7 @@ namespace LightGBM {
     std::vector<uint32_t> features_used_global_;
     int fcounter = 0;
     std::vector<ref_tree> ref_trees_;
+    std::vector<threshold_info> threshold_per_feature;
     int treecounter = 0;
   };
 }
