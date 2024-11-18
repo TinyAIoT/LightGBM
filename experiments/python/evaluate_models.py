@@ -1,5 +1,6 @@
 import os
-import re
+import re 
+import numpy as np
 import matplotlib.pyplot as plt
 
 import lightgbm as lgb
@@ -23,10 +24,13 @@ def GetValueFromTXT(filename, key, sum_up=False):
 			else:
 				ret = float(line.split(key+'=')[-1])
 		elif key + ': ' in line and key != 'num_leaves':
-			ret = float(line.split(key+': ')[-1][:-2])
+			if key == 'data':
+				ret = line.split(key+': ')[-1][:-2]
+			else:
+				ret = float(line.split(key+': ')[-1][:-2])
 	return ret
 
-def calcAccuracy(model_path, data_path):
+def calcAccuracy(model_path, data_path, classes=1):
 	model = lgb.Booster(model_file=model_path)
 
 	test_data = lgb.Dataset(data_path)
@@ -34,10 +38,13 @@ def calcAccuracy(model_path, data_path):
 
 	y_pred = model.predict(data_path, predict_disable_shape_check=True)
 
-	# Calculate accuracy and ROC AUC score
-	accuracy = accuracy_score(test_data.get_label(), (y_pred > 0.5).astype(int))
-	roc_auc = roc_auc_score(test_data.get_label(), y_pred)
-
+	if classes > 1:	
+		roc_auc = roc_auc_score(test_data.get_label(), y_pred, multi_class='ovo')	
+		accuracy = accuracy_score(test_data.get_label(), np.argmax(y_pred, axis=1))
+	else:
+		roc_auc = roc_auc_score(test_data.get_label(), y_pred)
+		accuracy = accuracy_score(test_data.get_label(), (y_pred > 0.5).astype(int))
+	
 	return accuracy, roc_auc
  
 
@@ -45,7 +52,7 @@ def plotMetrics(keyword, log_scale=False):
 	sorted_dir = sorted(os.listdir("../results"), key=lambda x: (int(x.split(".")[1]), int(x.split(".")[2])))
 	setting_value = []
 	accuracies = []
-	auc = []
+	logloss = []
 	no_features = []
 	no_thresholds = []
 	no_leaves = []
@@ -58,16 +65,16 @@ def plotMetrics(keyword, log_scale=False):
 	tinygbdt_penalty_split = 0
 	tinygbdt_forestsize = 0
 	tinygbdt_precision = 0
+	num_classes = 0
+	data = ""
 
 	for fn in sorted_dir:
 		if fn.endswith(keyword+".out"):
-			auc.append(GetValueFromOut('../results/'+fn, 'auc'))
+			logloss.append(GetValueFromOut('../results/'+fn, 'logloss'))
 			no_features.append(GetValueFromOut('../results/'+fn, '#features'))
 			no_thresholds.append(GetValueFromOut('../results/'+fn, '#thresholds'))
 			our_bits.append(GetValueFromOut('../results/'+fn, '#bits'))
 		if fn.endswith(keyword+".txt"):
-			accuracy, roc = calcAccuracy('../results/'+fn, '../covtype.libsvm.binary.test')
-			accuracies.append(accuracy)	
 			no_trees.append(GetValueFromTXT('../results/'+fn, 'Tree'))
 			setting_value.append(GetValueFromTXT('../results/'+fn, keyword))
 			# no_features.append(GetValueFromTXT('../results/'+fn, 'tt_feature_count'))
@@ -80,6 +87,13 @@ def plotMetrics(keyword, log_scale=False):
 			tinygbdt_penalty_split =  GetValueFromTXT('../results/'+fn, 'tinygbdt_penalty_split')
 			tinygbdt_forestsize =  GetValueFromTXT('../results/'+fn, 'tinygbdt_forestsize')
 			tinygbdt_precision =  GetValueFromTXT('../results/'+fn, 'tinygbdt_precision')
+			num_classes =  GetValueFromTXT('../results/'+fn, 'num_class')
+			if num_classes > 1:
+				accuracy, roc = calcAccuracy('../results/'+fn, '../covtype.test', classes=num_classes)
+			else:
+				accuracy, roc = calcAccuracy('../results/'+fn, '../covtype.libsvm.binary.test', classes=num_classes)
+			accuracies.append(accuracy)	
+			data = GetValueFromTXT('../results/'+fn, 'data')
 		else:
 			continue
 	
@@ -89,8 +103,8 @@ def plotMetrics(keyword, log_scale=False):
 
 	color = 'tab:red'
 	ax1.set_xlabel(keyword)
-	ax1.set_ylabel('AUC/Accuracies')
-	ax1.plot(setting_value, auc, color=color, label='AUC')
+	ax1.set_ylabel('Logloss')
+	ax1.plot(setting_value, logloss, color=color, label='Logloss')
 	ax1.plot(setting_value, accuracies, color='tab:purple', label='Accuracy')
 	plt.legend(loc='lower center')
 	ax1.tick_params(axis='y', labelcolor=color)
@@ -118,6 +132,7 @@ def plotMetrics(keyword, log_scale=False):
 
 	plt.savefig(
 		'../plots/'+keyword
+		+'_'+str(data)
 		+'_maxtrees'+str(num_iterations)
 		+'_maxdepth'+str(max_depth)
 		+'_penF'+str(tinygbdt_penalty_feature)

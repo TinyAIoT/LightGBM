@@ -469,3 +469,4 @@ dask-worker-space/
 experiments/results/*
 experiments/Model/*
 experiments/Output/*
+experiments/plots/*
