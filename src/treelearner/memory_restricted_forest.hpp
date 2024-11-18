@@ -12,7 +12,7 @@
 #include <LightGBM/utils/log.h>
 #include <vector>
 
-const bool CHECK_QUANTIZATION = false;
+const bool CHECK_QUANTIZATION = true;
 namespace LightGBM {
   struct consumed_memory {
     int bits;
@@ -226,6 +226,7 @@ namespace LightGBM {
       ref_trees_.push_back({});
       ref_trees_[treecounter].tree_id = treecounter;
       est_leftover_memory = treesize;
+      forestsize = treesize;      
       this->precision = precision;
       auto train_data = tree_learner_->train_data_;
       features_used_global_.resize(train_data->num_features());
@@ -238,6 +239,8 @@ namespace LightGBM {
       out << "\n";
       out << "#thresholds : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
       out << "\n";
+      out << "#bits : " << forestsize-est_leftover_memory;
+      out << "\n";
       for (int i = 0; i < ref_trees_.size()-1; i++) {
         out << ref_trees_[i];
       }
@@ -249,7 +252,7 @@ namespace LightGBM {
       std::cout << out.str();
     }
     bool init_;
-    int est_leftover_memory, max_depth;
+    int est_leftover_memory, max_depth, forestsize;
     double precision;
     const SerialTreeLearner *tree_learner_;
     /*! \brief count feature use; */

@@ -13,12 +13,12 @@ def GetValueFromOut(filename, key):
 			ret = float(line.split(key+' :')[-1])
 	return ret
 
-def GetValueFromTXT(filename, key):
+def GetValueFromTXT(filename, key, sum_up=False):
 	input = open(filename, "r")
 	ret = 0.0
 	for line in input.readlines():
 		if key + '=' in line:
-			if key == 'num_leaves':
+			if sum_up:
 				ret += float(line.split(key+'=')[-1])
 			else:
 				ret = float(line.split(key+'=')[-1])
@@ -50,11 +50,14 @@ def plotMetrics(keyword):
 	no_thresholds = []
 	no_leaves = []
 	no_trees = []
+	our_bits = []
+	lgb_bits = []
 	for fn in sorted_dir:
 		if fn.endswith(keyword+".out"):
 			auc.append(GetValueFromOut('../results/'+fn, 'auc'))
 			no_features.append(GetValueFromOut('../results/'+fn, '#features'))
 			no_thresholds.append(GetValueFromOut('../results/'+fn, '#thresholds'))
+			our_bits.append(GetValueFromOut('../results/'+fn, '#bits'))
 		if fn.endswith(keyword+".txt"):
 			accuracy, roc = calcAccuracy('../results/'+fn, '../covtype.libsvm.binary.test')
 			accuracies.append(accuracy)	
@@ -62,9 +65,13 @@ def plotMetrics(keyword):
 			setting_value.append(GetValueFromTXT('../results/'+fn, keyword))
 			# no_features.append(GetValueFromTXT('../results/'+fn, 'tt_feature_count'))
 			# no_thresholds.append(GetValueFromTXT('../results/'+fn, 'tt_threshold_count'))
-			no_leaves.append(GetValueFromTXT('../results/'+fn, 'num_leaves'))
+			no_leaves.append(GetValueFromTXT('../results/'+fn, 'num_leaves', sum_up=True))
+			lgb_bits.append(GetValueFromTXT('../results/'+fn, 'model_size', sum_up=True))
 		else:
 			continue
+	
+	# lbg_bits = lgb_floats*32 + lgb_ints*16
+
 	fig1, ax1 = plt.subplots()
 
 	color = 'tab:red'
@@ -79,8 +86,11 @@ def plotMetrics(keyword):
 
 
 	ax2.set_ylabel('count')  # we already handled the x-label with ax1
+	# ax2.set_yscale('log')
 	ax2.plot(setting_value, no_thresholds, label="no. thresholds")
 	ax2.plot(setting_value, no_leaves, label="no. leaves")
+	ax2.plot(setting_value, our_bits, color='tab:pink', label="no. bits")
+	ax2.plot(setting_value, lgb_bits, color='tab:brown', label="no. bits LGBM")
 	plt.legend(loc='lower right')
 
 	color = 'tab:green'
