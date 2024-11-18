@@ -11,6 +11,8 @@
 #include <LightGBM/dataset.h>
 #include <LightGBM/utils/log.h>
 #include <vector>
+
+const bool CHECK_QUANTIZATION = false;
 namespace LightGBM {
   struct consumed_memory {
     int bits;
@@ -98,23 +100,29 @@ namespace LightGBM {
       if (con_mem.new_feature) {
         feature_to_insert = feature;
         features_used_global_[fcounter] = (feature);
+#pragma omp critical
         ref_trees_[treecounter].feature_ids.push_back(fcounter);
+#pragma omp critical
         threshold_per_feature.push_back({static_cast<int>(feature)});
         fcounter++;
       } else {
         feature_to_insert = con_mem.findex;
+#pragma omp critical
         ref_trees_[treecounter].feature_ids.push_back(con_mem.findex);
       }
       if (con_mem.new_threshold) {
         for (int i = 0; i < threshold_per_feature.size(); i++) {
           if (threshold_per_feature[i].feature == feature_to_insert) {
+#pragma omp critical
             threshold_per_feature[i].thresholds_.push_back(threshold);
           }
         }
 #pragma omp critical
         thresholds_used_global_.push_back(threshold);
+#pragma omp critical
         ref_trees_[treecounter].thresholds.push_back(thresholds_used_global_.size()-1);
       } else {
+#pragma omp critical
         ref_trees_[treecounter].thresholds.push_back(con_mem.tindex);
       }
 
@@ -132,7 +140,7 @@ namespace LightGBM {
       return isInteger;
     }
 
-    void CalculateSplitMemoryConsumption(consumed_memory &con_mem, double threshold, uint32_t feature){
+    void CalculateSplitMemoryConsumption(consumed_memory &con_mem, double threshold, uint32_t feature) {
       con_mem.new_threshold = true;
       int currentsize = 0;
       for (int i = 0; i < threshold_per_feature.size(); i++) {
@@ -147,22 +155,21 @@ namespace LightGBM {
                 con_mem.bits += 1;
               } else { con_mem.bits += 16;}
               break;
-      }}}}
+            }}}}
+
       con_mem.bits += std::ceil(std::log2(currentsize + 1));
 
       if (con_mem.new_threshold) {
         // Check if current size +1 exceeds the next power of two
-        size_t next_power_of_two = static_cast<size_t>(std::pow(2, std::ceil(std::log2(currentsize + 1))));
-        if (currentsize + 1 > next_power_of_two) {
-          // Every feature reference in every tree would consume + 1 bit
-          for (int i = 0; i < ref_trees_.size(); i++) {
-            for (int j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
-              if (ref_trees_[i].feature_ids[j] == feature) {
-                con_mem.bits += 1;
-              }
-            }
-          }
-        }
+        if (CHECK_QUANTIZATION) {
+          size_t next_power_of_two = static_cast<size_t>(std::pow(2, std::ceil(std::log2(currentsize + 1))));
+          if (currentsize + 1 > next_power_of_two) {
+            // Every feature reference in every tree would consume + 1 bit
+            for (int i = 0; i < ref_trees_.size(); i++) {
+              for (int j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
+                if (ref_trees_[i].feature_ids[j] == feature) {
+                  con_mem.bits += 1;
+                }}}}}
       }
       int sizef = features_used_global_.size();
       bool foundfeature = false;
@@ -179,17 +186,15 @@ namespace LightGBM {
         con_mem.bits += 4 + 1 + static_cast<int>(std::ceil(std::log2(this->tree_learner_->train_data_->num_features())));
         con_mem.new_feature = true;
         // Check if current size +1 exceeds the next power of two
-        size_t next_power_of_two = static_cast<size_t>(std::pow(2, std::ceil(std::log2(features_used_global_.size() + 1))));
-        if (features_used_global_.size() + 1 > next_power_of_two) {
-          // Every feature reference in every tree would consume + 1 bit
-          for (int i = 0; i < ref_trees_.size(); i++) {
-            for (int j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
-              if (ref_trees_[i].feature_ids[j] != -1) {
-                con_mem.bits += 1;
-              }
-            }
-          }
-        }
+        if (CHECK_QUANTIZATION){
+          size_t next_power_of_two = static_cast<size_t>(std::pow(2, std::ceil(std::log2(features_used_global_.size() + 1))));
+          if (features_used_global_.size() + 1 > next_power_of_two) {
+            // Every feature reference in every tree would consume + 1 bit
+            for (int i = 0; i < ref_trees_.size(); i++) {
+              for (int j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
+                if (ref_trees_[i].feature_ids[j] != -1) {
+                  con_mem.bits += 1;
+        }}}}}
       }
     }
 
