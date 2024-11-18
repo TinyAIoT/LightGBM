@@ -303,7 +303,9 @@ void SerialTreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> l
   }
   if (MemoryRestrictedForest::IsEnable(config_)) {
     mrf_->UpdateMemoryForTree(tree);
-    tree->ToArrayPointer(mrf_->features_used_global_, mrf_->thresholds_used_global_, config_->tinygbdt_precision);
+    // TODO: leave this out for now and get #features and #thresholds from mrf
+    // tree->ToArrayPointer(mrf_->features_used_global_, mrf_->thresholds_used_global_, config_->tinygbdt_precision);
+    mrf_->printForest();
   }
 }
 
@@ -1063,22 +1065,28 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     //     new_split.gain -= (con_mem.findex * con_mem.findex * 80);
     // }
 
-    printf("# thresholds global %i ", mrf_->thresholds_used_global_.size());
+    // printf("# thresholds global %i ", mrf_->thresholds_used_global_.size());
     if (con_mem.new_feature) {
       // new_split.gain *= (config_->tinygbdt_penalty_feature);
       new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
     }
     if (con_mem.new_threshold) {
       // new_split.gain -= (config_->tinygbdt_penalty_split * con_mem.tindex);
-      new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
+      new_split.gain -= (config_->tinygbdt_penalty_split * sqrt(mrf_->thresholds_used_global_.size()));
+      // new_split.gain -= (config_->tinygbdt_penalty_split);
     }
       
     // new_split.gain -= (sizeof(mrf_->features_used_global_) * config_->tinygbdt_penalty_feature + sizeof(mrf_->thresholds_used_global_) * config_->tinygbdt_penalty_split);
+      
+    // if (new_split.gain < 0) {
+    //   new_split.gain = 0;
+    //   // Log::Debug(mrf_->printForest().c_str());
+    // }
 
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
     if (mrf_->est_leftover_memory < 0) {
       new_split.gain = 0;
-      //Log::Debug(mrf_->printForest().c_str());
+      // Log::Debug(mrf_->printForest().c_str());
     }
   }
   /*[tinygbdt] END */

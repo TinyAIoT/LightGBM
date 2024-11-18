@@ -94,10 +94,10 @@ namespace LightGBM {
 
     void CalculateSplitMemoryConsumption(consumed_memory &con_mem, double threshold, uint32_t feature) {
       int size = thresholds_used_global_.size();
-      bool foundthrehold = false;
+      bool foundthreshold = false;
       for (int i = 0; i < size; i++) {
         if (threshold == thresholds_used_global_[i]) {
-          foundthrehold = true;
+          foundthreshold = true;
         }
       }
       //auto itf = std::find(features_used_global_.begin(), features_used_global_.end(), feature);
@@ -113,7 +113,7 @@ namespace LightGBM {
         con_mem.bits += 4;
         con_mem.new_feature = true;
       }
-      if (!foundthrehold) {
+      if (!foundthreshold) {
         con_mem.bits += 16;
         con_mem.new_threshold = true;
       }
@@ -153,7 +153,11 @@ namespace LightGBM {
     }
     void printForest() {
       std::stringstream out;
-      out << "Leftover memory: " << est_leftover_memory;
+      out << "Leftover memory : " << est_leftover_memory;
+      out << "\n";
+      out << "#features : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0);
+      out << "\n";
+      out << "#thresholds : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
       out << "\n";
       std::cout << out.str();
     }
