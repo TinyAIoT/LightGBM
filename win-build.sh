@@ -13,12 +13,13 @@ else
 fi
 
 cd experiments || exit
-rm -r results
-mkdir -p results 
-# "../Release/lightgbm" config=train.conf max_depth=3 num_trees=50 tinygbdt_forestsize=64000 > train.output
+# rm -r models
+mkdir -p models 
+# # # "../Release/lightgbm" config=train.conf max_depth=3 num_trees=50 tinygbdt_forestsize=64000 > train.output
 END=1000
-for i in $(seq 5 25 $END); do 
-    if "../Release/lightgbm" config=train.conf max_depth=3 num_iterations=$i output_model=results/model.$i.0.num_iterations.txt > results/train.$i.0.num_iterations.out; then
+config=train.conf
+for i in $(seq 5 5 $END); do 
+    if "../Release/lightgbm" config=$config max_depth=3 num_iterations=$i output_model=models/model.$i.0.num_iterations.txt > models/train.$i.0.num_iterations.out; then
         echo "Training model $i complete"
     else
         echo "Training model $i failed / not complete"
@@ -27,7 +28,7 @@ for i in $(seq 5 25 $END); do
     # sleep 5
 done
 for i in $(seq 1 2 15); do 
-    if "../Release/lightgbm" config=train.conf max_depth=$i num_trees=50 output_model=results/model.$i.0.max_depth.txt > results/train.$i.0.max_depth.out; then
+    if "../Release/lightgbm" config=$config max_depth=$i num_trees=100 output_model=models/model.$i.0.max_depth.txt > models/train.$i.0.max_depth.out; then
         echo "Training model $i complete"
     else
         echo "Training model $i failed"
@@ -35,7 +36,7 @@ for i in $(seq 1 2 15); do
     fi
 done
 for i in 800 1600 3200 6400 12800 25600 51200 102400; do 
-    if "../Release/lightgbm" config=train.conf max_depth=3 num_trees=100 tinygbdt_forestsize=$i tinygbdt_penalty_split=0 tinygbdt_penalty_feature=0 output_model=results/model.$i.0.tinygbdt_forestsize.txt > results/train.$i.0.tinygbdt_forestsize.out; then
+    if "../Release/lightgbm" config=$config max_depth=3 num_trees=1000 tinygbdt_forestsize=$i tinygbdt_penalty_split=0 tinygbdt_penalty_feature=0 output_model=models/model.$i.0.tinygbdt_forestsize.txt > models/train.$i.0.tinygbdt_forestsize.out; then
         echo "Training model $i complete"
     else
         echo "Training model $i failed / not complete"
@@ -43,8 +44,8 @@ for i in 800 1600 3200 6400 12800 25600 51200 102400; do
     fi
     # sleep 1
 done
-for i in $(seq 0 0.5 10); do 
-    if "../Release/lightgbm" config=train.conf max_depth=3 num_trees=100 tinygbdt_penalty_feature=$i tinygbdt_penalty_split=0 output_model=results/model.$i.tinygbdt_penalty_feature.txt > results/train.$i.tinygbdt_penalty_feature.out; then
+for i in $(seq -4 1 4); do 
+    if "../Release/lightgbm" config=$config max_depth=3 num_trees=100 tinygbdt_penalty_feature=2e$i tinygbdt_penalty_split=0 output_model=models/model.$i.0.tinygbdt_penalty_feature.txt > models/train.$i.0.tinygbdt_penalty_feature.out; then
         echo "Training model $i complete"
     else
         echo "Training model $i failed / not complete"
