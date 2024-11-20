@@ -1064,21 +1064,27 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     //     new_split.gain -= (con_mem.findex * con_mem.findex * 80);
     // }
 
+    new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
+    new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
+
     // printf("# thresholds global %i ", mrf_->thresholds_used_global_.size());
-    if (con_mem.new_feature) {
-      // new_split.gain *= (config_->tinygbdt_penalty_feature);
-      new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
-    }
-    if (con_mem.new_threshold) {
-      // new_split.gain -= (config_->tinygbdt_penalty_split * con_mem.tindex);
-      new_split.gain -= (config_->tinygbdt_penalty_split * sqrt(mrf_->thresholds_used_global_.size()));
-      // new_split.gain -= (config_->tinygbdt_penalty_split);
-    }
+    // if (con_mem.new_feature) {
+    //   // new_split.gain *= (config_->tinygbdt_penalty_feature);
+    //   new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
+    // }
+    // if (con_mem.new_threshold) {
+    //   printf("# gain before %f ", new_split.gain);
+    //   // new_split.gain -= (config_->tinygbdt_penalty_split * con_mem.tindex);
+    //   // new_split.gain -= (config_->tinygbdt_penalty_split * sqrt(mrf_->thresholds_used_global_.size()));
+    //   new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
+    //   // new_split.gain -= (config_->tinygbdt_penalty_split);
+    //   printf("# gain after %f \n", new_split.gain);
+    // }
       
     // new_split.gain -= (sizeof(mrf_->features_used_global_) * config_->tinygbdt_penalty_feature + sizeof(mrf_->thresholds_used_global_) * config_->tinygbdt_penalty_split);
       
     // if (new_split.gain < 0) {
-    //   new_split.gain = 0;
+    //   new_split.gain = -0.1;
     //   // Log::Debug(mrf_->printForest().c_str());
     // }
 
