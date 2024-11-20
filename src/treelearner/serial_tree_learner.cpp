@@ -303,7 +303,7 @@ void SerialTreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> l
   if (MemoryRestrictedForest::IsEnable(config_)) {
     mrf_->UpdateMemoryForTree(tree);
     // tree->ToArrayPointer(mrf_->features_used_global_, mrf_->thresholds_used_global_, config_->tinygbdt_precision);
-    // mrf_->printForest();
+    mrf_->printForest();
   }
 }
 

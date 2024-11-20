@@ -26,7 +26,7 @@ namespace LightGBM {
   struct ref_tree {
     int tree_id;
     std::vector<int> feature_ids;
-    std::vector<double> thresholds;
+    std::vector<int> thresholds;
   };
   std::ostream & operator << (std::ostream & outs, const ref_tree & ref_t) {
     outs << ref_t.tree_id << ": features: ";
@@ -48,6 +48,11 @@ namespace LightGBM {
     threshold_info(int featureid) {
       feature = featureid;
     }
+    threshold_info(int featureid, double threshold, double bits_) {
+      feature = featureid;
+      thresholds_.push_back(threshold);
+      bits = bits_;
+    }
   };
   std::ostream & operator << (std::ostream & outs, const threshold_info & thres_inf) {
     outs << thres_inf.feature << ": thresholds: ";
@@ -64,21 +69,38 @@ namespace LightGBM {
     }
     void InsertLeafInformation(double leaf_value) {
       est_leftover_memory -= sizeof(float);
-      int tcounter = -1;
-      for (int i =0; i< thresholds_used_global_.size(); i++) {
-        if (thresholds_used_global_[i] == leaf_value)
-          tcounter = i;
-      }
+      bool found = false, featurefound = false;
+      int tcounter;
+      for (int i = 0; i < threshold_per_feature.size(); i++) {
+        if (threshold_per_feature[i].feature == 255) {
+          featurefound = true;
+          for (int j = 0; j < threshold_per_feature[i].thresholds_.size(); j++) {
+            if (threshold_per_feature[i].thresholds_[j] == leaf_value) {
+              found = true;
+              tcounter = j;
+      }}}}
 #pragma omp critical
-      ref_trees_[treecounter].feature_ids.push_back(-1);
-      if (tcounter != -1) {
+      ref_trees_[treecounter].feature_ids.push_back(255);
+      if (found) {
 #pragma omp critical
         ref_trees_[treecounter].thresholds.push_back(tcounter);
       } else {
 #pragma omp critical
         thresholds_used_global_.push_back(leaf_value);
+        if (!featurefound) {
 #pragma omp critical
-        ref_trees_[treecounter].thresholds.push_back(thresholds_used_global_.size()-1);
+          threshold_per_feature.push_back({255, leaf_value, 16});
+          ref_trees_[treecounter].thresholds.push_back(0);
+        } else {
+          for (int i = 0; i < threshold_per_feature.size(); i++) {
+            if (threshold_per_feature[i].feature == 255) {
+#pragma omp critical
+              threshold_per_feature[i].thresholds_.push_back(leaf_value);
+#pragma omp critical
+              ref_trees_[treecounter].thresholds.push_back(threshold_per_feature[i].thresholds_.size()-1);
+            }
+          }
+        }
       }
     }
 
@@ -101,26 +123,28 @@ namespace LightGBM {
         feature_to_insert = feature;
         features_used_global_[fcounter] = (feature);
 #pragma omp critical
-        ref_trees_[treecounter].feature_ids.push_back(fcounter);
+        ref_trees_[treecounter].feature_ids.push_back(feature);
 #pragma omp critical
         threshold_per_feature.push_back({static_cast<int>(feature)});
         fcounter++;
       } else {
         feature_to_insert = con_mem.findex;
 #pragma omp critical
-        ref_trees_[treecounter].feature_ids.push_back(con_mem.findex);
+        ref_trees_[treecounter].feature_ids.push_back(feature);
       }
       if (con_mem.new_threshold) {
+        int tsize;
         for (int i = 0; i < threshold_per_feature.size(); i++) {
           if (threshold_per_feature[i].feature == feature_to_insert) {
 #pragma omp critical
             threshold_per_feature[i].thresholds_.push_back(threshold);
+            tsize = threshold_per_feature[i].thresholds_.size() - 1;
           }
         }
 #pragma omp critical
         thresholds_used_global_.push_back(threshold);
 #pragma omp critical
-        ref_trees_[treecounter].thresholds.push_back(thresholds_used_global_.size()-1);
+        ref_trees_[treecounter].thresholds.push_back(tsize);
       } else {
 #pragma omp critical
         ref_trees_[treecounter].thresholds.push_back(con_mem.tindex);
@@ -176,13 +200,13 @@ namespace LightGBM {
       for (int i = 0; i < sizef; i++) {
         if (feature == features_used_global_[i]) {
           foundfeature = true;
-          con_mem.findex = i;
+          con_mem.findex = feature;
         }
       }
       // In case the feature is not used 8 bits are added for representing a bits_single and bits_ref.
       con_mem.bits += std::ceil(std::log2(features_used_global_.size() + 1));
       if (!foundfeature) {
-        // TODO Size of inserting a feature -> a feature needs the bits size and the number of thresholds + column it references.
+        // TODO Check with Model.
         con_mem.bits += 4 + 1 + static_cast<int>(std::ceil(std::log2(this->tree_learner_->train_data_->num_features())));
         con_mem.new_feature = true;
         // Check if current size +1 exceeds the next power of two
