@@ -26,19 +26,24 @@ def GetValueFromTXT(filename, key, sum_up=False):
 			else:
 				ret = float(line.split(key+'=')[-1])
 		elif key + ': ' in line and key != 'num_leaves':
-			if key == 'data' or key == 'objective':
-				ret = line.split(key+': ')[-1][:-2]
-			else:
+			try:
 				ret = float(line.split(key+': ')[-1][:-2])
+			except:
+				ret = line.split(key+': ')[-1][:-2]
 	return ret
 
-def calcAccuracy(model_path, data_path, classes=1):
+def calcAccuracy(model_path, data_path, classes=1, label_column=None):
+	print(model_path)
 	model = lgb.Booster(model_file=model_path)
 
-	test_data = lgb.Dataset(data_path)
+	if data_path.endswith('.csv'):
+		df = pd.read_csv(data_path, header=None)
+		test_data = lgb.Dataset(df.iloc[:,:int(label_column)], label=df.iloc[:,int(label_column)], free_raw_data=False)
+	else:
+		test_data = lgb.Dataset(data_path, free_raw_data=False)
 	test_data.construct()
 
-	y_pred = model.predict(data_path, predict_disable_shape_check=True)
+	y_pred = model.predict(test_data.get_data(), predict_disable_shape_check=True)
 
 	
 	if classes == 0: # regression
@@ -54,9 +59,10 @@ def calcAccuracy(model_path, data_path, classes=1):
 	return accuracy, roc_auc
  
 
-def plotMetrics(keyword, log_scale=False):
+def plotMetrics(keyword, log_scale=False, dataset=None):
 	print("Plotting: ", keyword)
-	sorted_dir = sorted(os.listdir("../models"), key=lambda x: (float(x.split(".")[1]), float(x.split(".")[2])))
+	sorted_dir = sorted(os.listdir("../models"), key=lambda x: (float(x.split(".")[1]), float("0."+x.split(".")[2])))
+	print(sorted_dir)
 	setting_value = []
 	accuracies = []
 	logloss = []
@@ -78,13 +84,13 @@ def plotMetrics(keyword, log_scale=False):
 	data = ""
 
 	for fn in sorted_dir:
-		if fn.endswith(keyword+".out"):
+		if fn.endswith(keyword+".out") or fn.endswith("baseline.out"):
 			logloss.append(GetValueFromOut('../models/'+fn, 'logloss'))
 			rmse.append(GetValueFromOut('../models/'+fn, 'rmse'))
 			no_features.append(GetValueFromOut('../models/'+fn, '#features'))
 			no_thresholds.append(GetValueFromOut('../models/'+fn, '#thresholds'))
 			our_bits.append(GetValueFromOut('../models/'+fn, '#bits'))
-		if fn.endswith(keyword+".txt"):
+		if fn.endswith(keyword+".txt") or fn.endswith("baseline.txt"):
 			no_trees.append(GetValueFromTXT('../models/'+fn, 'Tree'))
 			setting_value.append(GetValueFromTXT('../models/'+fn, keyword))
 			# no_features.append(GetValueFromTXT('../models/'+fn, 'tt_feature_count'))
@@ -98,20 +104,22 @@ def plotMetrics(keyword, log_scale=False):
 			tinygbdt_forestsize =  GetValueFromTXT('../models/'+fn, 'tinygbdt_forestsize')
 			tinygbdt_precision =  GetValueFromTXT('../models/'+fn, 'tinygbdt_precision')
 			num_classes =  GetValueFromTXT('../models/'+fn, 'num_class')
+			valid_data = GetValueFromTXT('../models/'+fn, 'valid')
+			label_column = GetValueFromTXT('../models/'+fn, 'label_column')
 			objective =  GetValueFromTXT('../models/'+fn, 'objective')
 			if objective == 'multiclass':
-				accuracy, roc = calcAccuracy('../models/'+fn, '../covtype.s.test', classes=num_classes)
+				accuracy, roc = calcAccuracy('../models/'+fn, '../'+valid_data, classes=num_classes)
 			elif objective == 'binary':
-				accuracy, roc = calcAccuracy('../models/'+fn, '../covtype.libsvm.binary.test', classes=num_classes)
+				accuracy, roc = calcAccuracy('../models/'+fn, '../'+valid_data, classes=num_classes)
 			elif objective == 'regression':
-				accuracy, roc = calcAccuracy('../models/'+fn, '../housing.test', classes=0)
+				accuracy, roc = calcAccuracy('../models/'+fn, '../'+valid_data, classes=0, label_column=label_column)
 			accuracies.append(accuracy)	
 			data = GetValueFromTXT('../models/'+fn, 'data')
 		else:
 			continue
 	
 	# lbg_bits = lgb_floats*32 + lgb_ints*16
-	print(len(setting_value), len(no_trees), len(no_features), len(no_thresholds), len(no_leaves), len(our_bits), len(lgb_bits), len(logloss), len(rmse), len(accuracies))
+	# print(len(setting_value), len(no_trees), len(no_features), len(no_thresholds), len(no_leaves), len(our_bits), len(lgb_bits), len(logloss), len(rmse), len(accuracies))
 
 	df = pd.DataFrame({
 		keyword: setting_value,
@@ -127,16 +135,17 @@ def plotMetrics(keyword, log_scale=False):
 	})
 
 	df_filename = (keyword
-			+'_'+str(data)
-			+'_maxtrees'+str(num_iterations)
-			+'_maxdepth'+str(max_depth)
+			+'_'+str(objective)
+			+'_'+str(data[5:])
 			+'_penF'+str(tinygbdt_penalty_feature)
 			+'_penT'+str(tinygbdt_penalty_split)
+			+'_maxtrees'+str(num_iterations)
+			+'_maxdepth'+str(max_depth)
 			+ '_maxsize'+str(tinygbdt_forestsize)
 			+'_precision'+str(tinygbdt_precision)
 			+'_logscale'+str(log_scale)
 			+'.csv')
-
+	
 	df.to_csv('../results/'+
 		df_filename
 		, index=False
@@ -146,7 +155,9 @@ def plotMetrics(keyword, log_scale=False):
 
 	color = 'tab:red'
 	ax1.set_xlabel(keyword)
-	ax1.set_xscale('log')
+	if log_scale:
+	# 	ax2.set_yscale('log')
+		ax1.set_xscale('log')	
 	if len(logloss) > 0:
 		if logloss[-1] != 0:
 			ax1.set_ylabel('Logloss')
@@ -158,13 +169,14 @@ def plotMetrics(keyword, log_scale=False):
 	ax1.plot(setting_value, accuracies, color='tab:purple', label='Accuracy/MSE')
 	plt.legend(loc='lower center')
 	ax1.tick_params(axis='y', labelcolor=color)
+	print(setting_value)
 
 	ax2 = ax1.twinx()  # instantiate a second Axes that shares the same x-axis
 
 
 	ax2.set_ylabel('count')  # we already handled the x-label with ax1
-	if log_scale:
-		ax2.set_yscale('log')
+	# if log_scale:
+	# 	ax2.set_yscale('log')
 	# ax2.set_yscale('log')
 	ax2.plot(setting_value, no_thresholds, label="no. thresholds")
 	ax2.plot(setting_value, no_leaves, label="no. leaves")
@@ -190,25 +202,25 @@ def plotMetrics(keyword, log_scale=False):
 
 	plt.savefig(
 		'../plots/'+keyword
-		+'_'+str(data)
-		+'_maxtrees'+str(num_iterations)
-		+'_maxdepth'+str(max_depth)
+		+'_'+str(data[5:])
 		+'_penF'+str(tinygbdt_penalty_feature)
 		+'_penT'+str(tinygbdt_penalty_split)
+		+'_maxtrees'+str(num_iterations)
+		+'_maxdepth'+str(max_depth)
 		+ '_maxsize'+str(tinygbdt_forestsize)
 		+'_precision'+str(tinygbdt_precision)
 		+'_logscale'+str(log_scale)
 		+'.png'
 		)
 
-	plt.show()
-
+	# plt.show()
 	return df_filename
 
 log_scale = False
 
-# TODO: is keyword a necessary parameter? can be omitted and just use filename and column number
-def plotAccuracyByPenalty(dataframe_filename, keyword, xlog=True, xlabel='penalty'):
+# TODO: value at x=0 goes to -inf because of log scale
+def plotAccuracyByPenalty(dataframe_filename, keyword, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='penalty'):
+	print(dataframe_filename)
 	df = pd.read_csv('../results/'+dataframe_filename)
 
 	fig1, ax1 = plt.subplots()
@@ -217,12 +229,42 @@ def plotAccuracyByPenalty(dataframe_filename, keyword, xlog=True, xlabel='penalt
 	ax1.set_xlabel(xlabel)
 	if xlog:
 		ax1.set_xscale('log')
-	ax1.plot(df[keyword], df['accuracy'], color='tab:purple', label='Accuracy/MSE')
-	plt.legend()
+
+	if plot_accuracy:
+		color='tab:orange'
+		if df['logloss'].iloc[1] == 0.0:
+			label='RMSE'
+		else:
+			label='Accuracy'
+		ax1.plot(df[keyword], df['accuracy'], '--o', color=color, label=label)
+		locs, labels = plt.xticks()
+		print(locs)
+		print(labels)
+		print(labels.insert(0, 0))
+		print(np.insert(labels, 0, 0))
+
+		ax1.set_ylabel(label)
+		ax1.tick_params(axis='y', labelcolor=color)
+		plt.legend(loc='lower left')
 	# ax1.tick_params(axis='y', labelcolor=color)
 
+	ax2 = ax1.twinx()  # instantiate a second Axes that shares the same x-axis
+	ax2.set_ylabel('Count')  
+	
+	if xlabel == 'Feature Penalty':
+		color = 'tab:green'
+		ax2.plot(df[keyword], df['no_features'], 'o--', label="Features", color=color)
+	if xlabel == 'Threshold Penalty':
+		color = 'tab:blue'
+		ax2.plot(df[keyword], df['no_thresholds'], 'o--', label="# thresholds and leaf values", color=color)
+		if plot_nodeLeafCount:
+			ax2.plot(df[keyword], (df['no_leaves']*2-1), 'o--', label="# nodes and leaves", color='tab:red')
+	plt.legend()
+
+	fig1.tight_layout()  # otherwise the right y-label is slightly clipped
+
 	plt.savefig(
-		'../plots/'+'AccuracyBY'+keyword+'_'+dataframe_filename[:-4]+'.png'
+		'../plots/'+'AccBY'+dataframe_filename[:-4]+'.png'
 		)
 
 	plt.show()
@@ -230,10 +272,10 @@ def plotAccuracyByPenalty(dataframe_filename, keyword, xlog=True, xlabel='penalt
 # plotMetrics('num_iterations', log_scale = log_scale)
 # plotMetrics('max_depth', log_scale = log_scale)
 # plotMetrics('tinygbdt_forestsize', log_scale = log_scale)
-fp_df_path = plotMetrics('tinygbdt_penalty_feature', log_scale = log_scale)
-tp_df_path = plotMetrics('tinygbdt_penalty_split', log_scale = log_scale)
-# plotMetrics('cegb_penalty_split', log_scale = log_scale)
+fp_df_path = plotMetrics('tinygbdt_penalty_feature', log_scale = True)
+tp_df_path = plotMetrics('tinygbdt_penalty_split', log_scale = True)
 
-plotAccuracyByPenalty(fp_df_path, 'tinygbdt_penalty_feature', xlog=True, xlabel='Feature Penalty')
-plotAccuracyByPenalty(tp_df_path, 'tinygbdt_penalty_split', xlog=True, xlabel='Threshold Penalty')
+plot_nodeLeafCount = True
+plotAccuracyByPenalty(fp_df_path, 'tinygbdt_penalty_feature', xlog=True, xlabel='Feature Penalty', plot_nodeLeafCount=plot_nodeLeafCount)
+plotAccuracyByPenalty(tp_df_path, 'tinygbdt_penalty_split', xlog=True, xlabel='Threshold Penalty', plot_nodeLeafCount=plot_nodeLeafCount)
 
