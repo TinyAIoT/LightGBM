@@ -153,7 +153,7 @@ namespace LightGBM {
               // Size of inserting Bit or Float
               if (threshold != 0.0 && threshold != 1.0) {
                 con_mem.bits += 1;
-              } else { con_mem.bits += 16;}
+              } else { con_mem.bits += 32;}
               break;
             }}}}
 
@@ -232,10 +232,17 @@ namespace LightGBM {
       features_used_global_.resize(train_data->num_features());
     }
     void printForest() {
+      int threshold_size = 0;
+      int feature_size = threshold_per_feature.size();
       std::stringstream out;
       out << "Leftover memory : " << est_leftover_memory;
       out << "\n";
-      out << "#features : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0);
+      // out << "features_used_global : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0);
+      // out << "\n";
+      // out << "thresholds_used_global : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
+      // out << "\n";
+      out << "features_used_global : " << fcounter;
+      out << "#features : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0)+1; // subtract values of features not used except feature 0 itself 
       out << "\n";
       out << "#thresholds : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
       out << "\n";
@@ -247,7 +254,12 @@ namespace LightGBM {
       out << "\n";
       for (int i = 0; i < threshold_per_feature.size(); i++) {
         out << threshold_per_feature[i];
+        threshold_size += threshold_per_feature[i].thresholds_.size();
       }
+      out << "\n";
+      out << "#features ref_tree : " << feature_size;
+      out << "\n";
+      out << "#thresholds ref_tree : " << threshold_size;
       out << "\n";
       std::cout << out.str();
     }
