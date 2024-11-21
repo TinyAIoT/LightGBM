@@ -1037,7 +1037,15 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     //   if (con_mem.new_feature)
     //     new_split.gain *= config_->tinygbdt_penalty_feature;
     // }
-        // Let's just assume for a first try that we reduce the the gain only by the last 90 % ...
+
+    // if (con_mem.new_threshold) {
+    //   new_split.gain *= config_->tinygbdt_penalty_split;   
+    // } 
+    // if (con_mem.new_feature) {
+    //   new_split.gain *= config_->tinygbdt_penalty_feature;
+    // }
+
+    // Let's just assume for a first try that we reduce the the gain only by the last 90 % ...
     // TODO find some fancy way to include the leftovermemory.
     // TODO In case we are using a "new" threshold it needs to be saved in the new_split.
     // However, the new_split just saves the bin id for the upper bound.
@@ -1066,6 +1074,13 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
 
     new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
     new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
+
+    // if (con_mem.new_feature) {
+    //   new_split.gain -= ((config_->tinygbdt_penalty_feature));
+    // }
+    // if (con_mem.new_threshold) {
+    //   new_split.gain -= (config_->tinygbdt_penalty_split);
+    // }
 
     // printf("# thresholds global %i ", mrf_->thresholds_used_global_.size());
     // if (con_mem.new_feature) {
