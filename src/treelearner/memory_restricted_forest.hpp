@@ -175,6 +175,7 @@ namespace LightGBM {
               con_mem.new_threshold = false;
               con_mem.tindex = j;
               // Size of inserting Bit or Float
+              // TODO: shouldnt this be (equal or) instead of (unequal and)?
               if (threshold != 0.0 && threshold != 1.0) {
                 con_mem.bits += 1;
               } else { con_mem.bits += 32;}
@@ -266,9 +267,9 @@ namespace LightGBM {
       // out << "thresholds_used_global : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
       // out << "\n";
       out << "features_used_global : " << fcounter;
-      out << "#features : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0)+1; // subtract values of features not used except feature 0 itself 
+      out << "features_used_global : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0)+1; // subtract values of features not used except feature 0 itself 
       out << "\n";
-      out << "#thresholds : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
+      out << "thresholds_used_global : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
       out << "\n";
       out << "#bits : " << forestsize-est_leftover_memory;
       out << "\n";
@@ -281,9 +282,9 @@ namespace LightGBM {
         threshold_size += threshold_per_feature[i].thresholds_.size();
       }
       out << "\n";
-      out << "#features ref_tree : " << feature_size;
+      out << "#features : " << feature_size;
       out << "\n";
-      out << "#thresholds ref_tree : " << threshold_size;
+      out << "#thresholds : " << threshold_size;
       out << "\n";
       std::cout << out.str();
     }
