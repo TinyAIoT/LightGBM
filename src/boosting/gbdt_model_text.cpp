@@ -415,6 +415,7 @@ bool GBDT::SaveModelToFile(int start_iteration, int num_iteration, int feature_i
   }
   std::string str_to_write = SaveModelToString(start_iteration, num_iteration, feature_importance_type);
   auto size = writer->Write(str_to_write.c_str(), str_to_write.size());
+  tree_learner_->afterTrain();
   return size > 0;
 }
 

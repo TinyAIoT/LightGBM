@@ -17,13 +17,15 @@ rm -rf Model
 rm -rf Output
 mkdir Model
 mkdir Output
-# $(seq 5 5 40)
 
-
-for i in 1 2; do
-  for j in 3 5; do
-    echo "${i} ${j}"
-    "../lightgbm" config=train.conf num_trees=$i max_depth=$j output_model=Model/model_trees${i}_depth${j}.txt > Output/train_trees${i}_depth${j}.output
+for learning_rate in 0.1; do
+  for trees in 1 2 3; do
+    for depth in 3 5; do
+      echo "setting done ${learning_rate} ${trees} ${depth}"
+      "../lightgbm" config=train.conf num_trees=$trees max_depth=$depth learning_rate=$learning_rate output_model=Model/model_trees${trees}_depth${depth}.txt > Output/train_trees${trees}_depth${depth}.output
+      "../lightgbm" config=predict.conf input_model=Model/model_trees${trees}_depth${depth}.txt > Predict/Predict_trees${trees}_depth${depth}.output
+      echo -n "${learning_rate}" >> /Users/ninaherrmann/Research/LightGBM/stats.txt
+    done
   done
 done
 

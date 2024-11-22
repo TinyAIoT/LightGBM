@@ -294,6 +294,12 @@ void SerialTreeLearner::updateMemoryForLeaf(double val) {
     mrf_->InsertLeafInformation(val);
   }
 }
+void SerialTreeLearner::afterTrain() {
+  if (MemoryRestrictedForest::IsEnable(config_)) {
+    mrf_->PrintInfoToFile();
+    mrf_->printForest();
+  }
+}
 void SerialTreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) {
   for (double leaf_value : leaf_value_) {
     if (leaf_value != 0.0) {
@@ -303,7 +309,6 @@ void SerialTreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> l
   if (MemoryRestrictedForest::IsEnable(config_)) {
     mrf_->UpdateMemoryForTree(tree);
     // tree->ToArrayPointer(mrf_->features_used_global_, mrf_->thresholds_used_global_, config_->tinygbdt_precision);
-    mrf_->printForest();
   }
 }
 
@@ -752,6 +757,7 @@ int32_t SerialTreeLearner::ForceSplits(Tree* tree, int* left_leaf,
     if (best_leaf_SplitInfo.gain <= 0.0) {
       Log::Warning("No further splits with positive gain, best gain: %f",
                    best_leaf_SplitInfo.gain);
+      afterTrain();
       return config_->num_leaves;
     }
     Split(tree, best_leaf, left_leaf, right_leaf);

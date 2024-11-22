@@ -11,6 +11,8 @@
 #include <LightGBM/dataset.h>
 #include <LightGBM/utils/log.h>
 #include <vector>
+#include <sys/stat.h>
+#include <fstream>
 
 const bool CHECK_QUANTIZATION = true;
 namespace LightGBM {
@@ -171,7 +173,6 @@ namespace LightGBM {
       needed_bits += 3 + 1 + bits(this->tree_learner_->train_data_->num_features()-1) + bit_num_thres;
       if (insert) {
         memory_consumption.bits_feature_threshold_mapping += needed_bits;
-        Log::Info("[TINY]: Insert %d bits for mapping %d %d", needed_bits, bit_num_thres,  bits(this->tree_learner_->train_data_->num_features()-1));
       }
 
       // In case the power of two increases we have an increase for every reference in every tree and for the reference
@@ -242,7 +243,32 @@ namespace LightGBM {
       // Always the predict value adds to one double.
       est_leftover_memory -= con_mem.bits;
     }
+    bool fileExists(const std::string& path) {
+      struct stat buffer;
+      return (stat(path.c_str(), &buffer) == 0);
+    }
 
+    void PrintInfoToFile() {
+      std::string filePath = "/Users/ninaherrmann/Research/LightGBM/stats.txt";
+      // Check if the file exists
+      if (!fileExists(filePath)) {
+        // Create the file
+        std::ofstream outfile(filePath);
+        if (!outfile) {
+          std::cerr << "Error creating file: " << filePath << std::endl;
+          return;
+        }
+        outfile.close();
+      }
+      // Open the file in append mode
+      std::ofstream file(filePath, std::ios::app);
+      if (!file) {
+        std::cerr << "Error opening file for appending: " << filePath << std::endl;
+        return;
+      }
+      // Append the variables to the file
+      file << "\n" << est_leftover_memory << ";"<< max_depth << ";" << ref_trees_.size() << ";";
+    }
     bool isAllInteger(const std::vector<double>& column) {
       bool isInteger = true;
       for (const auto& value : column) {
@@ -340,8 +366,6 @@ namespace LightGBM {
     }
 
     void Init(const int treesize, const double precision, int max_depth_) {
-      Log::Info("Bits from number on the border");
-      Log::Info("%d %d %d", bits(1), bits(4), bits(8));
       max_depth = max_depth_;
       ref_trees_.push_back({});
       ref_trees_[treecounter].tree_id = treecounter;
@@ -362,28 +386,55 @@ namespace LightGBM {
         out << threshold_per_feature[i];
       }
       out << "\n";
+      memory_separation control = CalcMemoryAtTheEnd();
+
       out << "Calculated Memory consumption:" << "\n";
-      out << "\tBits Bool Thresholds: " << memory_consumption.bits_bool_thres << "\n";
-      out << "\tBits float thresholds: " << memory_consumption.bits_float_thres << "\n";
-      out << "\tBits References inside Trees: " << memory_consumption.bits_tree_refs << "\n";
-      out << "\tBits Feature Threshold mapping: " << memory_consumption.bits_feature_threshold_mapping << "\n";
-      out << "\tBits Feature float leaves: " << memory_consumption.bits_float_leaf << "\n";
-      /*memory_separation control = CalcMemoryAtTheEnd();
-      out << "\t Control Variable Memory: Bits bool" << control.bits_bool_thres << " Bits float thres" << control.bits_float_thres << "\n";
-      std::cout << out.str();*/
+      out << "\tBits Bool Thresholds: " << memory_consumption.bits_bool_thres << " -> " << control.bits_bool_thres << "\n";
+      out << "\tBits float thresholds: " << memory_consumption.bits_float_thres << " -> " << control.bits_float_thres << "\n";
+      out << "\tBits References inside Trees: " << memory_consumption.bits_tree_refs << " -> " << control.bits_tree_refs << "\n";
+      out << "\tBits Feature Threshold mapping: " << memory_consumption.bits_feature_threshold_mapping << " -> " << control.bits_feature_threshold_mapping << "\n";
+      out << "\tBits Feature float leaves: " << memory_consumption.bits_float_leaf << " -> " << control.bits_float_leaf << "\n";
+
+      std::cout << out.str();
     }
     memory_separation CalcMemoryAtTheEnd() {
       memory_separation memory = {};
-      for (double threshold: thresholds_used_global_) {
-        if (threshold != 0.0 && threshold != 1.0) {
-          memory.bits_float_thres += 32;
-        } else {
-          memory.bits_bool_thres += 1;
+      for (threshold_info t_f_info : threshold_per_feature) {
+        for (double threshold : t_f_info.thresholds_) {
+          if (t_f_info.feature == 255) {
+            memory.bits_float_leaf += 32;
+          } else {
+            if (threshold != 0.0 && threshold != 1.0) {
+              memory.bits_float_thres += 32;
+            } else {
+              memory.bits_bool_thres += 1;
+            }
+          }
         }
       }
-      for (ref_tree tree : ref_trees_) {
-        //
+      int bit_num_thres = bits(max_num_threholds_per_feature);
+      memory.bits_feature_threshold_mapping += fcounter * (4 + bits(this->tree_learner_->train_data_->num_features()-1) + bit_num_thres);
+      int leavesize = 0;
+      for (threshold_info t_f_info : threshold_per_feature) {
+          if (t_f_info.feature == 255) {
+            leavesize = t_f_info.thresholds_.size();
+          }
       }
+      int leaves = static_cast<int>(pow(2, max_depth));
+      int numNodes = static_cast<int>(pow(2, max_depth)) - 1;
+      for (ref_tree tree : ref_trees_) {
+        if (tree.feature_ids.size() == 0) {break;}
+        memory.bits_tree_refs += bits(leavesize-1) * leaves;
+        memory.bits_tree_refs += bits(fcounter) * numNodes;
+        for (int feature: tree.feature_ids) {
+          if (feature != 255) {
+            for (threshold_info t_f_info : threshold_per_feature) {
+              if (t_f_info.feature == feature) {
+                int size = t_f_info.thresholds_.size() - 1;
+                if (size == 0) {size = 1;}
+                memory.bits_tree_refs += bits(size);
+      }}}}}
+      return memory;
     }
     bool init_;
     int est_leftover_memory, max_depth;

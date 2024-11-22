@@ -95,6 +95,7 @@ class TreeLearner {
                                data_size_t total_num_data, const data_size_t* bag_indices, data_size_t bag_cnt, const double* train_score) const = 0;
 
   virtual void updateMemoryForLeaf(double val);
+  virtual void afterTrain();
   virtual void updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_);
   TreeLearner() = default;
   /*! \brief Disable copy */

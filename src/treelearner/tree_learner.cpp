@@ -60,4 +60,7 @@ void TreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_va
     updateMemoryForLeaf(leaf_value);
   }
 }
+  void TreeLearner::afterTrain() {
+  return;
+}
 }  // namespace LightGBM
