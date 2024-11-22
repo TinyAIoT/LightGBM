@@ -73,8 +73,14 @@ namespace LightGBM {
     explicit MemoryRestrictedForest(const SerialTreeLearner *tree_learner)
       : init_(false), tree_learner_(tree_learner) {
     }
+    /* returns the bits to represent a number
+     * !! ATTENTION !!
+     * E.g. 4 --> 100 3 bits
+     * BUT if you want to reference 4 values you need 2 bits as 0 01 10 11 are sufficient.
+    */
     int bits(int size) {
       if (size == 0) return 1; // Special case for number 0
+      if (size < 0) return 1;
       int bits = 0;
       while (size) {
         bits++;
@@ -127,21 +133,9 @@ namespace LightGBM {
             if (threshold_per_feature[i].feature == 255) {
               currentsize = threshold_per_feature[i].thresholds_.size();
           }}
-          int next_power_of_two = nextPow2(currentsize + 1);
-          if (currentsize > next_power_of_two) {
-            int referencesinc = 0;
-            for (ref_tree tree: ref_trees_) {
-              for (double feature: tree.thresholds) {
-                if (feature == 255) {
-                  referencesinc += 1;
-                }
-              }
-            }
-            est_leftover_memory -= referencesinc;
-            memory_consumption.bits_tree_refs += referencesinc;
-          }
-          memory_consumption.bits_tree_refs += bits(currentsize);
-          est_leftover_memory -= bits(currentsize);
+          est_leftover_memory -= bits(currentsize-1);
+          memory_consumption.bits_tree_refs += bits(currentsize-1);
+
           for (std::size_t i = 0; i < threshold_per_feature.size(); i++) {
             if (threshold_per_feature[i].feature == 255) {
 #pragma omp critical
@@ -149,6 +143,18 @@ namespace LightGBM {
 #pragma omp critical
               ref_trees_[treecounter].thresholds.push_back(threshold_per_feature[i].thresholds_.size()-1);
             }
+          }
+          if (bits(currentsize) > bits(currentsize-1)) {
+            int referencesinc = 0;
+            for (ref_tree tree: ref_trees_) {
+              for (double feature: tree.feature_ids) {
+                if (feature == 255) {
+                  referencesinc += 1;
+                }
+              }
+            }
+            est_leftover_memory -= referencesinc;
+            memory_consumption.bits_tree_refs += referencesinc;
           }
         }
       }
@@ -161,25 +167,30 @@ namespace LightGBM {
      */
     int CalculateFeatureMemoryConsumption(bool insert) {
       int needed_bits = 0;
-      int unique_feature = bits(fcounter);
-      needed_bits += 3 + 3 + 1 + bits(this->tree_learner_->train_data_->num_features()) + unique_feature;
-      if (insert) {memory_consumption.bits_feature_threshold_mapping += needed_bits;}
-      int next_power_of_two = nextPow2(fcounter + 1);
+      int bit_num_thres = bits(max_num_threholds_per_feature-1);
+      needed_bits += 3 + 1 + bits(this->tree_learner_->train_data_->num_features()-1) + bit_num_thres;
+      if (insert) {
+        memory_consumption.bits_feature_threshold_mapping += needed_bits;
+        Log::Info("[TINY]: Insert %d bits for mapping %d %d", needed_bits, bit_num_thres,  bits(this->tree_learner_->train_data_->num_features()-1));
+      }
+
       // In case the power of two increases we have an increase for every reference in every tree and for the reference
       // in the feature mapping to the global threshold "array"
       if (CHECK_QUANTIZATION){
-        if (fcounter + 1 > next_power_of_two) {
-          if (unique_feature < bits(fcounter+1)) {
+        if (bits(fcounter+1) > bits(fcounter)) {
+          /*if (unique_feature < bits(fcounter)) {
             // For each feature mapping the bitreference needs to be increased.
             needed_bits += threshold_per_feature.size();
             if (insert) {memory_consumption.bits_feature_threshold_mapping += threshold_per_feature.size();}
-          }
+          }*/
           // Every feature reference in every tree would consume + 1 bit
           for (std::size_t i = 0; i < ref_trees_.size(); i++) {
             for (std::size_t j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
               if (ref_trees_[i].feature_ids[j] != -1) {
                 needed_bits += 1;
-                if (insert) {memory_consumption.bits_tree_refs += 1;}
+                if (insert) {
+                  memory_consumption.bits_tree_refs += 1;
+                }
       }}}}}
       return needed_bits;
     }
@@ -255,10 +266,10 @@ namespace LightGBM {
               break;
       }}}}
       // Cost of reference in tree.
-      con_mem.bits += bits(currentsize + 1);
+      con_mem.bits += bits(currentsize-1) + bits(fcounter);
       if (insert) {
-        memory_consumption.bits_tree_refs += bits(currentsize + 1);
-        memory_consumption.bits_tree_refs += bits(fcounter+1);
+        memory_consumption.bits_tree_refs += bits(currentsize-1);
+        memory_consumption.bits_tree_refs += bits(fcounter);
       }
       if (con_mem.new_threshold) {
         // Size of inserting bit or float for threshold
@@ -271,24 +282,25 @@ namespace LightGBM {
         }
         // Check if current size +1 exceeds the next power of two
         if (CHECK_QUANTIZATION) {
-          int next_power_of_two = nextPow2(currentsize + 1);
-          if (bits(currentsize + 1) > bits(max_num_threholds_per_feature)) {
+          if (bits(currentsize) > bits(max_num_threholds_per_feature-1)) {
             // We need to increase the size of the previous feature mappings as those depend on the number of threholds
             con_mem.bits += fcounter;
             if (insert) {
-              memory_consumption.bits_feature_threshold_mapping += fcounter;
-              max_num_threholds_per_feature = currentsize + 1;
+              memory_consumption.bits_feature_threshold_mapping += threshold_per_feature.size();
+              max_num_threholds_per_feature = currentsize;
             }
           }
-          if (currentsize + 1 > next_power_of_two) {
+
+          if (bits(currentsize) > bits(currentsize-1)) {
             // Every feature reference in every tree would consume + 1 bit
             for (std::size_t i = 0; i < ref_trees_.size(); i++) {
               for (std::size_t j = 0; j < ref_trees_[i].feature_ids.size(); j++) {
                 if (ref_trees_[i].feature_ids[j] == static_cast<int>(feature)) {
                   con_mem.bits += 1;
-                  if (insert) {memory_consumption.bits_tree_refs += 1;}
-                }}}}}
-      }
+                  if (insert) {
+                    memory_consumption.bits_tree_refs += 1;
+                  }
+      }}}}}}
       int sizef = fcounter;
       bool foundfeature = false;
       for (int i = 0; i < sizef; i++) {
@@ -328,6 +340,8 @@ namespace LightGBM {
     }
 
     void Init(const int treesize, const double precision, int max_depth_) {
+      Log::Info("Bits from number on the border");
+      Log::Info("%d %d %d", bits(1), bits(4), bits(8));
       max_depth = max_depth_;
       ref_trees_.push_back({});
       ref_trees_[treecounter].tree_id = treecounter;
@@ -354,7 +368,22 @@ namespace LightGBM {
       out << "\tBits References inside Trees: " << memory_consumption.bits_tree_refs << "\n";
       out << "\tBits Feature Threshold mapping: " << memory_consumption.bits_feature_threshold_mapping << "\n";
       out << "\tBits Feature float leaves: " << memory_consumption.bits_float_leaf << "\n";
-      std::cout << out.str();
+      /*memory_separation control = CalcMemoryAtTheEnd();
+      out << "\t Control Variable Memory: Bits bool" << control.bits_bool_thres << " Bits float thres" << control.bits_float_thres << "\n";
+      std::cout << out.str();*/
+    }
+    memory_separation CalcMemoryAtTheEnd() {
+      memory_separation memory = {};
+      for (double threshold: thresholds_used_global_) {
+        if (threshold != 0.0 && threshold != 1.0) {
+          memory.bits_float_thres += 32;
+        } else {
+          memory.bits_bool_thres += 1;
+        }
+      }
+      for (ref_tree tree : ref_trees_) {
+        //
+      }
     }
     bool init_;
     int est_leftover_memory, max_depth;
@@ -369,7 +398,7 @@ namespace LightGBM {
     int fcounter = 0;
     std::vector<ref_tree> ref_trees_;
     std::vector<threshold_info> threshold_per_feature;
-    int treecounter = 0, max_num_threholds_per_feature = 0;
+    int treecounter = 0, max_num_threholds_per_feature = 1;
   };
 }
 #endif //LIGHTGBM_MEMORY_RESTRICTED_FOREST_H
