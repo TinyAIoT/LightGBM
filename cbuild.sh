@@ -28,15 +28,15 @@ mkdir Output
 #    done
 #  done
 #done
-
 ms=64000
-for i in $(seq -10 1 15); do
-    for j in $(seq -10 1 15); do
+
+"../lightgbm" config=train.conf max_depth=3 num_trees=100 tinygbdt_forestsize=$ms tinygbdt_penalty_split=2 tinygbdt_penalty_feature=3 output_model=Model/model.$ms.0.ms.2.fp.3.tp.grid.txt > Output/train.$ms.0.ms.2.fp.3.tp.grid.out
+
+for i in $(seq -2 1 2); do
+    for j in $(seq -2 1 2); do
         echo "-${i}-j-${j}"
         fp=$(python3 -c "print(float(2**$i))" )
         tp=$(python3 -c "print(float(2**$j))" )
-        #      "../Release/lightgbm" config=train.conf num_trees=$trees max_depth=$depth learning_rate=$learning_rate output_model=Model/model_trees${trees}_depth${depth}.txt > Output/train_trees${trees}_depth${depth}.output
-
         if "../lightgbm" config=train.conf max_depth=3 num_trees=100 tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=Model/model.$ms.0.ms.$fp.fp.$tp.tp.grid.txt > Output/train.$ms.0.ms.$fp.fp.$tp.tp.grid.out; then
             echo "Training model fp $fp tp $tp complete"
         else

@@ -370,13 +370,27 @@ namespace LightGBM {
       ref_trees_.push_back({});
       ref_trees_[treecounter].tree_id = treecounter;
       est_leftover_memory = treesize;
+      forestsize = treesize;      
       this->precision = precision;
       auto train_data = tree_learner_->train_data_;
       features_used_global_.resize(train_data->num_features());
     }
     void printForest() {
+      int threshold_size = 0;
+      int feature_size = threshold_per_feature.size();
       std::stringstream out;
-      out << "Leftover memory: " << est_leftover_memory;
+      out << "Leftover memory : " << est_leftover_memory;
+      out << "\n";
+      // out << "features_used_global : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0);
+      // out << "\n";
+      // out << "thresholds_used_global : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
+      // out << "\n";
+      out << "features_used_global : " << fcounter;
+      out << "features_used_global : " << features_used_global_.size()-std::count(features_used_global_.begin(), features_used_global_.end(), 0)+1; // subtract values of features not used except feature 0 itself 
+      out << "\n";
+      out << "thresholds_used_global : " << thresholds_used_global_.size(); // -std::count(thresholds_used_global_.begin(), thresholds_used_global_.end(), 0); 
+      out << "\n";
+      out << "#bits : " << forestsize-est_leftover_memory;
       out << "\n";
       for (std::size_t i = 0; i < ref_trees_.size()-1; i++) {
         out << ref_trees_[i];
@@ -384,10 +398,15 @@ namespace LightGBM {
       out << "\n";
       for (std::size_t i = 0; i < threshold_per_feature.size(); i++) {
         out << threshold_per_feature[i];
+        threshold_size += threshold_per_feature[i].thresholds_.size();
       }
       out << "\n";
       memory_separation control = CalcMemoryAtTheEnd();
 
+      out << "#features : " << feature_size;
+      out << "\n";
+      out << "#thresholds : " << threshold_size;
+      out << "\n";
       out << "Calculated Memory consumption:" << "\n";
       out << "\tBits Bool Thresholds: " << memory_consumption.bits_bool_thres << " -> " << control.bits_bool_thres << "\n";
       out << "\tBits float thresholds: " << memory_consumption.bits_float_thres << " -> " << control.bits_float_thres << "\n";
@@ -437,7 +456,7 @@ namespace LightGBM {
       return memory;
     }
     bool init_;
-    int est_leftover_memory, max_depth;
+    int est_leftover_memory, max_depth, forestsize;
     memory_separation memory_consumption;
     double precision;
     const SerialTreeLearner *tree_learner_;

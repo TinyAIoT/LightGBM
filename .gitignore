@@ -466,6 +466,8 @@ dask-worker-space/
 
 # Nina
 *.output
-experiments/*
+experiments/results/*
 experiments/Model/*
 experiments/Output/*
+experiments/plots/*
+experiments/models/*
