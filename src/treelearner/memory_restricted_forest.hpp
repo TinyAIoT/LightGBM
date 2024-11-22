@@ -249,7 +249,7 @@ namespace LightGBM {
     }
 
     void PrintInfoToFile() {
-      std::string filePath = "/Users/ninaherrmann/Research/LightGBM/stats.txt";
+      std::string filePath = "/home/n_herr03@WIWI.UNI-MUENSTER.DE/research/gieseke/LightGBM/stats.txt";
       // Check if the file exists
       if (!fileExists(filePath)) {
         // Create the file

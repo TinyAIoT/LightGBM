@@ -18,34 +18,41 @@ rm -rf Output
 mkdir Model
 mkdir Output
 
-#for learning_rate in 0.1; do
-#  for trees in 1 2 3; do
-#    for depth in 3 5; do
-#      echo "setting done ${learning_rate} ${trees} ${depth}"
-#      "../lightgbm" config=train.conf num_trees=$trees max_depth=$depth learning_rate=$learning_rate output_model=Model/model_trees${trees}_depth${depth}.txt > Output/train_trees${trees}_depth${depth}.output
-#      "../lightgbm" config=predict.conf input_model=Model/model_trees${trees}_depth${depth}.txt > Predict_trees${trees}_depth${depth}.output
-#      echo -n "${learning_rate}" >> /Users/ninaherrmann/Research/LightGBM/stats.txt
-#    done
-#  done
-#done
 ms=64000
-
-"../lightgbm" config=train.conf max_depth=3 num_trees=100 tinygbdt_forestsize=$ms tinygbdt_penalty_split=2 tinygbdt_penalty_feature=3 output_model=Model/model.$ms.0.ms.2.fp.3.tp.grid.txt > Output/train.$ms.0.ms.2.fp.3.tp.grid.out
-
-for i in $(seq -2 1 2); do
-    for j in $(seq -2 1 2); do
-        echo "-${i}-j-${j}"
-        fp=$(python3 -c "print(float(2**$i))" )
-        tp=$(python3 -c "print(float(2**$j))" )
-        if "../lightgbm" config=train.conf max_depth=3 num_trees=100 tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=Model/model.$ms.0.ms.$fp.fp.$tp.tp.grid.txt > Output/train.$ms.0.ms.$fp.fp.$tp.tp.grid.out; then
-            echo "Training model fp $fp tp $tp complete"
-        else
-            echo "Training model fp $fp tp $tp failed / not complete"
-            # exit 1
-        fi
-    done
+for dataset in "breastcancer_data" "kr-vs-kp" "mushroom"; do
+  for i in $(seq -10 1 15); do
+      for j in $(seq -10 1 15); do
+          for tree in 5 10 15 20 30 40 50 100 200 500 1000 5000 10000 100000; do
+              for depth in 3 5 7; do
+                fp=$(python3 -c "print(float(2**$i))" )
+                tp=$(python3 -c "print(float(2**$j))" )
+                if "../lightgbm" config=train.conf train_data=data/${dataset}.libsvm.train valid_data=data/${dataset}.libsvm.test config=train.conf max_depth=$depth num_trees=$tree tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=Model/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > Output/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out; then
+                    echo "Training model fp $fp tp $tp complete"
+                else
+                    echo "Training model fp $fp tp $tp failed / not complete"
+                fi
+              done
+          done
+      done
+  done
 done
-#cd examples/binary_classification || exit
-#"../../lightgbm" config=train.conf output_model=model1.txt > train.output
-#cd ../..
-# python3 plot_model.py
+for dataset in "kin8nm" "california_housing"; do
+  for i in $(seq -10 1 15); do
+      for j in $(seq -10 1 15); do
+          for tree in 5 10 15 20 30 40 50 100 200 500 1000 5000 10000 100000; do
+              for depth in 3 5 7; do
+                fp=$(python3 -c "print(float(2**$i))" )
+                tp=$(python3 -c "print(float(2**$j))" )
+                if "../lightgbm" config=train.regression.conf train_data=data/${dataset}.libsvm.train valid_data=data/${dataset}.libsvm.test config=train.conf max_depth=$depth num_trees=$tree tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=Model/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > Output/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out; then
+                    echo "Training model fp $fp tp $tp complete"
+                else
+                    echo "Training model fp $fp tp $tp failed / not complete"
+                fi
+            done
+          done
+      done
+  done
+done
+
+cd ../../LightGBMcustom/ || exit
+./cbuild.sh
