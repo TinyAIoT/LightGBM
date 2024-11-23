@@ -37,7 +37,6 @@ def GetValueFromOutBits(filename):
         match5 = re.search(r'{} ([\d.]+)'.format(key5_pattern), line)
 
         if match1:
-            print("Match found for key1!")
             ret1 = float(match1.group(1))
         if match2:
             ret2 = float(match2.group(1))
@@ -123,6 +122,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
     no_thresholds = []
     no_leaves = []
     no_trees = []
+    depth = []
     our_bits = []
     lgb_bits = []
     tinygbdt_penalty_feature = []
@@ -149,6 +149,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
             our_bits.append(GetValueFromOutBits('../Modeltest/'+fn))
         if fn.endswith(".txt") or (get_baseline and fn.endswith("baseline.txt")):
             no_trees.append(GetValueFromTXT('../Modeltest/'+fn, 'Tree'))
+            depth.append(GetValueFromTXT('../Modeltest/'+fn, 'max_depth'))
             setting_value.append(GetValueFromTXT('../Modeltest/'+fn, keyword))
             no_leaves.append(GetValueFromTXT('../Modeltest/'+fn, 'num_leaves', sum_up=True))
             lgb_bits.append(GetValueFromTXT('../Modeltest/'+fn, 'model_size', sum_up=True))
@@ -175,42 +176,13 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
 
     # lbg_bits = lgb_floats*32 + lgb_ints*16
     # print(len(setting_value), len(no_trees), len(no_features), len(no_thresholds), len(no_leaves), len(our_bits), len(lgb_bits), len(logloss), len(rmse), len(accuracies))
-    print(no_trees)
-    length = len(no_trees)
-    if len(no_leaves) != length:
-        print(no_leaves)
-        print("noleaves")
-
-    if len(our_bits) != length:
-        print(our_bits)
-        print("ourbits")
-
-    if len(lgb_bits) != length:
-        print(lgb_bits)
-        print("lgb_bits")
-
-    if len(logloss) != length:
-        print(logloss)
-        print("logloss")
-    if len(rmse) != length:
-        print(rmse)
-        print("rmse")
-    if len(accuracies) != length:
-        print(accuracies)
-        print("accuracies")
-    if len(no_features) != length:
-        print(no_features)
-        print("no_features")
-    if len(no_thresholds) != length:
-        print(no_thresholds)
-        print("no_thresholds")
-    if len(tinygbdt_penalty_feature) != length:
-        print(tinygbdt_penalty_feature)
-        print("tinygbdt_penalty_feature")
+    #print(no_trees)
+    #length = len(no_trees)
 
     df = pd.DataFrame({
         # keyword: setting_value,
         'no_trees': no_trees,
+        'depth': depth,
         'no_features': no_features,
         'no_thresholds': no_thresholds,
         'no_leaves': no_leaves,
@@ -234,14 +206,14 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
                    +'_precision'+str(tinygbdt_precision)
                    +'_logscale'+str(log_scale)
                    +'.csv')
-
     df.to_csv('../results/'+
         df_filename
         , index=False
         )
 
     if not dont_plot:
-
+        print("DF KEY!!!!")
+        print(df_key)
         setting_value = df[df_key]
 
         plt.ioff()
@@ -298,8 +270,8 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
         plt.savefig(
             '../plots/'+keyword
             +'_'+str(data[5:])
-            +'_penF'+str(tinygbdt_penalty_feature)
-            +'_penT'+str(tinygbdt_penalty_split)
+            +'_penF'+str(tinygbdt_penalty_feature[-1])
+            +'_penT'+str(tinygbdt_penalty_split[-1])
             +'_maxtrees'+str(num_iterations)
             +'_maxdepth'+str(max_depth)
             + '_maxsize'+str(tinygbdt_forestsize)
@@ -437,7 +409,8 @@ def plot_grid(df_grid_path, title='Penalty Grid Search'):
     pcm = plt.scatter(df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature'], c='r', label='Max Accuracy')
     plt.annotate('Max Accuracy', (df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature']))
     print("Dataframe max accuracy")
-    print(df_max_accuracy)
+    summary = df.describe()
+    print(summary)
     plt.title(title)
     plt.xscale('log')
     plt.yscale('log')
