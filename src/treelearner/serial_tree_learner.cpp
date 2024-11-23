@@ -1033,6 +1033,14 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     const BinMapper* bin_mapper = train_data_->FeatureBinMapper(feature_index);
     double threshold = bin_mapper->BinToValue(new_split.threshold);
     mrf_->CalculateSplitMemoryConsumption(con_mem, threshold, real_fidx);
+    float a = 4.0 / (std::sqrt(24.0) - 1.0);
+    float b = 1.0 - a;
+
+    // Apply the transformation
+    float add_f = a * std::sqrt(con_mem.bits) + b;
+
+    new_split.gain *= ((config_->tinygbdt_penalty_feature * add_f));
+    new_split.gain *= ((config_->tinygbdt_penalty_split * add_f));
 
     // if (con_mem.new_threshold) {
     //   if (con_mem.new_feature)
@@ -1077,9 +1085,6 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     //   if (con_mem.new_feature)
     //     new_split.gain -= (con_mem.findex * con_mem.findex * 80);
     // }
-
-    new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
-    new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
 
     // if (con_mem.new_feature) {
     //   new_split.gain -= ((config_->tinygbdt_penalty_feature));
