@@ -81,7 +81,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
 		The filename of the saved DataFrame in CSV format.
 	"""
 	print("Plotting: ", keyword)
-	sorted_dir = sorted(os.listdir("../models"), key=lambda x: (float(x.split(".")[1])))#, float("0."+x.split(".")[2])))
+	sorted_dir = sorted(os.listdir("../Models"), key=lambda x: (float(x.split(".")[1])))#, float("0."+x.split(".")[2])))
 	print(sorted_dir)
 	setting_value = []
 	accuracies = []
@@ -165,8 +165,8 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
 	df_filename = (keyword
 			+'_'+str(objective)
 			+'_'+str(data[5:])
-			+'_penF'+str(tinygbdt_penalty_split[-1])
-			+'_penT'+str(tinygbdt_penalty_split[-1])
+			+'.fp'+str(tinygbdt_penalty_split[-1])
+			+'.tp'+str(tinygbdt_penalty_split[-1])
 			+'_maxtrees'+str(num_iterations)
 			+'_maxdepth'+str(max_depth)
 			+ '_maxsize'+str(tinygbdt_forestsize)
