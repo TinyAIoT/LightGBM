@@ -1,0 +1,130 @@
+[LightGBM] [Info] Warning: last line of train.conf has no end of line, still using this line
+[LightGBM] [Warning] max_bin is set=255, max_bin=255 will be ignored. Current value: max_bin=255
+[LightGBM] [Warning] config is set=train.conf, config=train.conf will be ignored. Current value: config=train.conf
+[LightGBM] [Warning] train_data is set=data/breastcancer_data.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/breastcancer_data.libsvm.train
+[LightGBM] [Warning] train_data is set=data/breastcancer_data.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/breastcancer_data.libsvm.train
+[LightGBM] [Warning] valid_data is set=data/breastcancer_data.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/breastcancer_data.libsvm.test
+[LightGBM] [Warning] valid_data is set=data/breastcancer_data.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/breastcancer_data.libsvm.test
+[LightGBM] [Warning] max_depth is set=5, max_depth=3 will be ignored. Current value: max_depth=5
+[LightGBM] [Warning] tinygbdt_forestsize is set=64000, tinygbdt_forestsize=50000 will be ignored. Current value: tinygbdt_forestsize=64000
+[LightGBM] [Warning] tinygbdt_penalty_split is set=0.25, tinygbdt_penalty_split=0.9 will be ignored. Current value: tinygbdt_penalty_split=0.25
+[LightGBM] [Warning] tinygbdt_penalty_feature is set=1.0, tinygbdt_penalty_feature=0.8 will be ignored. Current value: tinygbdt_penalty_feature=1.0
+[LightGBM] [Warning] Unknown parameter: num_parallel_tree
+[LightGBM] [Info] Finished loading parameters
+[LightGBM] [Info] Construct bin mappers from text data time 0.01 seconds
+[LightGBM] [Info] Finished loading data in 0.058874 seconds
+[LightGBM] [Info] Number of positive: 286, number of negative: 169
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.001009 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 4548
+[LightGBM] [Info] Number of data points in the train set: 455, number of used features: 30
+[LightGBM] [Info] Finished initializing training
+[LightGBM] [Info] Started training...
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.628571 -> initscore=0.526093
+[LightGBM] [Info] Start training from score 0.526093
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.435560
+[LightGBM] [Info] Iteration:1, valid_1 auc : 0.885522
+[LightGBM] [Info] 0.001242 seconds elapsed, finished iteration 1
+[LightGBM] [Warning] No further splits with positive gain, best gain: -21.353488
+[LightGBM] [Info] Iteration:2, valid_1 auc : 0.964297
+[LightGBM] [Info] 0.002707 seconds elapsed, finished iteration 2
+[LightGBM] [Warning] No further splits with positive gain, best gain: -22.625814
+[LightGBM] [Info] Iteration:3, valid_1 auc : 0.969047
+[LightGBM] [Info] 0.004174 seconds elapsed, finished iteration 3
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.984926
+[LightGBM] [Info] Iteration:4, valid_1 auc : 0.970685
+[LightGBM] [Info] 0.005290 seconds elapsed, finished iteration 4
+[LightGBM] [Warning] No further splits with positive gain, best gain: -4.661559
+[LightGBM] [Info] Iteration:5, valid_1 auc : 0.969047
+[LightGBM] [Info] 0.006372 seconds elapsed, finished iteration 5
+[LightGBM] [Warning] No further splits with positive gain, best gain: -18.318453
+[LightGBM] [Info] Iteration:6, valid_1 auc : 0.969374
+[LightGBM] [Info] 0.007480 seconds elapsed, finished iteration 6
+[LightGBM] [Warning] No further splits with positive gain, best gain: -10.927895
+[LightGBM] [Info] Iteration:7, valid_1 auc : 0.990174
+[LightGBM] [Info] 0.008612 seconds elapsed, finished iteration 7
+[LightGBM] [Warning] No further splits with positive gain, best gain: -9.872808
+[LightGBM] [Info] Iteration:8, valid_1 auc : 0.990501
+[LightGBM] [Info] 0.009716 seconds elapsed, finished iteration 8
+[LightGBM] [Warning] No further splits with positive gain, best gain: -12.091004
+[LightGBM] [Info] Iteration:9, valid_1 auc : 0.990501
+[LightGBM] [Info] 0.010809 seconds elapsed, finished iteration 9
+[LightGBM] [Warning] No further splits with positive gain, best gain: -14.262905
+[LightGBM] [Info] Iteration:10, valid_1 auc : 0.990174
+[LightGBM] [Info] 0.011952 seconds elapsed, finished iteration 10
+[LightGBM] [Warning] No further splits with positive gain, best gain: -23.473552
+[LightGBM] [Info] Iteration:11, valid_1 auc : 0.990174
+[LightGBM] [Info] 0.013055 seconds elapsed, finished iteration 11
+[LightGBM] [Warning] No further splits with positive gain, best gain: -17.526718
+[LightGBM] [Info] Iteration:12, valid_1 auc : 0.990174
+[LightGBM] [Info] 0.014146 seconds elapsed, finished iteration 12
+[LightGBM] [Warning] No further splits with positive gain, best gain: -22.430525
+[LightGBM] [Info] Iteration:13, valid_1 auc : 0.991648
+[LightGBM] [Info] 0.015272 seconds elapsed, finished iteration 13
+[LightGBM] [Warning] No further splits with positive gain, best gain: -16.603404
+[LightGBM] [Info] Iteration:14, valid_1 auc : 0.99394
+[LightGBM] [Info] 0.016394 seconds elapsed, finished iteration 14
+[LightGBM] [Warning] No further splits with positive gain, best gain: -22.636239
+[LightGBM] [Info] Iteration:15, valid_1 auc : 0.993285
+[LightGBM] [Info] 0.017470 seconds elapsed, finished iteration 15
+[LightGBM] [Warning] No further splits with positive gain, best gain: -19.563318
+[LightGBM] [Info] Iteration:16, valid_1 auc : 0.993613
+[LightGBM] [Info] 0.018576 seconds elapsed, finished iteration 16
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.870050
+[LightGBM] [Warning] Stopped training because there are no more leaves that meet the split requirements
+[LightGBM] [Info] 0.019102 seconds elapsed, finished iteration 17
+Leftover memory : 62282
+features_used_global : 5features_used_global : 6
+thresholds_used_global : 43
+#bits : 1718
+0: features: 7 255 255 
+	thresholds:	0 0 1 
+1: features: 23 27 255 255 255 
+	thresholds:	0 0 2 3 4 
+2: features: 27 23 255 255 255 
+	thresholds:	1 1 5 6 7 
+3: features: 20 255 255 
+	thresholds:	0 8 9 
+4: features: 27 255 255 
+	thresholds:	1 10 11 
+5: features: 7 255 255 
+	thresholds:	0 12 13 
+6: features: 22 255 255 
+	thresholds:	0 14 15 
+7: features: 23 255 255 
+	thresholds:	0 16 17 
+8: features: 27 255 255 
+	thresholds:	1 18 19 
+9: features: 22 255 255 
+	thresholds:	1 20 21 
+10: features: 7 255 255 
+	thresholds:	0 22 23 
+11: features: 22 255 255 
+	thresholds:	2 24 25 
+12: features: 27 255 255 
+	thresholds:	1 26 27 
+13: features: 22 255 255 
+	thresholds:	1 28 29 
+14: features: 27 255 255 
+	thresholds:	1 30 31 
+15: features: 22 255 255 
+	thresholds:	2 32 33 
+16: features: 
+	thresholds:	
+
+7: thresholds: 0.1 
+255: thresholds: 0.659454 0.306667 0.13266 -0.219813 -0.21599 0.130796 -0.189186 -0.170116 0.103728 -0.169239 0.0995513 -0.160223 0.105287 -0.135597 0.116133 -0.113716 0.0855453 -0.138649 0.0813105 -0.136209 0.108153 -0.0950599 0.0898023 -0.106445 0.0710366 -0.127012 0.0975503 -0.0879996 0.0986157 -0.0788884 0.0670478 -0.112544 0.0623579 -0.115052 
+23: thresholds: 884.6 953.7 
+27: thresholds: 0.2 0.1 
+20: thresholds: 16.8 
+22: thresholds: 102 101.2 115.4 
+
+#features : 6
+#thresholds : 43
+Calculated Memory consumption:
+	Bits Bool Thresholds: 0 -> 0
+	Bits float thresholds: 288 -> 288
+	Bits References inside Trees: 287 -> 4583
+	Bits Feature Threshold mapping: 56 -> 55
+	Bits Feature float leaves: 1088 -> 1088
+[LightGBM] [Info] Finished training

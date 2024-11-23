@@ -1,0 +1,220 @@
+[LightGBM] [Info] Warning: last line of train.conf has no end of line, still using this line
+[LightGBM] [Warning] max_bin is set=255, max_bin=255 will be ignored. Current value: max_bin=255
+[LightGBM] [Warning] config is set=train.conf, config=train.conf will be ignored. Current value: config=train.conf
+[LightGBM] [Warning] train_data is set=data/breastcancer_data.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/breastcancer_data.libsvm.train
+[LightGBM] [Warning] train_data is set=data/breastcancer_data.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/breastcancer_data.libsvm.train
+[LightGBM] [Warning] valid_data is set=data/breastcancer_data.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/breastcancer_data.libsvm.test
+[LightGBM] [Warning] valid_data is set=data/breastcancer_data.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/breastcancer_data.libsvm.test
+[LightGBM] [Warning] max_depth is set=5, max_depth=3 will be ignored. Current value: max_depth=5
+[LightGBM] [Warning] tinygbdt_forestsize is set=64000, tinygbdt_forestsize=50000 will be ignored. Current value: tinygbdt_forestsize=64000
+[LightGBM] [Warning] tinygbdt_penalty_split is set=0.00390625, tinygbdt_penalty_split=0.9 will be ignored. Current value: tinygbdt_penalty_split=0.00390625
+[LightGBM] [Warning] tinygbdt_penalty_feature is set=0.25, tinygbdt_penalty_feature=0.8 will be ignored. Current value: tinygbdt_penalty_feature=0.25
+[LightGBM] [Warning] Unknown parameter: num_parallel_tree
+[LightGBM] [Info] Finished loading parameters
+[LightGBM] [Info] Construct bin mappers from text data time 0.01 seconds
+[LightGBM] [Info] Finished loading data in 0.057256 seconds
+[LightGBM] [Info] Number of positive: 286, number of negative: 169
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000979 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 4548
+[LightGBM] [Info] Number of data points in the train set: 455, number of used features: 30
+[LightGBM] [Info] Finished initializing training
+[LightGBM] [Info] Started training...
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.628571 -> initscore=0.526093
+[LightGBM] [Info] Start training from score 0.526093
+[LightGBM] [Warning] No further splits with positive gain, best gain: -3.777545
+[LightGBM] [Info] Iteration:1, valid_1 auc : 0.957746
+[LightGBM] [Info] 0.002186 seconds elapsed, finished iteration 1
+[LightGBM] [Warning] No further splits with positive gain, best gain: -5.024285
+[LightGBM] [Info] Iteration:2, valid_1 auc : 0.972159
+[LightGBM] [Info] 0.004259 seconds elapsed, finished iteration 2
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.490841
+[LightGBM] [Info] Iteration:3, valid_1 auc : 0.971667
+[LightGBM] [Info] 0.006044 seconds elapsed, finished iteration 3
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.962790
+[LightGBM] [Info] Iteration:4, valid_1 auc : 0.970357
+[LightGBM] [Info] 0.008169 seconds elapsed, finished iteration 4
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.990484
+[LightGBM] [Info] Iteration:5, valid_1 auc : 0.97134
+[LightGBM] [Info] 0.010343 seconds elapsed, finished iteration 5
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.173483
+[LightGBM] [Info] Iteration:6, valid_1 auc : 0.970685
+[LightGBM] [Info] 0.011872 seconds elapsed, finished iteration 6
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.339353
+[LightGBM] [Info] Iteration:7, valid_1 auc : 0.972486
+[LightGBM] [Info] 0.014069 seconds elapsed, finished iteration 7
+[LightGBM] [Warning] No further splits with positive gain, best gain: -4.715895
+[LightGBM] [Info] Iteration:8, valid_1 auc : 0.974615
+[LightGBM] [Info] 0.016310 seconds elapsed, finished iteration 8
+[LightGBM] [Warning] No further splits with positive gain, best gain: -4.277336
+[LightGBM] [Info] Iteration:9, valid_1 auc : 0.996069
+[LightGBM] [Info] 0.018217 seconds elapsed, finished iteration 9
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.711295
+[LightGBM] [Info] Iteration:10, valid_1 auc : 0.995742
+[LightGBM] [Info] 0.019687 seconds elapsed, finished iteration 10
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.095952
+[LightGBM] [Info] Iteration:11, valid_1 auc : 0.995742
+[LightGBM] [Info] 0.021415 seconds elapsed, finished iteration 11
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.988761
+[LightGBM] [Info] Iteration:12, valid_1 auc : 0.996069
+[LightGBM] [Info] 0.022853 seconds elapsed, finished iteration 12
+[LightGBM] [Warning] No further splits with positive gain, best gain: -3.328274
+[LightGBM] [Info] Iteration:13, valid_1 auc : 0.996069
+[LightGBM] [Info] 0.024889 seconds elapsed, finished iteration 13
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.443980
+[LightGBM] [Info] Iteration:14, valid_1 auc : 0.996397
+[LightGBM] [Info] 0.026601 seconds elapsed, finished iteration 14
+[LightGBM] [Warning] No further splits with positive gain, best gain: -2.509796
+[LightGBM] [Info] Iteration:15, valid_1 auc : 0.996397
+[LightGBM] [Info] 0.027908 seconds elapsed, finished iteration 15
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.432438
+[LightGBM] [Info] Iteration:16, valid_1 auc : 0.996397
+[LightGBM] [Info] 0.029155 seconds elapsed, finished iteration 16
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.165433
+[LightGBM] [Info] Iteration:17, valid_1 auc : 0.997052
+[LightGBM] [Info] 0.030090 seconds elapsed, finished iteration 17
+[LightGBM] [Warning] No further splits with positive gain, best gain: -3.306301
+[LightGBM] [Info] Iteration:18, valid_1 auc : 0.997052
+[LightGBM] [Info] 0.031650 seconds elapsed, finished iteration 18
+[LightGBM] [Warning] No further splits with positive gain, best gain: -3.667298
+[LightGBM] [Info] Iteration:19, valid_1 auc : 0.996725
+[LightGBM] [Info] 0.033179 seconds elapsed, finished iteration 19
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.840498
+[LightGBM] [Info] Iteration:20, valid_1 auc : 0.996069
+[LightGBM] [Info] 0.034371 seconds elapsed, finished iteration 20
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.168993
+[LightGBM] [Info] Iteration:21, valid_1 auc : 0.995414
+[LightGBM] [Info] 0.035534 seconds elapsed, finished iteration 21
+[LightGBM] [Warning] No further splits with positive gain, best gain: -3.302345
+[LightGBM] [Info] Iteration:22, valid_1 auc : 0.996725
+[LightGBM] [Info] 0.036604 seconds elapsed, finished iteration 22
+[LightGBM] [Warning] No further splits with positive gain, best gain: -2.217572
+[LightGBM] [Info] Iteration:23, valid_1 auc : 0.996397
+[LightGBM] [Info] 0.037386 seconds elapsed, finished iteration 23
+[LightGBM] [Warning] No further splits with positive gain, best gain: -2.110116
+[LightGBM] [Info] Iteration:24, valid_1 auc : 0.996397
+[LightGBM] [Info] 0.038142 seconds elapsed, finished iteration 24
+[LightGBM] [Warning] No further splits with positive gain, best gain: -2.145374
+[LightGBM] [Info] Iteration:25, valid_1 auc : 0.995414
+[LightGBM] [Info] 0.039199 seconds elapsed, finished iteration 25
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.407131
+[LightGBM] [Info] Iteration:26, valid_1 auc : 0.995414
+[LightGBM] [Info] 0.040196 seconds elapsed, finished iteration 26
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.026120
+[LightGBM] [Info] Iteration:27, valid_1 auc : 0.995087
+[LightGBM] [Info] 0.040916 seconds elapsed, finished iteration 27
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.684933
+[LightGBM] [Info] Iteration:28, valid_1 auc : 0.995087
+[LightGBM] [Info] 0.041585 seconds elapsed, finished iteration 28
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.180286
+[LightGBM] [Info] Iteration:29, valid_1 auc : 0.994759
+[LightGBM] [Info] 0.042526 seconds elapsed, finished iteration 29
+[LightGBM] [Warning] No further splits with positive gain, best gain: -1.768663
+[LightGBM] [Info] Iteration:30, valid_1 auc : 0.995742
+[LightGBM] [Info] 0.043212 seconds elapsed, finished iteration 30
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.757832
+[LightGBM] [Info] Iteration:31, valid_1 auc : 0.995742
+[LightGBM] [Info] 0.043839 seconds elapsed, finished iteration 31
+[LightGBM] [Warning] No further splits with positive gain, best gain: -2.423469
+[LightGBM] [Info] Iteration:32, valid_1 auc : 0.995414
+[LightGBM] [Info] 0.044532 seconds elapsed, finished iteration 32
+[LightGBM] [Warning] No further splits with positive gain, best gain: -3.102061
+[LightGBM] [Info] Iteration:33, valid_1 auc : 0.995414
+[LightGBM] [Info] 0.045186 seconds elapsed, finished iteration 33
+[LightGBM] [Warning] No further splits with positive gain, best gain: -0.418295
+[LightGBM] [Warning] Stopped training because there are no more leaves that meet the split requirements
+[LightGBM] [Info] 0.045484 seconds elapsed, finished iteration 34
+Leftover memory : 58025
+features_used_global : 10features_used_global : 11
+thresholds_used_global : 143
+#bits : 5975
+0: features: 7 27 20 22 1 255 255 255 255 255 255 
+	thresholds:	0 0 0 0 0 0 1 2 3 4 5 
+1: features: 7 22 20 21 21 255 255 255 255 255 255 
+	thresholds:	0 1 0 0 1 6 7 8 9 10 11 
+2: features: 27 23 20 255 255 255 255 
+	thresholds:	0 0 1 12 13 14 15 
+3: features: 7 20 27 21 255 255 255 255 255 
+	thresholds:	0 0 0 2 16 17 18 19 20 
+4: features: 7 20 22 21 255 255 255 255 255 
+	thresholds:	0 0 2 1 21 22 23 24 25 
+5: features: 27 23 255 255 255 
+	thresholds:	0 0 26 27 28 
+6: features: 7 20 23 21 255 255 255 255 255 
+	thresholds:	0 0 1 3 29 30 31 32 33 
+7: features: 7 23 21 20 255 255 255 255 255 
+	thresholds:	1 1 3 2 34 35 36 37 38 
+8: features: 22 26 21 255 255 255 255 
+	thresholds:	3 0 4 39 40 41 42 
+9: features: 27 23 255 255 255 
+	thresholds:	0 0 43 44 45 
+10: features: 7 23 21 255 255 255 255 
+	thresholds:	1 1 3 46 47 48 49 
+11: features: 22 26 255 255 255 
+	thresholds:	3 0 50 51 52 
+12: features: 23 27 1 20 255 255 255 255 255 
+	thresholds:	2 1 1 3 53 54 55 56 57 
+13: features: 27 22 21 255 255 255 255 
+	thresholds:	0 0 5 58 59 60 61 
+14: features: 7 13 255 255 255 
+	thresholds:	0 0 62 63 64 
+15: features: 23 27 255 255 255 
+	thresholds:	2 1 65 66 67 
+16: features: 27 255 255 
+	thresholds:	0 68 69 
+17: features: 22 21 22 255 255 255 255 
+	thresholds:	4 5 3 70 71 72 73 
+18: features: 27 1 20 255 255 255 255 
+	thresholds:	1 2 3 74 75 76 77 
+19: features: 22 21 255 255 255 
+	thresholds:	4 5 78 79 80 
+20: features: 27 1 255 255 255 
+	thresholds:	1 2 81 82 83 
+21: features: 23 21 255 255 255 
+	thresholds:	3 4 84 85 86 
+22: features: 7 255 255 
+	thresholds:	0 87 88 
+23: features: 23 255 255 
+	thresholds:	2 89 90 
+24: features: 27 1 255 255 255 
+	thresholds:	1 1 91 92 93 
+25: features: 26 10 255 255 255 
+	thresholds:	0 0 94 95 96 
+26: features: 13 255 255 
+	thresholds:	0 97 98 
+27: features: 27 255 255 
+	thresholds:	1 99 100 
+28: features: 26 10 255 255 255 
+	thresholds:	0 0 101 102 103 
+29: features: 23 255 255 
+	thresholds:	4 104 105 
+30: features: 27 255 255 
+	thresholds:	1 106 107 
+31: features: 21 255 255 
+	thresholds:	6 108 109 
+32: features: 23 255 255 
+	thresholds:	2 110 111 
+33: features: 
+	thresholds:	
+
+7: thresholds: 0.1 0 
+27: thresholds: 0.1 0.2 
+20: thresholds: 16.8 15.3 16.9 14.5 
+22: thresholds: 116.1 103.3 102 101.2 117.5 
+1: thresholds: 19.1 21.1 20 
+255: thresholds: 0.67701 0.607307 0.263115 0.59952 0.256862 0.295801 0.142271 0.0250957 -0.0448777 0.0701692 -0.201117 -0.227839 0.129064 -0.0280379 -0.158649 -0.198842 0.129482 0.152162 -0.0635742 -0.181607 -0.133456 0.124167 0.0453016 -0.0567051 -0.00729204 -0.170652 0.113473 -0.144566 -0.123178 0.115859 0.123196 -0.0486135 -0.151932 -0.159136 0.112179 0.115306 -0.144565 -0.139731 -0.0448109 0.106808 0.0946656 0.0296915 -0.133191 0.0991346 -0.118089 -0.0946272 0.0872177 0.11042 -0.130018 -0.124596 0.0989771 0.0853643 -0.105282 0.114399 -0.109403 -0.125713 0.0945461 -0.122361 0.0910447 0.0868274 -0.123805 -0.119824 0.0935469 -0.0901686 -0.0648537 0.0830476 -0.100156 -0.118017 0.0843648 -0.0717301 0.0961399 -0.10853 0.058089 -0.126794 0.097658 -0.105177 0.0911456 -0.105929 0.091306 -0.104065 -0.0392069 0.0930344 -0.101435 -0.0253659 0.0755436 0.0778134 -0.0903301 0.0597554 -0.0751189 0.0518143 -0.0845094 0.0766232 -0.107875 -0.0538735 0.101567 -0.0490979 -0.34996 0.0470222 -0.0834153 0.0354695 -0.105221 0.0990288 -0.0446999 -0.298176 0.066817 -0.051537 0.0319552 -0.102813 0.0808535 -0.0399618 0.041911 -0.0748989 
+21: thresholds: 28 21.1 23 25.7 20.2 27.7 23.3 
+23: thresholds: 953.7 862.1 884.6 736.3 727.1 
+26: thresholds: 0.2 
+13: thresholds: 34.4 
+10: thresholds: 0.5 
+
+#features : 11
+#thresholds : 143
+Calculated Memory consumption:
+	Bits Bool Thresholds: 1 -> 1
+	Bits float thresholds: 960 -> 960
+	Bits References inside Trees: 1288 -> 11645
+	Bits Feature Threshold mapping: 147 -> 120
+	Bits Feature float leaves: 3584 -> 3584
+[LightGBM] [Info] Finished training

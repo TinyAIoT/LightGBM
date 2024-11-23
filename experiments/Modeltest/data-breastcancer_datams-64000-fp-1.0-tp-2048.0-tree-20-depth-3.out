@@ -1,0 +1,51 @@
+[LightGBM] [Info] Warning: last line of train.conf has no end of line, still using this line
+[LightGBM] [Warning] max_bin is set=255, max_bin=255 will be ignored. Current value: max_bin=255
+[LightGBM] [Warning] config is set=train.conf, config=train.conf will be ignored. Current value: config=train.conf
+[LightGBM] [Warning] train_data is set=data/breastcancer_data.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/breastcancer_data.libsvm.train
+[LightGBM] [Warning] train_data is set=data/breastcancer_data.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/breastcancer_data.libsvm.train
+[LightGBM] [Warning] valid_data is set=data/breastcancer_data.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/breastcancer_data.libsvm.test
+[LightGBM] [Warning] valid_data is set=data/breastcancer_data.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/breastcancer_data.libsvm.test
+[LightGBM] [Warning] max_depth is set=3, max_depth=3 will be ignored. Current value: max_depth=3
+[LightGBM] [Warning] tinygbdt_forestsize is set=64000, tinygbdt_forestsize=50000 will be ignored. Current value: tinygbdt_forestsize=64000
+[LightGBM] [Warning] tinygbdt_penalty_split is set=2048.0, tinygbdt_penalty_split=0.9 will be ignored. Current value: tinygbdt_penalty_split=2048.0
+[LightGBM] [Warning] tinygbdt_penalty_feature is set=1.0, tinygbdt_penalty_feature=0.8 will be ignored. Current value: tinygbdt_penalty_feature=1.0
+[LightGBM] [Warning] Unknown parameter: num_parallel_tree
+[LightGBM] [Info] Finished loading parameters
+[LightGBM] [Info] Construct bin mappers from text data time 0.01 seconds
+[LightGBM] [Info] Finished loading data in 0.057818 seconds
+[LightGBM] [Info] Number of positive: 286, number of negative: 169
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.001020 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 4548
+[LightGBM] [Info] Number of data points in the train set: 455, number of used features: 30
+[LightGBM] [Info] Finished initializing training
+[LightGBM] [Info] Started training...
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.628571 -> initscore=0.526093
+[LightGBM] [Info] Start training from score 0.526093
+[LightGBM] [Warning] No further splits with positive gain, best gain: -2048.185560
+[LightGBM] [Info] Iteration:1, valid_1 auc : 0.885522
+[LightGBM] [Info] 0.001251 seconds elapsed, finished iteration 1
+[LightGBM] [Warning] No further splits with positive gain, best gain: -5916.901339
+[LightGBM] [Warning] Stopped training because there are no more leaves that meet the split requirements
+[LightGBM] [Info] 0.001774 seconds elapsed, finished iteration 2
+Leftover memory : 63891
+features_used_global : 1features_used_global : 2
+thresholds_used_global : 3
+#bits : 109
+0: features: 7 255 255 
+	thresholds:	0 0 1 
+1: features: 
+	thresholds:	
+
+7: thresholds: 0.1 
+255: thresholds: 0.659454 0.306667 
+
+#features : 2
+#thresholds : 3
+Calculated Memory consumption:
+	Bits Bool Thresholds: 0 -> 0
+	Bits float thresholds: 32 -> 32
+	Bits References inside Trees: 3 -> 16
+	Bits Feature Threshold mapping: 10 -> 10
+	Bits Feature float leaves: 64 -> 64
+[LightGBM] [Info] Finished training
