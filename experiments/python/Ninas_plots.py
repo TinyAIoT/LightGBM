@@ -94,8 +94,9 @@ def plot_grid(df, title='Penalty Grid Search'):
     plt.ylabel('Feature Penalty')
     plt.colorbar()
     plt.legend()
-    plt.show()
+    # plt.show()
     plt.savefig('../plots/' + 'penalty_grid_.png')
+    plt.show()
     # plt.tight_layout()
 
 def plotAccuracyByPenalty(df, keyword, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='penalty'):
@@ -159,8 +160,11 @@ def plotAccuracyByPenalty(df, keyword, plot_accuracy=True, plot_nodeLeafCount=Fa
 
     plt.show()
 
-df = pd.read_csv('../results/grid_binary_breastcancer_data.libsvm.train_penF8.0_penT8.0_maxtrees100.0_maxdepth7.0_maxsize64000.0_precision1.0_logscaleTrue.csv')
-subset = df[(df['no_trees'] == 16)]
+df = pd.read_csv('../results/california_housing/grid_regression_california_housing.libsvm.train_penF8192.0_penT8192.0_maxdepth7.0_maxsize64000.0_precision7.0_logscaleTrue.csv')
+subset = df[(df['max_trees'] == 10000) & (df['depth'] == 5)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+sm_subset = df[(df['max_trees'] == 10) & (df['depth'] == 5) & (df['tinygbdt_penalty_feature'] == 1)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+sm_subset = sm_subset.sort_values(by='tinygbdt_penalty_split')
 print(subset.describe())
-#plot_grid(subset, 'tinygbdt_penalty_split')
-plotMetrics(subset)
+plot_grid(subset, 'tinygbdt_penalty_split')
+plotMetrics(sm_subset)
+plotAccuracyByPenalty(sm_subset,'tinygbdt_penalty_split' )

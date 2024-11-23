@@ -4,7 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import re
-
+import argparse
+import os
 import lightgbm as lgb
 from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
 
@@ -90,9 +91,26 @@ def calcAccuracy(model_path, data_path, classes=1, label_column=None):
         accuracy = accuracy_score(test_data.get_label(), (y_pred > 0.5).astype(int))
 
     return accuracy, other
+def extract_key(filename):
+    # Use regular expressions to find the numbers after specific prefixes
+    match_datams = re.search(r'datams-(\d+)', filename)
+    match_fp = re.search(r'fp-([0-9.]+)', filename)
+    match_tp = re.search(r'tp-([0-9.]+)', filename)
+    match_tree = re.search(r'tree-(\d+)', filename)
+    match_depth = re.search(r'depth-(\d+)', filename)
+
+    # Extract the numbers, using 0 if the pattern isn't found
+    datams = int(match_datams.group(1)) if match_datams else 0
+    fp = float(match_fp.group(1)) if match_fp else 0.0
+    tp = float(match_tp.group(1)) if match_tp else 0.0
+    tree = int(match_tree.group(1)) if match_tree else 0
+    depth = int(match_depth.group(1)) if match_depth else 0
+
+    # Create a tuple for sorting
+    return (datams, fp, tp, tree, depth)
 
 # keyword is the substring of the filename to search for in model.txt and .out files
-def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=False, get_baseline=True):
+def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=False, get_baseline=True, directory=''):
     """Evaluates the model files that end with the specified keyword in the filename and plots various metrics.
     keyword : str
         The keyword to identify the model files.
@@ -112,7 +130,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
     str
         The filename of the saved DataFrame in CSV format.
     """
-    sorted_dir = sorted(os.listdir("../data/All" + dataset), key=lambda x: (float(x.split(".")[1])))#, float("0."+x.split(".")[2])))
+    sorted_dir = sorted(os.listdir("../data/All" + directory), key=extract_key)#, float("0."+x.split(".")[2])))
     setting_value = []
     accuracies = []
     logloss = []
@@ -139,36 +157,37 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
         df_key = ''
 
     for fn in sorted_dir:
+        filepath = "../data/All" + directory + '/' + fn
         if fn.endswith(".out") or (get_baseline and fn.endswith("baseline.out")):
-            logloss.append(GetValueFromOut('../Modeltest/'+fn, 'logloss'))
-            rmse.append(GetValueFromOut('../Modeltest/'+fn, 'rmse'))
-            no_features.append(GetValueFromOut('../Modeltest/'+fn, '#features'))
-            no_thresholds.append(GetValueFromOut('../Modeltest/'+fn, '#thresholds'))
-            our_bits.append(GetValueFromOutBits('../Modeltest/'+fn))
+            logloss.append(GetValueFromOut(filepath, 'logloss'))
+            rmse.append(GetValueFromOut(filepath, 'rmse'))
+            no_features.append(GetValueFromOut(filepath, '#features'))
+            no_thresholds.append(GetValueFromOut(filepath, '#thresholds'))
+            our_bits.append(GetValueFromOutBits(filepath))
         if fn.endswith(".txt") or (get_baseline and fn.endswith("baseline.txt")):
-            no_trees.append(GetValueFromTXT('../Modeltest/'+fn, 'Tree'))
-            depth.append(GetValueFromTXT('../Modeltest/'+fn, 'max_depth'))
-            setting_value.append(GetValueFromTXT('../Modeltest/'+fn, keyword))
-            no_leaves.append(GetValueFromTXT('../Modeltest/'+fn, 'num_leaves', sum_up=True))
-            lgb_bits.append(GetValueFromTXT('../Modeltest/'+fn, 'model_size', sum_up=True))
-            num_iterations = GetValueFromTXT('../Modeltest/'+fn, 'num_iterations')
-            max_depth =  GetValueFromTXT('../Modeltest/'+fn, 'max_depth')
-            tinygbdt_penalty_feature.append(GetValueFromTXT('../Modeltest/'+fn, 'tinygbdt_penalty_feature'))
-            tinygbdt_penalty_split.append(GetValueFromTXT('../Modeltest/'+fn, 'tinygbdt_penalty_split'))
-            tinygbdt_forestsize =  GetValueFromTXT('../Modeltest/'+fn, 'tinygbdt_forestsize')
-            tinygbdt_precision =  GetValueFromTXT('../Modeltest/'+fn, 'tinygbdt_precision')
-            num_classes =  GetValueFromTXT('../Modeltest/'+fn, 'num_class')
-            valid_data = GetValueFromTXT('../Modeltest/'+fn, 'valid')
-            label_column = GetValueFromTXT('../Modeltest/'+fn, 'label_column')
-            objective =  GetValueFromTXT('../Modeltest/'+fn, 'objective')
+            no_trees.append(GetValueFromTXT(filepath, 'Tree'))
+            depth.append(GetValueFromTXT(filepath, 'max_depth'))
+            setting_value.append(GetValueFromTXT(filepath, keyword))
+            no_leaves.append(GetValueFromTXT(filepath, 'num_leaves', sum_up=True))
+            lgb_bits.append(GetValueFromTXT(filepath, 'model_size', sum_up=True))
+            num_iterations = GetValueFromTXT(filepath, 'num_iterations')
+            max_depth =  GetValueFromTXT(filepath, 'max_depth')
+            tinygbdt_penalty_feature.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_feature'))
+            tinygbdt_penalty_split.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_split'))
+            tinygbdt_forestsize =  GetValueFromTXT(filepath, 'tinygbdt_forestsize')
+            tinygbdt_precision =  GetValueFromTXT(filepath, 'tinygbdt_precision')
+            num_classes =  GetValueFromTXT(filepath, 'num_class')
+            valid_data = GetValueFromTXT(filepath, 'valid')
+            label_column = GetValueFromTXT(filepath, 'label_column')
+            objective =  GetValueFromTXT(filepath, 'objective')
             if objective == 'multiclass':
-                accuracy, roc = calcAccuracy('../Modeltest/'+fn, '../'+valid_data, classes=num_classes)
+                accuracy, roc = calcAccuracy(filepath, '../'+valid_data, classes=num_classes)
             elif objective == 'binary':
-                accuracy, roc = calcAccuracy('../Modeltest/'+fn, '../'+valid_data, classes=num_classes)
+                accuracy, roc = calcAccuracy(filepath, '../'+valid_data, classes=num_classes)
             elif objective == 'regression':
-                rmse_py, accuracy = calcAccuracy('../Modeltest/'+fn, '../'+valid_data, classes=0, label_column=label_column)
+                rmse_py, accuracy = calcAccuracy(filepath, '../'+valid_data, classes=0, label_column=label_column)
             accuracies.append(accuracy)
-            data = GetValueFromTXT('../Modeltest/'+fn, 'data')
+            data = GetValueFromTXT(filepath, 'data')
         else:
             continue
 
@@ -200,7 +219,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
                    +'_precision'+str(tinygbdt_precision)
                    +'_logscale'+str(log_scale)
                    +'.csv')
-    df.to_csv('../results/'+
+    df.to_csv('../results' + directory + '/' +
         df_filename
         , index=False
         )
@@ -295,8 +314,6 @@ def plotAccuracyByPenalty(dataframe_filename, keyword, plot_accuracy=True, plot_
     None
     """
     df = pd.read_csv('../results/'+dataframe_filename)
-
-    # plt.title(keyword)
 
     fig1, ax1 = plt.subplots()
 
@@ -417,7 +434,12 @@ def plot_grid(df_grid_path, title='Penalty Grid Search'):
         )
     # plt.tight_layout()
 
+parser = argparse.ArgumentParser(description="Name of the dataset")
+parser.add_argument('string_arg', type=str, help='the datasetname')
+args = parser.parse_args()
 
+# You can access the arguments using args.string_arg and args.directory
+print(f"String argument: {args.string_arg}")
 """
 Experiment 3
 """
@@ -436,9 +458,9 @@ Experiment 1
 """
 Experiment 2
 """
-fp_df_path = plotMetrics('grid', df_key='tinygbdt_penalty_split', log_scale = True)
+fp_df_path = plotMetrics('grid', df_key='tinygbdt_penalty_split', log_scale = True, directory=args.string_arg)
 # fp_df_path = 'grid_binary_covtype.libsvm.binary.train_penF8192.0_penT8192.0_maxtrees100000.0_maxdepth3.0_maxsize8000.0_precision4.0_logscaleTrue.csv'
-plot_grid(fp_df_path, title='Penalty Grid Search, Covtype binary, 8KB Memory')
+# plot_grid(fp_df_path, title='Penalty Grid Search, Covtype binary, 8KB Memory')
 
 
 """
