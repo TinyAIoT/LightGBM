@@ -112,7 +112,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
     str
         The filename of the saved DataFrame in CSV format.
     """
-    sorted_dir = (os.listdir("../Modeltest"))#, float("0."+x.split(".")[2])))
+    sorted_dir = sorted(os.listdir("../data/All" + dataset), key=lambda x: (float(x.split(".")[1])))#, float("0."+x.split(".")[2])))
     setting_value = []
     accuracies = []
     logloss = []
@@ -129,8 +129,6 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
     tinygbdt_penalty_split = []
     num_iterations = 0
     max_depth = 0
-    # tinygbdt_penalty_feature = 0
-    # tinygbdt_penalty_split = 0
     tinygbdt_forestsize = 0
     tinygbdt_precision = 0
     num_classes = 0
@@ -174,10 +172,6 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Fal
         else:
             continue
 
-    # lbg_bits = lgb_floats*32 + lgb_ints*16
-    # print(len(setting_value), len(no_trees), len(no_features), len(no_thresholds), len(no_leaves), len(our_bits), len(lgb_bits), len(logloss), len(rmse), len(accuracies))
-    #print(no_trees)
-    #length = len(no_trees)
 
     df = pd.DataFrame({
         # keyword: setting_value,
