@@ -79,7 +79,7 @@ def plot_grid(df, axe, fig, title='Penalty Grid Search'):
     axe.legend()
 
 
-def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='penalty'):
+def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='Threshold Penalty'):
     # Determine which keyword to use based on xlabel
     if xlabel == 'Feature Penalty' or xlabel == 'Both penalties':
         keyword = 'tinygbdt_penalty_feature'
@@ -121,14 +121,12 @@ def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCou
 
     # Plot features or thresholds
     if xlabel == 'Feature Penalty':
-        color = 'tab:green'
         ax2.plot(df[keyword], df['no_features'], 'o--', label="Features", color=color)
         ax2.axhline(df['no_features'][0], linestyle=':', label="Penalty = 0", color='tab:red')
 
     if xlabel == 'Threshold Penalty' or xlabel == 'Both penalties':
-        color = 'tab:blue'
         ax2.plot(df[keyword], df['no_thresholds'], 'o--', label="# thresholds and leaf values", color=color)
-        ax2.axhline(df['no_thresholds'][0], linestyle=':', label="Penalty = 0", color='tab:red')
+        #ax2.axhline(df['no_thresholds'][0], linestyle=':', label="Penalty = 0", color='tab:red')
         if plot_nodeLeafCount:
             ax2.plot(df[keyword], (df['no_leaves']*2-1), 'o--', label="# nodes and leaves", color='tab:grey')
 
@@ -136,21 +134,23 @@ def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCou
 
     axe.figure.tight_layout()  # Ensure layout adjustments
 
-datasets = ['Breastcancer', 'california_housing'] #, 'kin8nm', 'kr-vs-kp', 'mushroom'] # todo covtype
+datasets = ['Breastcancer', 'california_housing', 'kin8nm', 'kr-vs-kp', 'mushroom'] # 'Breastcancer', 'california_housing', 'kr-vs-kp', 'kin8nm' # todo covtype
 plt.rcParams['image.cmap'] = 'viridis'
-
-fig, axes = plt.subplots(2, 4, figsize=(10, 8))
+functions = ['simple', 'bits']
+fig, axes = plt.subplots(2, 5, figsize=(10, 8))
 counter = 0
 
-for data in datasets:
-    df = pd.read_csv('../results/' + data + '/AllSubtraction.csv')
-    subset = df[(df['max_trees'] == 10000) & (df['depth'] == 5)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-    sm_subset = df[(df['max_trees'] == 10) & (df['depth'] == 5) & (df['tinygbdt_penalty_feature'] == 1)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-    sm_subset = sm_subset.sort_values(by='tinygbdt_penalty_split')
-    print(subset.describe())
-    plot_grid(subset, axe=axes[counter, 3], fig=fig)
-    plotMetrics(sm_subset, axe=axes[counter, 2])
-    plotAccuracyByPenalty(sm_subset, axes[counter, 1], 'tinygbdt_penalty_split', )
-    counter = counter + 1
-
-plt.show()
+for function in functions:
+    for data in datasets:
+        df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
+        subset = df[(df['max_trees'] == 10000) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        sm_subset = df[(df['max_trees'] == 10000) & (df['depth'] == 3) & (df['tinygbdt_penalty_feature'] == 1)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        sm_subset = sm_subset.sort_values(by='tinygbdt_penalty_split')
+        print(data)
+        print(subset.describe())
+        plot_grid(subset, axe=axes[0, counter], fig=fig)
+        #plotMetrics(sm_subset, axe=axes[1, counter])
+        plotAccuracyByPenalty(sm_subset, axes[1, counter], 'tinygbdt_penalty_split' )
+        counter = counter + 1
+    plt.savefig('results/' + function + ' .png', format='png', dpi=300)
+    plt.show()
