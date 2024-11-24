@@ -1,7 +1,14 @@
 import numpy as np
 import pandas as pd
+import argparse
 
-df = pd.read_csv('../results/mushroom/result_bits.csv')
+parser = argparse.ArgumentParser(description="Name of the dataset")
+parser.add_argument('string_arg', type=str, help='the datasetname')
+args = parser.parse_args()
+
+# You can access the arguments using args.string_arg and args.directory
+print(f"String argument: {args.string_arg}")
+df = pd.read_csv('../results/' + args.string_arg + '/bits_result.csv')
 df_sorted = df.sort_values(by=['tinygbdt_penalty_feature', 'tinygbdt_penalty_split'])
 df_sorted_reset = df_sorted.reset_index(drop=True)
 print(df.head(100))
@@ -31,4 +38,4 @@ if remainder > 0:
 df_sorted_reset['max_trees'] = repeated_sequence
 print(df_sorted_reset.head(50))
 
-df_sorted_reset.to_csv('../results/mushroom/bits_all.csv', index=False)
+df_sorted_reset.to_csv('../results/' + args.string_arg + '/bit_all.csv', index=False)

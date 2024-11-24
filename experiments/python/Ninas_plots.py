@@ -73,22 +73,18 @@ def plot_grid(df, axe, fig, column='accuracy', title=''):
     fig.colorbar(scm, ax=axe, orientation='vertical')
 
 
-def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='Threshold Penalty'):
+def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='Feature Penalty'):
     # Determine which keyword to use based on xlabel
-    keywords = ['accuracy1', 'accuracy2', 'accuracy3']
+    keywords = ['accuracy1', 'accuracy2', 'accuracy3', 'accuracy4', 'accuracy4']
     norm = Normalize(vmin=0, vmax=len(keywords) - 1)
     colors = [viridis(norm(i)) for i in range(len(keywords))]
     if xlabel == 'Feature Penalty' or xlabel == 'Both penalties':
         keyword = 'tinygbdt_penalty_feature'
     if xlabel == 'Threshold Penalty':
         keyword = 'tinygbdt_penalty_split'
-
     axe.set_xlabel(xlabel)
-
     if xlog:
         axe.set_xscale('log')
-
-    # Plot accuracy or R2 score
     if plot_accuracy:
         if df['logloss'].iloc[1] == 0.0:
             label = 'R2 Score'
@@ -101,10 +97,11 @@ def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCou
         max_accuracy_xvalue = df[keyword].loc[df['accuracy'] == max_accuracy].values[0]
 
         axe.plot(max_accuracy_xvalue, max_accuracy, 'ro')
-        axe.annotate('max at ' + str(max_accuracy_xvalue), (max_accuracy_xvalue, max_accuracy))
+        #axe.annotate('max at ' + str(max_accuracy_xvalue), (max_accuracy_xvalue, max_accuracy))
 
         if xlabel == 'Threshold Penalty' or xlabel == 'Both penalties':
             axe.plot(df[keyword], ((df['no_leaves']*2-1)/df['no_thresholds']), 'o--', label="reuse factor", color=colors[1])
+
 
         axe.set_ylabel(label)
         axe.tick_params(axis='y', color=colors[0])
@@ -116,40 +113,52 @@ def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCou
 
     # Plot features or thresholds
     if xlabel == 'Feature Penalty':
-        ax2.plot(df[keyword], df['no_features'], 'o--', label="Features", color=colors[2])
-        ax2.axhline(df['no_features'][0], linestyle=':', label="Penalty = 0", color=colors[2])
+        ax2.plot(df[keyword], df['no_features'], 'o--', label="Features", color=colors[4])
+        #ax2.axhline(df['no_features'][0], linestyle=':', label="Penalty = 0", color=colors[2])
 
     if xlabel == 'Threshold Penalty' or xlabel == 'Both penalties':
-        ax2.plot(df[keyword], df['no_thresholds'], 'o--', label="# thresholds and leaf values", color=colors[2])
+        ax2.plot(df[keyword], df['no_thresholds'], 'o--', label="# thresholds and leaf values", color=colors[4])
         #ax2.axhline(df['no_thresholds'][0], linestyle=':', label="Penalty = 0", color='tab:red')
         if plot_nodeLeafCount:
             ax2.plot(df[keyword], (df['no_leaves']*2-1), 'o--', label="# nodes and leaves", color='tab:grey')
+    ax2.plot(df[keyword], df['our_bits'], 'o--', label="Our Bits", color=colors[2])
+    ax2.plot(df[keyword], df['lgb_bits'], 'o--', label="LGB Bits", color=colors[3])
 
     #ax2.legend(loc='upper right')
+def plot_memory_acc(subset, axe, fig):
+    keywords = ['accuracy1', 'accuracy4']
+    norm = Normalize(vmin=0, vmax=len(keywords) - 1)
+    colors = [viridis(norm(i)) for i in range(len(keywords))]
+    axe.plot(subset['our_bits'], subset['accuracy'],  label='TOD', color=colors[0], alpha=0.6)#, s=3)
+    axe.plot(subset['lgb_bits'], subset['accuracy'], label='LGB', color=colors[1], alpha=0.6)#, s=3)
+    axe.legend()
 
-datasets = ['Breastcancer', 'kr-vs-kp', 'mushroom', 'california_housing'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
+
+datasets = ['Breastcancer', 'california_housing', 'kin8nm', 'kr-vs-kp', 'mushroom'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
 plt.rcParams['image.cmap'] = 'viridis'
-functions = ['simple']
+functions = ['bit']
 
 for function in functions:
-    fig, axes = plt.subplots(4, 3, figsize=(10, 8), sharex=True)
+    fig, axes = plt.subplots(5, 4, figsize=(10, 8))
     counter = 0
     for data in datasets:
+        # collect data
         df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-        subset = df[(df['max_trees'] == 10000) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-        sm_subset = df[(df['max_trees'] == 10000) & (df['depth'] == 3) & (df['tinygbdt_penalty_feature'] == 1)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-        sm_subset = sm_subset.sort_values(by='tinygbdt_penalty_split')
+        subset = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        acc_good_subset = df[(df['max_trees'] == 100) & (df['depth'] == 3) & (df['tinygbdt_penalty_feature'] < 1000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        acc_good_subset = acc_good_subset.sort_values(by='our_bits')
+        sm_subset = subset[(subset['tinygbdt_penalty_split'] == 1) & (subset['tinygbdt_penalty_feature'] < 1000) & (subset['tinygbdt_penalty_feature'] > 0.1)& (subset['tinygbdt_penalty_split'] < 1000)& (subset['tinygbdt_penalty_split'] > 0.1)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        sm_subset = sm_subset.sort_values(by='tinygbdt_penalty_feature')
+        print(acc_good_subset)
+        #graphs
         plot_grid(subset, axe=axes[counter, 0], fig=fig, column='accuracy', title='Accuracy with changing penalties')
-        #plotMetrics(sm_subset, axe=axes[1, counter])
-        plotAccuracyByPenalty(sm_subset, axes[counter, 1], 'tinygbdt_penalty_split' )
-        handles_row2 = axes[0, 1].get_lines() + axes[0, 1].collections + axes[1, 1].get_lines() + axes[1, 1].collections
-        labels_row2 = [handle.get_label() for handle in handles_row2]
-        fig.legend(handles_row2, labels_row2, loc='right', bbox_to_anchor=(0.5, 0), ncol=4)
+        plotAccuracyByPenalty(sm_subset, axes[counter, 1], 'tinygbdt_penalty_feature')
         plot_grid(subset, axe=axes[counter, 2], fig=fig, column='our_bits', title='Memory usage with changing penalties')
+        plot_memory_acc(acc_good_subset, axe=axes[counter, 3], fig=fig)
+
         counter = counter + 1
 
-
     axes[3,0].set_xlabel('Split Penalty')
-    axes[3,2].set_xlabel('Split Penalty')
+    axes[3,1].set_xlabel('Split Penalty')
     plt.savefig('../results/' + function + '.png', format='png', dpi=300)
     plt.show()
