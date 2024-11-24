@@ -4,7 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import re
-
+from matplotlib.cm import viridis
+from matplotlib.colors import Normalize
 import lightgbm as lgb
 from pandas import read_csv
 from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
@@ -54,33 +55,29 @@ def plotMetrics(df, axe, log_scale=False):
     # Tweak layout with tight_layout and return the figure (but no plt since using an existing axe)
     axe.figure.tight_layout()
 
-def plot_grid(df, axe, fig, title='Penalty Grid Search'):
+def plot_grid(df, axe, fig, column='accuracy', title=''):
 
-    scm = axe.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df['accuracy'], cmap='viridis',
-                label='Accuracy')
-    max_accuracy = df['accuracy'][1:].max()
-    df_max_accuracy = df.loc[df['accuracy'] == max_accuracy]
+    scm = axe.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], cmap='viridis',
+                label=column)
+    #if (column == 'accuracy'):
+        # max_accuracy = df[column][1:].max()
+        # df_max_accuracy = df.loc[df[column] == max_accuracy]
+        # split_penalty = df_max_accuracy['tinygbdt_penalty_split'].iloc[0]
+        # feature_penalty = df_max_accuracy['tinygbdt_penalty_feature'].iloc[0]
+        # pcm = axe.scatter(split_penalty, feature_penalty, c='r', label='Max Accuracy')
+        # axe.annotate('Max Accuracy', (split_penalty, feature_penalty))
 
-    # Assuming there's a single row with max accuracy, extract the first element
-    split_penalty = df_max_accuracy['tinygbdt_penalty_split'].iloc[0]
-    feature_penalty = df_max_accuracy['tinygbdt_penalty_feature'].iloc[0]
-
-    # Scatter and annotate the point with the max accuracy
-    pcm = plt.scatter(split_penalty, feature_penalty, c='r', label='Max Accuracy')
-    axe.annotate('Max Accuracy', (split_penalty, feature_penalty))
-    axe.set_title(title)
     axe.set_xscale('log')
     axe.set_yscale('log')  # Correct method for setting y scale
-    axe.set_xlabel('Split Penalty')
     axe.set_ylabel('Feature Penalty')
-
-    # axe.colorbar()
     fig.colorbar(scm, ax=axe, orientation='vertical')
-    axe.legend()
 
 
 def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='Threshold Penalty'):
     # Determine which keyword to use based on xlabel
+    keywords = ['accuracy1', 'accuracy2', 'accuracy3']
+    norm = Normalize(vmin=0, vmax=len(keywords) - 1)
+    colors = [viridis(norm(i)) for i in range(len(keywords))]
     if xlabel == 'Feature Penalty' or xlabel == 'Both penalties':
         keyword = 'tinygbdt_penalty_feature'
     if xlabel == 'Threshold Penalty':
@@ -93,27 +90,25 @@ def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCou
 
     # Plot accuracy or R2 score
     if plot_accuracy:
-        color = 'tab:orange'
         if df['logloss'].iloc[1] == 0.0:
             label = 'R2 Score'
         else:
             label = 'Accuracy'
 
-        axe.plot(df[keyword], df['accuracy'], '--o', color=color, label=label)
+        axe.plot(df[keyword], df['accuracy'], '--o', label=label, color=colors[0])
+
         max_accuracy = df['accuracy'][1:].max()
         max_accuracy_xvalue = df[keyword].loc[df['accuracy'] == max_accuracy].values[0]
 
-        # Highlight the maximum point
-        print(max_accuracy_xvalue)
         axe.plot(max_accuracy_xvalue, max_accuracy, 'ro')
         axe.annotate('max at ' + str(max_accuracy_xvalue), (max_accuracy_xvalue, max_accuracy))
 
         if xlabel == 'Threshold Penalty' or xlabel == 'Both penalties':
-            axe.plot(df[keyword], ((df['no_leaves']*2-1)/df['no_thresholds']), 'o--', label="reuse factor", color='tab:green')
+            axe.plot(df[keyword], ((df['no_leaves']*2-1)/df['no_thresholds']), 'o--', label="reuse factor", color=colors[1])
 
-        axe.set_ylabel(label, color=color)
-        axe.tick_params(axis='y', labelcolor=color)
-        axe.legend(loc='lower left')
+        axe.set_ylabel(label)
+        axe.tick_params(axis='y', color=colors[0])
+        #axe.legend(loc='lower left')
 
     # Add a twin axis for plotting other metrics
     ax2 = axe.twinx()
@@ -121,36 +116,40 @@ def plotAccuracyByPenalty(df, axe, keyword, plot_accuracy=True, plot_nodeLeafCou
 
     # Plot features or thresholds
     if xlabel == 'Feature Penalty':
-        ax2.plot(df[keyword], df['no_features'], 'o--', label="Features", color=color)
-        ax2.axhline(df['no_features'][0], linestyle=':', label="Penalty = 0", color='tab:red')
+        ax2.plot(df[keyword], df['no_features'], 'o--', label="Features", color=colors[2])
+        ax2.axhline(df['no_features'][0], linestyle=':', label="Penalty = 0", color=colors[2])
 
     if xlabel == 'Threshold Penalty' or xlabel == 'Both penalties':
-        ax2.plot(df[keyword], df['no_thresholds'], 'o--', label="# thresholds and leaf values", color=color)
+        ax2.plot(df[keyword], df['no_thresholds'], 'o--', label="# thresholds and leaf values", color=colors[2])
         #ax2.axhline(df['no_thresholds'][0], linestyle=':', label="Penalty = 0", color='tab:red')
         if plot_nodeLeafCount:
             ax2.plot(df[keyword], (df['no_leaves']*2-1), 'o--', label="# nodes and leaves", color='tab:grey')
 
-    ax2.legend(loc='upper right')
+    #ax2.legend(loc='upper right')
 
-    axe.figure.tight_layout()  # Ensure layout adjustments
-
-datasets = ['Breastcancer', 'california_housing', 'kin8nm', 'kr-vs-kp', 'mushroom'] # 'Breastcancer', 'california_housing', 'kr-vs-kp', 'kin8nm' # todo covtype
+datasets = ['Breastcancer', 'kr-vs-kp', 'mushroom', 'california_housing'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
 plt.rcParams['image.cmap'] = 'viridis'
-functions = ['simple', 'bits']
-fig, axes = plt.subplots(2, 5, figsize=(10, 8))
-counter = 0
+functions = ['simple']
 
 for function in functions:
+    fig, axes = plt.subplots(4, 3, figsize=(10, 8), sharex=True)
+    counter = 0
     for data in datasets:
         df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
         subset = df[(df['max_trees'] == 10000) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
         sm_subset = df[(df['max_trees'] == 10000) & (df['depth'] == 3) & (df['tinygbdt_penalty_feature'] == 1)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
         sm_subset = sm_subset.sort_values(by='tinygbdt_penalty_split')
-        print(data)
-        print(subset.describe())
-        plot_grid(subset, axe=axes[0, counter], fig=fig)
+        plot_grid(subset, axe=axes[counter, 0], fig=fig, column='accuracy', title='Accuracy with changing penalties')
         #plotMetrics(sm_subset, axe=axes[1, counter])
-        plotAccuracyByPenalty(sm_subset, axes[1, counter], 'tinygbdt_penalty_split' )
+        plotAccuracyByPenalty(sm_subset, axes[counter, 1], 'tinygbdt_penalty_split' )
+        handles_row2 = axes[0, 1].get_lines() + axes[0, 1].collections + axes[1, 1].get_lines() + axes[1, 1].collections
+        labels_row2 = [handle.get_label() for handle in handles_row2]
+        fig.legend(handles_row2, labels_row2, loc='right', bbox_to_anchor=(0.5, 0), ncol=4)
+        plot_grid(subset, axe=axes[counter, 2], fig=fig, column='our_bits', title='Memory usage with changing penalties')
         counter = counter + 1
-    plt.savefig('results/' + function + ' .png', format='png', dpi=300)
+
+
+    axes[3,0].set_xlabel('Split Penalty')
+    axes[3,2].set_xlabel('Split Penalty')
+    plt.savefig('../results/' + function + '.png', format='png', dpi=300)
     plt.show()
