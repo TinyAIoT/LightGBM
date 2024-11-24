@@ -110,7 +110,7 @@ def extract_key(filename):
     return (datams, fp, tp, tree, depth)
 
 # keyword is the substring of the filename to search for in model.txt and .out files
-def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=False, get_baseline=True, directory=''):
+def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=True, get_baseline=True, directory=''):
     """Evaluates the model files that end with the specified keyword in the filename and plots various metrics.
     keyword : str
         The keyword to identify the model files.

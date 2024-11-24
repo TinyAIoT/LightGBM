@@ -129,14 +129,26 @@ def plot_memory_acc(subset, axe, fig):
     keywords = ['accuracy1', 'accuracy4']
     norm = Normalize(vmin=0, vmax=len(keywords) - 1)
     colors = [viridis(norm(i)) for i in range(len(keywords))]
-    axe.plot(subset['our_bits'], subset['accuracy'],  label='TOD', color=colors[0], alpha=0.6)#, s=3)
-    axe.plot(subset['lgb_bits'], subset['accuracy'], label='LGB', color=colors[1], alpha=0.6)#, s=3)
+    width = 0.25  # the width of the bars
+    multiplier = 0
+    x = np.arange(len(subset['our_bits']))
+    myitems = {
+        'Our_bits': (subset['our_bits']),
+        'LGM_bits': (subset['lgb_bits'])
+    }
+    for attribute, measurement in myitems.items():
+        offset = width * multiplier
+        rects = axe.bar(x + offset, measurement, width, label=attribute)
+        # axe.bar_label(rects, padding=3)
+        multiplier += 1
+    #axe.bar(subset['our_bits'], subset['accuracy'],  label='TOD', color=colors[0], alpha=0.6)#, s=3)
+    #axe.plot(subset['lgb_bits'], subset['accuracy'], label='LGB', color=colors[1], alpha=0.6)#, s=3)
     axe.legend()
 
 
 datasets = ['Breastcancer', 'california_housing', 'kin8nm', 'kr-vs-kp', 'mushroom'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
 plt.rcParams['image.cmap'] = 'viridis'
-functions = ['bit']
+functions = ['simple']
 
 for function in functions:
     fig, axes = plt.subplots(5, 4, figsize=(10, 8))
@@ -145,7 +157,7 @@ for function in functions:
         # collect data
         df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
         subset = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-        acc_good_subset = df[(df['max_trees'] == 100) & (df['depth'] == 3) & (df['tinygbdt_penalty_feature'] < 1000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        acc_good_subset = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
         acc_good_subset = acc_good_subset.sort_values(by='our_bits')
         sm_subset = subset[(subset['tinygbdt_penalty_split'] == 1) & (subset['tinygbdt_penalty_feature'] < 1000) & (subset['tinygbdt_penalty_feature'] > 0.1)& (subset['tinygbdt_penalty_split'] < 1000)& (subset['tinygbdt_penalty_split'] > 0.1)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
         sm_subset = sm_subset.sort_values(by='tinygbdt_penalty_feature')
