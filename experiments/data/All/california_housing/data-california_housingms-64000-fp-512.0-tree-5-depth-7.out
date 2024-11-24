@@ -1,0 +1,45 @@
+[LightGBM] [Info] Warning: last line of train.conf has no end of line, still using this line
+[LightGBM] [Warning] max_bin is set=255, max_bin=255 will be ignored. Current value: max_bin=255
+[LightGBM] [Warning] config is set=train.conf, config=train.conf will be ignored. Current value: config=train.conf
+[LightGBM] [Warning] train_data is set=data/california_housing.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/california_housing.libsvm.train
+[LightGBM] [Warning] train_data is set=data/california_housing.libsvm.train, train_data=data/kddcup_train.csv will be ignored. Current value: train_data=data/california_housing.libsvm.train
+[LightGBM] [Warning] valid_data is set=data/california_housing.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/california_housing.libsvm.test
+[LightGBM] [Warning] valid_data is set=data/california_housing.libsvm.test, valid_data=data/kddcup_test.csv will be ignored. Current value: valid_data=data/california_housing.libsvm.test
+[LightGBM] [Warning] max_depth is set=7, max_depth=3 will be ignored. Current value: max_depth=7
+[LightGBM] [Warning] tinygbdt_forestsize is set=64000, tinygbdt_forestsize=50000 will be ignored. Current value: tinygbdt_forestsize=64000
+[LightGBM] [Warning] tinygbdt_penalty_split is set=1, tinygbdt_penalty_split=0.9 will be ignored. Current value: tinygbdt_penalty_split=1
+[LightGBM] [Warning] tinygbdt_penalty_feature is set=512.0, tinygbdt_penalty_feature=0.8 will be ignored. Current value: tinygbdt_penalty_feature=512.0
+[LightGBM] [Warning] Unknown parameter: num_parallel_tree
+[LightGBM] [Info] Finished loading parameters
+[LightGBM] [Info] Construct bin mappers from text data time 0.02 seconds
+[LightGBM] [Info] Finished loading data in 0.089453 seconds
+[LightGBM] [Warning] Contains only one class
+[LightGBM] [Info] Number of positive: 16512, number of negative: 0
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000792 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 1838
+[LightGBM] [Info] Number of data points in the train set: 16512, number of used features: 8
+[LightGBM] [Info] Finished initializing training
+[LightGBM] [Info] Started training...
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=1.000000 -> initscore=34.539576
+[LightGBM] [Info] Start training from score 34.539576
+[LightGBM] [Warning] Stopped training because there are no more leaves that meet the split requirements
+[LightGBM] [Info] 0.000091 seconds elapsed, finished iteration 1
+Leftover memory : 63968
+features_used_global : 0features_used_global : 1
+thresholds_used_global : 1
+#bits : 32
+0: features: 255 
+	thresholds:	0 
+
+255: thresholds: 34.5396 
+
+#features : 1
+#thresholds : 1
+Calculated Memory consumption:
+	Bits Bool Thresholds: 0 -> 0
+	Bits float thresholds: 0 -> 0
+	Bits References inside Trees: 0 -> 255
+	Bits Feature Threshold mapping: 0 -> 0
+	Bits Feature float leaves: 32 -> 32
+[LightGBM] [Info] Finished training
