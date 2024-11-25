@@ -7,3 +7,4 @@ for dataset in "/kin8nm" "/california_housing"; do
 done
 
 cd ..
+

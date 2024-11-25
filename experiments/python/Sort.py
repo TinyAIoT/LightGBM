@@ -8,24 +8,11 @@ args = parser.parse_args()
 
 # You can access the arguments using args.string_arg and args.directory
 print(f"String argument: {args.string_arg}")
-df = pd.read_csv('../results/' + args.string_arg + '/bits_result.csv')
+df = pd.read_csv('../results/' + args.string_arg + '/simple_all.csv')
 df_sorted = df.sort_values(by=['tinygbdt_penalty_feature', 'tinygbdt_penalty_split'])
 df_sorted_reset = df_sorted.reset_index(drop=True)
 print(df.head(100))
-sequence = [5, 5, 5,
-            10, 10, 10,
-            15, 15, 15,
-            20, 20, 20,
-            30, 30, 30,
-            40, 40, 40,
-            50, 50, 50,
-            100, 100, 100,
-            200, 200, 200,
-            500, 500, 500,
-            1000, 1000, 1000,
-            5000, 5000, 5000,
-            10000, 10000, 10000,
-            100000, 100000, 100000]
+sequence = [5, 10, 15, 20, 30, 40, 50, 100, 200, 500]
 num_repeats = len(df_sorted_reset) // len(sequence)  # Calculate how many full sequence repeats are needed
 remainder = len(df_sorted_reset) % len(sequence)
 
@@ -38,4 +25,4 @@ if remainder > 0:
 df_sorted_reset['max_trees'] = repeated_sequence
 print(df_sorted_reset.head(50))
 
-df_sorted_reset.to_csv('../results/' + args.string_arg + '/bit_all.csv', index=False)
+df_sorted_reset.to_csv('../results/' + args.string_arg + '/simple_all2.csv', index=False)
