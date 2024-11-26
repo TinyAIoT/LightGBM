@@ -15,10 +15,10 @@ from pandas import read_csv
 from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
 # keyword is the substring of the filename to search for in model.txt and .out files
 
-plotgrid = False
-barplot = False
+plotgrid = True
+barplot = True
 barplot_check = True
-lineplot = False
+lineplot = True
 lineplot2 = False
 def plotMetrics(df, axe, log_scale=False):
     setting_value = df['tinygbdt_penalty_split']
@@ -78,9 +78,8 @@ def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
             row = df[(df['tinygbdt_penalty_feature'] == 8) & (df['tinygbdt_penalty_split'] == 64)]
         if data == 'mushroom':
             row = df[(df['tinygbdt_penalty_feature'] == 32) & (df['tinygbdt_penalty_split'] == 16)]
-        pcm = axe.scatter(row['tinygbdt_penalty_split'], row['tinygbdt_penalty_feature'], c='r', label='Max Accuracy')
+        pcm = axe.scatter(row['tinygbdt_penalty_split'], row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy')
     #plt.annotate('Max Accuracy', (df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature']))
-
     axe.set_xscale('log')
     axe.set_yscale('log')  # Correct method for setting y scale
     return scm
@@ -207,25 +206,24 @@ def plotAccuracyMemByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, p
 
     #ax2.legend(loc='upper right')
 
-def plot_memory_acc(df, axe, ylim, fig, big=False):
+def plot_memory_acc(df, dfn, axe, ylim, fig, big=False):
     keywords = ['accuracy1', 'accuracy2','accuracy1', 'accuracy2']
     norm = Normalize(vmin=0, vmax=len(keywords) - 1)
     colors = [viridis(norm(i)) for i in range(len(keywords))]
-    width = 0.25  # the width of the bars
+    width = 0.25
     multiplier = 0
     if big:
-        memory_values = [4096, 8192, 16384, 32768, 49152, 65536]
+        memory_values = [ 4096, 8192, 16384, 32768, 65536]
     else:
-        memory_values = [ 2048, 4096, 8192, 16384, 32768, 49152]
+        memory_values = [ 4096, 8192, 16384, 32768, 65536]
 
-    tolerance = 40000
     fp=df['tinygbdt_penalty_feature'].iloc[2]
     tp=df['tinygbdt_penalty_feature'].iloc[2]
     print(fp)
     # Create a new DataFrame to store the best accuracy rows
     best_rows_toad = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
-    best_rows_native = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
-    best_rows_native_fp = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
+    best_rows_naive = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
+    best_rows_naive_fp = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
     test = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
 
     zero_row = [0] * 13
@@ -236,25 +234,26 @@ def plot_memory_acc(df, axe, ylim, fig, big=False):
             best_rows_toad = pd.concat([best_rows_toad, best_row.to_frame().T], ignore_index=True)  # Append the row
 
     for target in memory_values:
-        subset = df[(df['lgb_bits'] <= target)]
+        subset = dfn[(dfn['lgb_bits'] <= target)]
         if not subset.empty:
             best_row_n = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
-            best_rows_native = pd.concat([best_rows_native, best_row_n.to_frame().T], ignore_index=True)  # Append the row
+            best_rows_naive = pd.concat([best_rows_naive, best_row_n.to_frame().T], ignore_index=True)  # Append the row
         else :
-            best_rows_native = pd.concat([best_rows_native, pd.DataFrame([zero_row], columns=test.columns)])
+            best_rows_naive = pd.concat([best_rows_naive, pd.DataFrame([zero_row], columns=test.columns)])
+
     for target in memory_values:
         subset = df[(df['our_bits'] <= target) & (df['tinygbdt_penalty_feature'] <= fp) & (df['tinygbdt_penalty_split'] <= tp)]
         if not subset.empty:
             best_row_n = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
-            best_rows_native_fp = pd.concat([best_rows_native_fp, best_row_n.to_frame().T], ignore_index=True)  # Append the row
+            best_rows_naive_fp = pd.concat([best_rows_naive_fp, best_row_n.to_frame().T], ignore_index=True)  # Append the row
         else :
-            best_rows_native_fp = pd.concat([best_rows_native_fp, pd.DataFrame([zero_row], columns=test.columns)])
+            best_rows_naive_fp = pd.concat([best_rows_naive_fp, pd.DataFrame([zero_row], columns=test.columns)])
 
     x = np.arange(len(best_rows_toad['our_bits']))
-    print(best_rows_native_fp)
+    print(best_rows_naive_fp)
     myitems = {
-        'ToaD': (best_rows_native_fp['accuracy']),
-        'Native': (best_rows_native['accuracy']),
+        'Naive': (best_rows_naive['accuracy']),
+        'ToaD': (best_rows_naive_fp['accuracy']),
         'ToaD + Penalty': (best_rows_toad['accuracy'])
     }
     for attribute, measurement in myitems.items():
@@ -267,20 +266,24 @@ def plot_memory_acc(df, axe, ylim, fig, big=False):
     axe.set_xticks(x + width)  # Position the ticks at the center of the grouped bars
     kb_mem_val = []
     for memval in memory_values:
-        kb_mem_val.append(f"{memval // 1024}")
+        kb_mem_val.append(bits_to_kb(memval, 0))
 
     axes[counter].set_xlabel("KB")
     axes[0].set_ylabel("Metric: \nAccuracy (binary)\n R2 (regression))")
     axe.set_xticklabels(kb_mem_val)  # Apply the custom labels
 
-def getnativerow(df, bits):
+def getnaiverow(df, bits):
     returndf = pd.DataFrame()
     for bitvalue in bits:
         subset = df[(df['lgb_bits'] <= bitvalue)]
         returndf = pd.concat([returndf, subset.loc[subset['accuracy'].idxmax()].to_frame().T])
     return returndf
 def bits_to_kb(x, pos):
-    return f"{x / 1000:.1f}"
+    return x / (8 * 1024)
+def bits_to_kb_str(x, pos):
+    x = x / (8 * 1024)
+    return f"{x:.1f} KB"
+
 datasets = ['breastcancer', 'california_housing','covtype', 'kin8nm', 'kr-vs-kp', 'mushroom'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
 binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
 regression = ['california_housing', 'kin8nm'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
@@ -290,8 +293,8 @@ vminour_bits, vmaxour_bits, vminour_accuracy, vmaxour_accuracy = 1000, 0 , 1000,
 for function in functions:
     for data in datasets:
         df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-        data_tree_550_depth_3 = df[(df['max_trees'] == 5) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-        data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 5) & (df['depth'] == 3)]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        data_tree_550_depth_3 = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['depth'] == 3)]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
         minbits = data_tree_550_depth_3_fptp_1000['our_bits'].min()
         vminour_bits, vmaxour_bits = min(minbits, vminour_bits), max(data_tree_550_depth_3_fptp_1000['our_bits'].max(), vmaxour_bits)
         vminour_accuracy, vmaxour_accuracy = min(data_tree_550_depth_3_fptp_1000['accuracy'].min(), vminour_accuracy), max(data_tree_550_depth_3_fptp_1000['accuracy'].max(), vmaxour_accuracy)
@@ -303,8 +306,8 @@ if (plotgrid):
         counter = 0
         for data in datasets:
             df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-            data_tree_550_depth_3 = df[(df['max_trees'] == 5) & (df['depth'] == 3)]
-            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 5) & (df['depth'] == 3)]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
+            data_tree_550_depth_3 = df[(df['max_trees'] == 100) & (df['depth'] == 3)]
+            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['depth'] == 3)]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
             #graphs
             if (data in binary):
                 axe=axes[0, counter].set_title(data + "\n(binary)")
@@ -313,7 +316,7 @@ if (plotgrid):
             #grid_memory2 = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[2, counter], fig=fig, column='lgb_bits', norm=norm, title='Memory usage with changing penalties')
             grid_memory = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[0, counter], fig=fig, column='our_bits', data=data, norm=norm, title='Memory usage with changing penalties')
             grid_accuracy = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[1,counter], fig=fig, column='accuracy', data=data, norm=norm2, title='Accuracy with changing penalties')
-            axes[1, counter].set_xlabel('Split Penalty')
+            axes[1, counter].set_xlabel('Threshold Penalty')
             counter =counter+1
 
         #cbar3 = fig.colorbar(grid_memory2, ax=axes[2], orientation='vertical', location='right', shrink=0.9, pad=0.01)
@@ -322,128 +325,47 @@ if (plotgrid):
           # Divide by 1000 to convert to KB
 
         #cbar3.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb))
-        cbar.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb))
+        cbar.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb_str))
         axes[0,0].set_ylabel('Feature Penalty')
         axes[1,0].set_ylabel('Feature Penalty')
         axes[0,0].set_ylabel('Feature Penalty')
         axes[0,5].yaxis.set_label_position("right")
         axes[1,5].yaxis.set_label_position("right")
 
-        axes[0,5].set_ylabel('Memory (KB)', labelpad=50)
+        axes[0,5].set_ylabel('Memory (KB)', labelpad=60)
         axes[1,5].set_ylabel('Metric: \nAccuracy (binary)\n R2 (regression))', labelpad=50)
         plt.savefig('../results/' + function + 'grid.png', format='png', dpi=300)
         plt.show()
 if barplot_check:
     for function in functions:
-        fig, axes = plt.subplots(1, 6, figsize=(10, 8))
+        fig, axes = plt.subplots(1, 6, figsize=(15, 4))
         counter = 0
         for data in datasets:
             df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
+            dfn = pd.read_csv('../results/' + data + '/classic.csv')
             dsubset = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             if (data in binary):
                 axes[counter].set_title(data + "\n(binary)")
             if (data in regression):
                 axes[counter].set_title(data + "\n(regression)")
             if data == 'breastcancer':
-                plot_memory_acc(df, axes[counter], 0.9, fig)
+                plot_memory_acc(df, dfn, axes[counter], 0.9, fig)
             if data == 'california_housing':
-                plot_memory_acc(df, axes[counter], 0.1, fig, True)
+                plot_memory_acc(df, dfn, axes[counter], 0.1, fig, True)
             if data == 'covtype':
-                plot_memory_acc(df, axes[counter], 0.45, fig)
+                plot_memory_acc(df, dfn, axes[counter], 0.6, fig)
             if data == 'kin8nm':
-                plot_memory_acc(df, axes[counter], 0.1, fig, True)
+                plot_memory_acc(df, dfn, axes[counter], 0.1, fig, True)
             if data == 'kr-vs-kp':
-                plot_memory_acc(df, axes[counter], 0.85, fig)
+                plot_memory_acc(df, dfn, axes[counter], 0.85, fig)
             if data == 'mushroom':
-                plot_memory_acc(df, axes[counter], 0.9, fig)
+                plot_memory_acc(df, dfn, axes[counter], 0.9, fig)
             counter = counter +1
         mergedhandles, mergedlabels = axes[0].get_legend_handles_labels()
         fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.15,0.05), ncol=7)
         plt.savefig('../results/' + function + 'barplot.png', format='png', dpi=300)
         plt.show()
-if barplot:
-    for function in functions:
-        fig, axes = plt.subplots(1, 6, figsize=(10, 8))
-        counter = 0
-        for data in datasets:
-            df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-            dsubset = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-            best_rows_toad = pd.DataFrame()
-            row_native = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
 
-            if data == 'breastcancer':
-                best_rows_toad = dsubset[(dsubset['tinygbdt_penalty_feature'] == 4) & (dsubset['tinygbdt_penalty_split'] == 8) |
-                              (dsubset['tinygbdt_penalty_feature'] == 2) & (dsubset['tinygbdt_penalty_split'] == 8) |
-                              (dsubset['tinygbdt_penalty_feature'] == 2) & (dsubset['tinygbdt_penalty_split'] == 4) |
-                              (dsubset['tinygbdt_penalty_feature'] == 1) & (dsubset['tinygbdt_penalty_split'] == 4)]
-                row = getnativerow(dsubset, best_rows_toad['our_bits'])
-                row_native = pd.concat([row_native, row])
-            if data == 'california_housing':
-                best_rows_toad = dsubset[(dsubset['tinygbdt_penalty_feature'] == 8) & (dsubset['tinygbdt_penalty_split'] == 0.125) |
-                                        (dsubset['tinygbdt_penalty_feature'] == 4) & (dsubset['tinygbdt_penalty_split'] == 0.125) |
-                                         (dsubset['tinygbdt_penalty_feature'] == 4) & (dsubset['tinygbdt_penalty_split'] == 0.0625)|
-                                         (dsubset['tinygbdt_penalty_feature'] == 2) & (dsubset['tinygbdt_penalty_split'] == 0.0625)]
-                row = getnativerow(dsubset, best_rows_toad['our_bits'])
-                row_native = pd.concat([row_native, row])
-            if data == 'covtype':
-                best_rows_toad = dsubset[(dsubset['tinygbdt_penalty_feature'] == 1024) & (dsubset['tinygbdt_penalty_split'] == 16384) |
-                                          (dsubset['tinygbdt_penalty_feature'] == 512) & (dsubset['tinygbdt_penalty_split'] == 16384) |
-                                          (dsubset['tinygbdt_penalty_feature'] == 512) & (dsubset['tinygbdt_penalty_split'] == 8192) |
-                                          (dsubset['tinygbdt_penalty_feature'] == 256) & (dsubset['tinygbdt_penalty_split'] == 8192)]
-                row = getnativerow(dsubset, best_rows_toad['our_bits'])
-                row_native = pd.concat([row_native, row])
-            if data == 'kin8nm':
-                best_rows_toad = dsubset[(dsubset['tinygbdt_penalty_feature'] == 0.5) & (dsubset['tinygbdt_penalty_split'] == 0.125)|
-                                         (dsubset['tinygbdt_penalty_feature'] == 0.25) & (dsubset['tinygbdt_penalty_split'] == 0.125) |
-                                         (dsubset['tinygbdt_penalty_feature'] == 0.25) & (dsubset['tinygbdt_penalty_split'] == 0.0625) |
-                                         (dsubset['tinygbdt_penalty_feature'] == 0.125) & (dsubset['tinygbdt_penalty_split'] == 0.0625)]
-                row = getnativerow(dsubset, best_rows_toad['our_bits'])
-                row_native = pd.concat([row_native, row])
-            if data == 'kr-vs-kp':
-                best_rows_toad = dsubset[(dsubset['tinygbdt_penalty_feature'] == 16) & (dsubset['tinygbdt_penalty_split'] == 128)|
-                                         (dsubset['tinygbdt_penalty_feature'] == 8) & (dsubset['tinygbdt_penalty_split'] == 128)|
-                                         (dsubset['tinygbdt_penalty_feature'] == 2) & (dsubset['tinygbdt_penalty_split'] == 64) |
-                                         (dsubset['tinygbdt_penalty_feature'] == 0.5) & (dsubset['tinygbdt_penalty_split'] == 32)]
-                row = getnativerow(dsubset, best_rows_toad['our_bits'])
-                row_native = pd.concat([row_native, row])
-            if data == 'mushroom':
-                best_rows_toad = dsubset[(dsubset['tinygbdt_penalty_feature'] == 32) & (dsubset['tinygbdt_penalty_split'] == 16)|
-                                         (dsubset['tinygbdt_penalty_feature'] == 16) & (dsubset['tinygbdt_penalty_split'] == 8) |
-                                         (dsubset['tinygbdt_penalty_feature'] == 8) & (dsubset['tinygbdt_penalty_split'] == 4) |
-                                         (dsubset['tinygbdt_penalty_feature'] == 4) & (dsubset['tinygbdt_penalty_split'] == 2)]
-                row = getnativerow(dsubset, best_rows_toad['our_bits'])
-                row_native = pd.concat([row_native, row])
-
-            x = np.arange(len(best_rows_toad['our_bits']))
-            myitems = {
-                'Our_bits': (best_rows_toad['accuracy']),
-                'native_bits': (row_native['accuracy'])
-            }
-            width = 0.25  # the width of the bars
-            multiplier = 0
-            keywords = ['accuracy1', 'accuracy2','accuracy1', 'accuracy2']
-            norm = Normalize(vmin=0, vmax=len(keywords) - 1)
-            colors = [viridis(norm(i)) for i in range(len(keywords))]
-            names = ['Toad', 'native']
-            for attribute, measurement in myitems.items():
-                offset = width * multiplier
-                rects = axes[counter].bar(x + offset, measurement, width, label=names[multiplier], color=colors[multiplier+1])
-                multiplier += 1
-            axes[counter].set_title(data)
-            axes[counter].set_xticks(x + width)  # Position the ticks at the center of the grouped bars
-            best_rows_toad['our_bits_kb'] = best_rows_toad['our_bits'].apply(
-                lambda x: f"{x / 1024:.2f}"
-            )
-            axes[counter].set_xlabel("KB")
-            axes[counter].set_xticklabels(best_rows_toad['our_bits_kb'])
-            datasets2 = ['breastcancer', 'california_housing', 'kin8nm', 'kr-vs-kp', 'mushroom'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
-            axes[0].set_ylabel("Metric: Accuracy (binary)\n R2 (regression))")
-            counter = counter + 1
-
-        mergedhandles, mergedlabels = axes[0].get_legend_handles_labels()
-        fig.legend(mergedhandles, mergedlabels, loc='right', bbox_to_anchor=(0.975,0.5), ncol=1)
-        plt.savefig('../results/' + function + 'barplot.png', format='png', dpi=300)
-        plt.show()
 if lineplot2:
     for function in functions:
         fig, axes = plt.subplots( 2, 6, figsize=(15, 6), sharex=True, sharey=True)
@@ -515,11 +437,11 @@ if lineplot:
             if (data in regression):
                 axe=axes[0, counter].set_title(data + "\n(regression)")
             if data in regression:
-                handles, labels = plotAccuracyByPenalty(data_criteria_split_1, axes[0,counter], 'tinygbdt_penalty_feature', binary=False)
-                handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_1, axes[1, counter], keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty', binary=False)
+                handles, labels = plotAccuracyByPenalty(data_criteria_split_1, axes[0,counter], 'tinygbdt_penalty_feature', binary=False, mem=False)
+                handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_1, axes[1, counter], keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty', binary=False, mem=False)
 
-            handles, labels = plotAccuracyByPenalty(data_criteria_split_1, axes[0,counter], 'tinygbdt_penalty_feature')
-            handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_1, axes[1, counter], keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty')
+            handles, labels = plotAccuracyByPenalty(data_criteria_split_1, axes[0,counter], 'tinygbdt_penalty_feature', mem=False)
+            handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_1, axes[1, counter], keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty', mem=False)
             counter = counter + 1
         mergedhandles = handles + handles2
         mergedlabels = labels + labels2
