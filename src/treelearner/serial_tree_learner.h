@@ -115,7 +115,6 @@ class SerialTreeLearner: public TreeLearner {
       }
     }
   }
-  void updateMemoryForLeaf(double val) override;
   void afterTrain() override;
   void updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) override;
   void RenewTreeOutput(Tree* tree, const ObjectiveFunction* obj, std::function<double(const label_t*, int)> residual_getter,

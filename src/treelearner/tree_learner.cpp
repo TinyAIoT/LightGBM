@@ -52,13 +52,9 @@ TreeLearner* TreeLearner::CreateTreeLearner(const std::string& learner_type, con
   return nullptr;
 }
 
-void TreeLearner::updateMemoryForLeaf(double val) {
-  return;
-}
+
 void TreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) {
-  for (double leaf_value : leaf_value_) {
-    updateMemoryForLeaf(leaf_value);
-  }
+  return;
 }
   void TreeLearner::afterTrain() {
   return;

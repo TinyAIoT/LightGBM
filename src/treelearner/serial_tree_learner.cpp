@@ -289,21 +289,16 @@ Tree* SerialTreeLearner::FitByExistingTree(const Tree* old_tree, const score_t* 
   return tree.release();
 }
 
-void SerialTreeLearner::updateMemoryForLeaf(double val) {
-  if (MemoryRestrictedForest::IsEnable(config_)) {
-    mrf_->InsertLeafInformation(val);
-  }
-}
+
 void SerialTreeLearner::afterTrain() {
   if (MemoryRestrictedForest::IsEnable(config_)) {
-    // mrf_->PrintInfoToFile();
     mrf_->printForest();
   }
 }
 void SerialTreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) {
   for (double leaf_value : leaf_value_) {
     if (leaf_value != 0.0) {
-      updateMemoryForLeaf(leaf_value);
+      mrf_->InsertLeafInformation(leaf_value);
     }
   }
   if (MemoryRestrictedForest::IsEnable(config_)) {
@@ -954,7 +949,7 @@ void SerialTreeLearner::SplitInner(Tree* tree, int best_leaf, int* left_leaf,
     RecomputeBestSplitForLeaf(tree, leaf, &best_split_per_leaf_[leaf]);
   }
   if (mrf_ != nullptr) {
-    mrf_->InsertSplitInfo(tree, train_data_);
+    mrf_->InsertSplitInfo(tree);
   }
 }
 
@@ -1029,13 +1024,8 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
 
   /*[tinygbdt] BEGIN: if feature/split is not already used, the model should pay a price. */  
   if (MemoryRestrictedForest::IsEnable(config_)) {
-    consumed_memory con_mem = {};
-    const BinMapper* bin_mapper = train_data_->FeatureBinMapper(feature_index);
-    double threshold = bin_mapper->BinToValue(new_split.threshold);
-    mrf_->CalculateSplitMemoryConsumption(con_mem, threshold, real_fidx);
     new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
     new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
-
 
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
     if (mrf_->est_leftover_memory < 0) {
