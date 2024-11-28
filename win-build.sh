@@ -34,19 +34,19 @@ the cbuild process is created for Windows, might need some adaptations for other
 training models based on grid of threshold and feature penalties.
 ACTIVATE for Exeperiment 2
 '
-ms=64000
-for i in $(seq -10 1 15); do 
-    for j in $(seq -10 1 15); do 
-        fp=$(python -c "print(float(2**$i))" )
-        tp=$(python -c "print(float(2**$j))" )
-        if "../Release/lightgbm" config=$config max_depth=3 num_trees=100000 tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=models/model.$ms.0.ms.$fp.fp.$tp.tp.grid.txt > models/train.$ms.0.ms.$fp.fp.$tp.tp.grid.out; then
-            echo "Training model fp $fp tp $tp complete"
-        else
-            echo "Training model fp $fp tp $tp failed / not complete"
-            # exit 1  
-        fi
-    done
-done
+# ms=64000
+# for i in $(seq -10 1 15); do 
+#     for j in $(seq -10 1 15); do 
+#         fp=$(python -c "print(float(2**$i))" )
+#         tp=$(python -c "print(float(2**$j))" )
+#         if "../Release/lightgbm" config=$config max_depth=3 num_trees=100000 tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=models/model.$ms.0.ms.$fp.fp.$tp.tp.grid.txt > models/train.$ms.0.ms.$fp.fp.$tp.tp.grid.out; then
+#             echo "Training model fp $fp tp $tp complete"
+#         else
+#             echo "Training model fp $fp tp $tp failed / not complete"
+#             # exit 1  
+#         fi
+#     done
+# done
 
 :'
 the following three loops train the 3 x 3 models for the memory experiments.

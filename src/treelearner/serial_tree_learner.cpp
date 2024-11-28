@@ -296,7 +296,7 @@ void SerialTreeLearner::updateMemoryForLeaf(double val) {
 }
 void SerialTreeLearner::afterTrain() {
   if (MemoryRestrictedForest::IsEnable(config_)) {
-    mrf_->PrintInfoToFile();
+    // mrf_->PrintInfoToFile();
     mrf_->printForest();
   }
 }
