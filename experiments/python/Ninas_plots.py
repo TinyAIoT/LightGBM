@@ -11,6 +11,7 @@ from matplotlib.ticker import FuncFormatter
 from matplotlib.cm import viridis
 from matplotlib.colors import Normalize
 import lightgbm as lgb
+import helper.helper as hp
 from pandas import read_csv
 from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
 # keyword is the substring of the filename to search for in model.txt and .out files
@@ -20,51 +21,11 @@ barplot = True
 barplot_check = True
 lineplot = True
 lineplot2 = False
-def plotMetrics(df, axe, log_scale=False):
-    setting_value = df['tinygbdt_penalty_split']
-    color = 'tab:red'
-    axe.set_xlabel('tinygbdt_penalty_split')
-    if log_scale:
-        axe.set_xscale('log')
-    # Plot on the main Axes
-    if len(df['logloss']) > 0 and df['logloss'].iloc[-1] != 0:
-        axe.set_ylabel('Logloss', color=color)
-        axe.plot(setting_value, df['logloss'], color=color, label='Logloss')
-
-    if len(df['rmse']) > 0 and df['rmse'].iloc[-1] != 0:
-        axe.set_ylabel('R2 Score/Accuracy', color=color)
-        axe.plot(setting_value, df['accuracy'], color=color, label='R2 Score')
-
-    axe.plot(setting_value, df['accuracy'], color='tab:purple', label='Accuracy/R2')
-    axe.tick_params(axis='y', labelcolor=color)
-    axe.legend(loc='upper left')
-
-    # Create a twin Axes for each additional y-axis
-    ax2 = axe.twinx()
-    ax2.set_ylabel('count')
-    ax2.plot(setting_value, df['no_thresholds'], label="no. thresholds")
-    ax2.plot(setting_value, df['no_leaves'], label="no. leaves")
-    ax2.legend(loc='upper right')
-
-    ax3 = axe.twinx()
-    ax3.spines['right'].set_position(('outward', 60))  # Offset the spine
-    ax3.set_ylabel('bit count')
-    ax3.plot(setting_value, df['our_bits'], color='tab:pink', label="no. bits")
-    ax3.plot(setting_value, df['lgb_bits'], color='tab:brown', label="no. bits Naive")
-    ax3.legend(loc='upper right')
-    ax4 = axe.twinx()
-    ax4.spines['right'].set_position(('outward', 120))  # Offset the spine
-    ax4.set_ylabel('no. features/trees', color='tab:green')
-    ax4.plot(setting_value, df['no_features'], label="no. features", color='tab:green')
-    ax4.plot(setting_value, df['no_trees'], label="no. trees", color='tab:cyan')
-    ax4.tick_params(axis='y', labelcolor='tab:green')
-    ax4.legend(loc='lower right')
-
-    axe.figure.tight_layout()
 
 def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
     scm = axe.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], cmap='viridis',
                 label=column, norm=norm)
+    # TODO find some metric to go beyond manually sleecting points
     if column == 'accuracy':
         if data == 'breastcancer':
             row = df[(df['tinygbdt_penalty_feature'] == 4) & (df['tinygbdt_penalty_split'] == 8)]
@@ -78,22 +39,13 @@ def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
             row = df[(df['tinygbdt_penalty_feature'] == 8) & (df['tinygbdt_penalty_split'] == 64)]
         if data == 'mushroom':
             row = df[(df['tinygbdt_penalty_feature'] == 32) & (df['tinygbdt_penalty_split'] == 16)]
-        pcm = axe.scatter(row['tinygbdt_penalty_split'], row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy')
+        pcm = axe.scatter(row['tinygbdt_penalty_split'], row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
     #plt.annotate('Max Accuracy', (df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature']))
     axe.set_xscale('log')
     axe.set_yscale('log')  # Correct method for setting y scale
     return scm
-def rgb_to_hex(r, g, b):
-    r_int = int(r * 255)
-    g_int = int(g * 255)
-    b_int = int(b * 255)
-    return ('{:02X}' * 3).format(r_int, g_int, b_int)
-def generatecolors(rangeint):
-    norm2 = Normalize(vmin=0, vmax=rangeint - 1)
-    colors2 = [viridis(norm2(i)) for i in range(rangeint)]
-    for x in range(rangeint):
-        print(rgb_to_hex(colors2[x][0], colors2[x][1], colors2[x][2]))
-def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='Feature Penalty', mem=True, binary=True):
+
+def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, xlog=True, xlabel='Feature Penalty', mem=True, binary=True):
     # Determine which keyword to use based on xlabel
     keywords = ['accuracy1', 'accuracy2', 'accuracy3', 'accuracy4', 'accuracy4', 'accuracy5']
     norm = Normalize(vmin=0, vmax=len(keywords) - 1)
@@ -158,7 +110,7 @@ def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, plot
     return merged_handles, merged_labels
 
     #ax2.legend(loc='upper right')
-def plotAccuracyMemByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, plot_nodeLeafCount=False, xlog=True, xlabel='Feature Penalty', binary=True):
+def plotAccuracyMemByPenalty(df, axe, keyword, plot_accuracy=True, xlog=True, xlabel='Feature Penalty', binary=True):
     # Determine which keyword to use based on xlabel
     keywords = ['accuracy1', 'accuracy2', 'accuracy3', 'accuracy4', 'accuracy4', 'accuracy5']
     norm = Normalize(vmin=0, vmax=len(keywords) - 1)
@@ -180,10 +132,6 @@ def plotAccuracyMemByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, p
         axe.plot(df[keyword], df['accuracy'], '--o', label='Metric', color=colors[4], markersize=3)
 
         max_accuracy = df['accuracy'][1:].max()
-        #max_accuracy_xvalue = df[keyword].loc[df['accuracy'] == max_accuracy].values[0]
-
-        #axe.plot(max_accuracy_xvalue, max_accuracy, 'ro')
-        #axe.annotate('max at ' + str(max_accuracy_xvalue), (max_accuracy_xvalue, max_accuracy))
         axe.tick_params(axis='y', color=colors[0])
 
     ax2 = axe.twinx()
@@ -266,7 +214,7 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False):
     axe.set_xticks(x + width)  # Position the ticks at the center of the grouped bars
     kb_mem_val = []
     for memval in memory_values:
-        kb_mem_val.append(bits_to_kb(memval, 0))
+        kb_mem_val.append(hp.bits_to_kb(memval))
 
     axes[counter].set_xlabel("KB")
     axes[0].set_ylabel("Metric: \nAccuracy (binary)\n R2 (regression))")
@@ -278,11 +226,6 @@ def getnaiverow(df, bits):
         subset = df[(df['lgb_bits'] <= bitvalue)]
         returndf = pd.concat([returndf, subset.loc[subset['accuracy'].idxmax()].to_frame().T])
     return returndf
-def bits_to_kb(x, pos):
-    return x / (8 * 1024)
-def bits_to_kb_str(x, pos):
-    x = x / (8 * 1024)
-    return f"{x:.1f} KB"
 
 datasets = ['breastcancer', 'california_housing','covtype', 'kin8nm', 'kr-vs-kp', 'mushroom'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
 binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
@@ -325,7 +268,8 @@ if (plotgrid):
           # Divide by 1000 to convert to KB
 
         #cbar3.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb))
-        cbar.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb_str))
+        cbar.ax.yaxis.set_major_formatter(FuncFormatter(hp.bits_to_kb_str))
+
         axes[0,0].set_ylabel('Feature Penalty')
         axes[1,0].set_ylabel('Feature Penalty')
         axes[0,0].set_ylabel('Feature Penalty')
@@ -334,7 +278,7 @@ if (plotgrid):
 
         axes[0,5].set_ylabel('Memory (KB)', labelpad=60)
         axes[1,5].set_ylabel('Metric: \nAccuracy (binary)\n R2 (regression))', labelpad=50)
-        plt.savefig('../results/' + function + 'grid.png', format='png', dpi=300)
+        plt.savefig('../results/images/' + function + 'grid.png', format='png', dpi=300)
         plt.show()
 if barplot_check:
     for function in functions:
@@ -363,7 +307,7 @@ if barplot_check:
             counter = counter +1
         mergedhandles, mergedlabels = axes[0].get_legend_handles_labels()
         fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.15,0.05), ncol=7)
-        plt.savefig('../results/' + function + 'barplot.png', format='png', dpi=300)
+        plt.savefig('../results/images/' + function + 'barplot.png', format='png', dpi=300)
         plt.show()
 
 if lineplot2:
@@ -408,7 +352,7 @@ if lineplot2:
         axes[1,0].set_ylabel('Metric: Accuracy (binary)\n R2 (regression))')
         axes[0,0].set_ylabel('Metric: Accuracy (binary)\n R2 (regression))')
 
-        plt.savefig('../results/' + function + 'lines.png', format='png', dpi=300)
+        plt.savefig('../results/images/' + function + 'lines.png', format='png', dpi=300)
         plt.show()
 if lineplot:
     for function in functions:
@@ -452,5 +396,5 @@ if lineplot:
         axes[1,0].set_ylabel('Metric: Accuracy (binary)\n R2 (regression))')
         axes[0,0].set_ylabel('Metric: Accuracy (binary)\n R2 (regression))')
 
-        plt.savefig('../results/' + function + 'lines.png', format='png', dpi=300)
+        plt.savefig('../results/images/' + function + 'lines.png', format='png', dpi=300)
         plt.show()
