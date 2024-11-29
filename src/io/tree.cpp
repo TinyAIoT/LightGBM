@@ -457,26 +457,24 @@ std::string Tree::ToString() const {
     str_buf << "tt_threshold_count=" 
       <<  tt_thresholds_.size() << '\n'; 
   }
-  str_buf << "split_feature= "
+  str_buf << "split_feature="
     << ArrayToString(split_feature_, num_leaves_ - 1) << '\n';
-  str_buf << "split_gain= "
+  str_buf << "split_gain="
     << ArrayToString(split_gain_, num_leaves_ - 1) << '\n';
-  str_buf << "threshold= "
+  str_buf << "threshold="
     << ArrayToString<true>(threshold_, num_leaves_ - 1) << '\n';
-  str_buf << "decision_type= "
+  str_buf << "decision_type="
     << ArrayToString(Common::ArrayCast<int8_t, int>(decision_type_), num_leaves_ - 1) << '\n';
   str_buf << "left_child="
     << ArrayToString(left_child_, num_leaves_ - 1) << '\n';
   str_buf << "right_child="
     << ArrayToString(right_child_, num_leaves_ - 1) << '\n';
-  str_buf << "leaf_value= "
+  str_buf << "leaf_value="
     << ArrayToString<true>(leaf_value_, num_leaves_) << '\n';
   str_buf << "leaf_weight="
     << ArrayToString<true>(leaf_weight_, num_leaves_) << '\n';
   str_buf << "leaf_count="
     << ArrayToString(leaf_count_, num_leaves_) << '\n';
-  str_buf << "model_size="
-    << (3 * 16 * (num_leaves_ -1) + 32 * (num_leaves_ - 1) + 32 * num_leaves_) << '\n'; // 16 bit left_child + 16 bit right_child + 16 bit split_feature + 32 bit leave_value + 32 bit threshold
   str_buf << "internal_value="
     << ArrayToString(internal_value_, num_leaves_ - 1) << '\n';
   str_buf << "internal_weight="
@@ -731,11 +729,9 @@ std::string Tree::ToIfElse(int index, bool predict_leaf_index) const {
 }
 
 std::string Tree::NodeToIfElse(int index, bool predict_leaf_index) const {
-  std::stringstream str_buf_array;
   std::stringstream str_buf;
   Common::C_stringstream(str_buf);
   str_buf << std::setprecision(std::numeric_limits<double>::digits10 + 2);
-  str_buf_array << "std::vector<std::vector<double>> fullTree {";
   if (index >= 0) {
     // non-leaf
     str_buf << "fval = arr[" << split_feature_[index] << "];";

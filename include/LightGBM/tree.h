@@ -13,6 +13,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+
 namespace LightGBM {
 
 #define kCategoricalMask (1)
