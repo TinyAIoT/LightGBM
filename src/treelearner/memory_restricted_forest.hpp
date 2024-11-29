@@ -148,8 +148,6 @@ namespace LightGBM {
     }
 
     void UpdateMemoryForTree(Tree *tree) {
-      Log::Info("Ref tree update memory for tree %d %d !!!!!!!!!!", ref_trees_.size() - 1, ref_trees_.back().tree_id);
-
 #pragma omp critical
       ref_trees_.push_back({});
       ref_trees_.back().tree_id = ref_trees_.size() - 1;
@@ -166,7 +164,6 @@ namespace LightGBM {
         feature_to_insert = feature;
         features_used_global_.push_back(feature);
 #pragma omp critical
-        Log::Info("Ref tree size insert split %d %d !!!!!!!!!!", ref_trees_.size() - 1, ref_trees_.back().tree_id);
         ref_trees_.back().feature_ids.push_back(feature);
 #pragma omp critical
         threshold_per_feature.push_back({static_cast<int>(feature)});
@@ -292,7 +289,6 @@ namespace LightGBM {
       max_depth = max_depth_;
       if (ref_trees_.empty()) {
         ref_trees_.push_back({});
-        Log::Info("Ref Tree size!! %d ", ref_trees_.size() - 1);
         ref_trees_.back().tree_id = ref_trees_.size() - 1;
       }
       est_leftover_memory = forestsize;
@@ -359,9 +355,7 @@ namespace LightGBM {
       int numNodes = static_cast<int>(pow(2, max_depth)) - 1;
       for (ref_tree tree: ref_trees_) {
         if (tree.feature_ids.size() == 0) { break; }
-        // Log::Info("[TINYGBDT]: Added for tree %d %d bits for leaves references %d leaves", tree.tree_id, bits(leavesize - 1), leaves);
         memory.bits_tree_refs += bits(leavesize - 1) * leaves;
-        // Log::Info("[TINYGBDT]: Added for tree %d %d bits for feature references %d Nodes", tree.tree_id, bits(features_used_global_.size()-1), numNodes);
         memory.bits_tree_refs += bits(features_used_global_.size()-1) * numNodes;
         for (int feature: tree.feature_ids) {
           if (feature != 255) {
@@ -370,7 +364,6 @@ namespace LightGBM {
                 int size = t_f_info.thresholds_.size() - 1;
                 if (size == 0) { size = 1; }
                 memory.bits_tree_refs += bits(size);
-                Log::Info("Added %d bits for feature %d", bits(size), feature);
               }
             }
           }
