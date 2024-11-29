@@ -12,7 +12,7 @@ else
     exit 1
 fi
 
-cd experiments/python || exit
+# cd experiments/python || exit
 
 # TODO Call fetch Data
 
@@ -21,7 +21,7 @@ cd examples/binary_classification || exit
 
 for tree in 1 2 3 5 10 50 100; do
   for depth in 3 5 7; do
-    if "../../lightgbm" config=train.conf max_depth=$depth num_trees=$tree tinygbdt_forestsize=50000 tinygbdt_penalty_split=0.9 tinygbdt_penalty_feature=0.8 output_model=tree-${tree}-depth-${depth}-fp-0.9-tp-0.8.txt > tree-${tree}-depth-${depth}-fp-0.9-tp-0.8.out; then
+    if "../../lightgbm" config=train.conf max_depth=$depth num_trees=$tree tinygbdt_forestsize=50000 tinygbdt_penalty_split=0.9 tinygbdt_penalty_feature=0.8 output_model=Model/tree-${tree}-depth-${depth}-fp-0.9-tp-0.8.txt > Model/tree-${tree}-depth-${depth}-fp-0.9-tp-0.8.out; then
         echo "Training model Tree ${tree} Depth ${depth} complete"
     else
         echo "Training model Tree ${tree} Depth ${depth} failed / not complete"

@@ -784,7 +784,6 @@ void SerialTreeLearner::SplitInner(Tree* tree, int best_leaf, int* left_leaf,
   SplitInfo& best_split_info = best_split_per_leaf_[best_leaf];
   const int inner_feature_index =
       train_data_->InnerFeatureIndex(best_split_info.feature);
-
   if (cegb_ != nullptr) {
     cegb_->UpdateLeafBestSplits(tree, best_leaf, &best_split_info,
                                 &best_split_per_leaf_);
@@ -966,7 +965,6 @@ void SerialTreeLearner::RenewTreeOutput(Tree* tree, const ObjectiveFunction* obj
         n_nozeroworker_perleaf[i] = 0;
       }
     }
-
     if (num_machines > 1) {
       std::vector<double> outputs(tree->num_leaves());
       for (int i = 0; i < tree->num_leaves(); ++i) {
@@ -1077,9 +1075,9 @@ void SerialTreeLearner::RecomputeBestSplitForLeaf(Tree* tree, int leaf, SplitInf
   }
 
   OMP_INIT_EX();
-  // find splits
-  std::vector<int8_t> node_used_features = col_sampler_.GetByNode(tree, leaf);
-  #pragma omp parallel for schedule(static) num_threads(share_state_->num_threads)
+// find splits
+std::vector<int8_t> node_used_features = col_sampler_.GetByNode(tree, leaf);
+#pragma omp parallel for schedule(static) num_threads(share_state_->num_threads)
   for (int feature_index = 0; feature_index < num_features_; ++feature_index) {
     OMP_LOOP_EX_BEGIN();
     if (!col_sampler_.is_feature_used_bytree()[feature_index] ||
