@@ -12,6 +12,11 @@ else
     exit 1
 fi
 
+cd experiments/python || exit
+
+# TODO Call fetch Data
+
+# TODO adapt when testing is not longer necessary
 cd examples/binary_classification || exit
 
 for tree in 1 2 3 5 10 50 100; do
