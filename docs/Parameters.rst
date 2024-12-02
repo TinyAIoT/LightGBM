@@ -594,10 +594,6 @@ Learning Control Parameters
 
    -  [tinygbdt] size of the boosted tree
 
--  ``tinygbdt_precision`` :raw-html:`<a id="tinygbdt_precision" title="Permalink to this parameter" href="#tinygbdt_precision">&#x1F517;&#xFE0E;</a>`, default = ``3``, type = double
-
-   -  [tinygbdt] precision for merging float/threshold values
-
 -  ``cegb_tradeoff`` :raw-html:`<a id="cegb_tradeoff" title="Permalink to this parameter" href="#cegb_tradeoff">&#x1F517;&#xFE0E;</a>`, default = ``1.0``, type = double, constraints: ``cegb_tradeoff >= 0.0``
 
    -  cost-effective gradient boosting multiplier for all penalties

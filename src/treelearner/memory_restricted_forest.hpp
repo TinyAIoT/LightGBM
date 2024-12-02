@@ -155,7 +155,7 @@ namespace LightGBM {
 
     void InsertSplitInfo(const Tree *tree) {
       size_t last_node_id = tree->num_leaves_ - 2;
-      const double threshold = RoundDecimals(tree->threshold_[last_node_id], this->precision);
+      const double threshold = tree->threshold_[last_node_id];
       const uint32_t feature = tree->split_feature_[last_node_id];
       split_info split_inf = {};
       CalculateSplitMemoryConsumption(split_inf, threshold, feature);
@@ -272,11 +272,6 @@ namespace LightGBM {
       return needed_bits;
     }
 
-    double RoundDecimals(double number, double decimals) {
-      double rounded = ((double) ((int) (number * pow(10.0, decimals) + .5))) / pow(10.0, decimals);
-      return rounded;
-    }
-
     static bool IsEnable(const Config *config) {
       if (config->tinygbdt_forestsize == 0) {
         Log::Info("MemoryRestrictedForest disabled");
@@ -285,7 +280,7 @@ namespace LightGBM {
       return true;
     }
 
-    void Init(const int forestsize_, const double precision, int max_depth_) {
+    void Init(const int forestsize_, int max_depth_) {
       max_depth = max_depth_;
       if (ref_trees_.empty()) {
         ref_trees_.push_back({});
@@ -293,7 +288,6 @@ namespace LightGBM {
       }
       est_leftover_memory = forestsize;
       forestsize = forestsize_;
-      this->precision = precision;
     }
 
     void printForest() {
@@ -374,7 +368,6 @@ namespace LightGBM {
 
     bool init_;
     int est_leftover_memory, max_depth, forestsize;
-    double precision;
     const SerialTreeLearner *tree_learner_;
     std::vector<double> thresholds_used_global_;
     std::vector<uint32_t> features_used_global_;

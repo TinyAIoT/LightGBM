@@ -81,7 +81,7 @@ void SerialTreeLearner::Init(const Dataset* train_data, bool is_constant_hessian
   /*[tinygbdt] BEGIN: Initializing global variables */
   if (MemoryRestrictedForest::IsEnable(config_)) {
     mrf_.reset(new MemoryRestrictedForest(this));
-    mrf_->Init(config_->tinygbdt_forestsize, config_->tinygbdt_precision, config_->max_depth);
+    mrf_->Init(config_->tinygbdt_forestsize, config_->max_depth);
   }
   /*[tinygbdt] END */
 }
@@ -144,7 +144,7 @@ void SerialTreeLearner::ResetTrainingDataInner(const Dataset* train_data,
     cegb_->Init();
   }
   if (mrf_ != nullptr) {
-    mrf_->Init(config_->tinygbdt_forestsize, config_->tinygbdt_precision, config_->max_depth);
+    mrf_->Init(config_->tinygbdt_forestsize, config_->max_depth);
   }
 }
 
@@ -188,7 +188,7 @@ void SerialTreeLearner::ResetConfig(const Config* config) {
     if (mrf_ == nullptr) {
       mrf_.reset(new MemoryRestrictedForest(this));
     }
-    mrf_->Init(config_->tinygbdt_forestsize, config_->tinygbdt_precision, config_->max_depth);
+    mrf_->Init(config_->tinygbdt_forestsize, config_->max_depth);
   }
   constraints_.reset(LeafConstraintsBase::Create(config_, config_->num_leaves, train_data_->num_features()));
 }

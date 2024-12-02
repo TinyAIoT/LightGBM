@@ -148,7 +148,6 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
     num_iterations = 0
     max_depth = 0
     tinygbdt_forestsize = 0
-    tinygbdt_precision = 0
     num_classes = 0
     objective = ""
     data = ""
@@ -175,7 +174,6 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
             tinygbdt_penalty_feature.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_feature'))
             tinygbdt_penalty_split.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_split'))
             tinygbdt_forestsize =  GetValueFromTXT(filepath, 'tinygbdt_forestsize')
-            tinygbdt_precision =  GetValueFromTXT(filepath, 'tinygbdt_precision')
             num_classes =  GetValueFromTXT(filepath, 'num_class')
             valid_data = GetValueFromTXT(filepath, 'valid')
             label_column = GetValueFromTXT(filepath, 'label_column')
@@ -216,7 +214,6 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
                    +'_maxtrees'+str(num_iterations)
                    +'_maxdepth'+str(max_depth)
                    + '_maxsize'+str(tinygbdt_forestsize)
-                   +'_precision'+str(tinygbdt_precision)
                    +'_logscale'+str(log_scale)
                    +'.csv')
     df.to_csv('../results' + directory + '/' +
@@ -288,7 +285,6 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
             +'_maxtrees'+str(num_iterations)
             +'_maxdepth'+str(max_depth)
             + '_maxsize'+str(tinygbdt_forestsize)
-            +'_precision'+str(tinygbdt_precision)
             +'_logscale'+str(log_scale)
             +'.png'
             )
