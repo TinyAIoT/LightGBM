@@ -471,3 +471,4 @@ experiments/Model/*
 experiments/Output/*
 experiments/plots/*
 experiments/models/*
+experiments/data/*
