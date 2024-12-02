@@ -230,9 +230,6 @@ class BinMapper {
       return str_buf.str();
     }
   }
-  inline double getMinVal() const { return min_val_; }
-  inline std::vector<double> getBinUpperBound() const { return bin_upper_bound_; }
-  inline double getMaxVal() const { return max_val_; }
 
  private:
   /*! \brief Number of bins */

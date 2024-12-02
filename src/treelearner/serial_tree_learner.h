@@ -115,8 +115,6 @@ class SerialTreeLearner: public TreeLearner {
       }
     }
   }
-  void updateMemoryForLeaf(double val) override;
-  void afterTrain() override;
   void updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) override;
   void RenewTreeOutput(Tree* tree, const ObjectiveFunction* obj, std::function<double(const label_t*, int)> residual_getter,
                        data_size_t total_num_data, const data_size_t* bag_indices, data_size_t bag_cnt, const double* train_score) const override;
@@ -179,19 +177,13 @@ class SerialTreeLearner: public TreeLearner {
   void CheckSplit(const SplitInfo& best_split_info, const int left_leaf_index, const int right_leaf_index);
   #endif
 
-  /*[tinygbdt] BEGIN: Declaring global variables */
-  /*! \brief count feature use; TODO: possible to use fewer bits? */
-  std::vector<uint32_t> features_used_global_;
-  /*! \brief record thresholds used for split */
-  std::set<float> splits_used_global_;
-  /*[tinygbdt] END */
-
   /*!
   * \brief Get the number of data in a leaf
   * \param leaf_idx The index of leaf
   * \return The number of data in the leaf_idx leaf
   */
   inline virtual data_size_t GetGlobalDataCountInLeaf(int leaf_idx) const;
+
   /*! \brief number of data */
   data_size_t num_data_;
   /*! \brief number of features */

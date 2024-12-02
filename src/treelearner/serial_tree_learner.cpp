@@ -241,7 +241,7 @@ Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians
       Log::Warning("No further splits with positive gain, best gain: %f", best_leaf_SplitInfo.gain);
       break;
     }
-    // split tree with best leaf 
+    // split tree with best leaf
     Split(tree_ptr, best_leaf, &left_leaf, &right_leaf);
     cur_depth = std::max(cur_depth, tree->leaf_depth(left_leaf));
   }
@@ -250,6 +250,8 @@ Tree* SerialTreeLearner::Train(const score_t* gradients, const score_t *hessians
     gradient_discretizer_->RenewIntGradTreeOutput(tree.get(), config_, data_partition_.get(), gradients_, hessians_,
       [this] (int leaf_index) { return GetGlobalDataCountInLeaf(leaf_index); });
   }
+
+  Log::Debug("Trained a tree with leaves = %d and depth = %d", tree->num_leaves(), cur_depth);
   return tree.release();
 }
 
@@ -281,35 +283,18 @@ Tree* SerialTreeLearner::FitByExistingTree(const Tree* old_tree, const score_t* 
     }
     auto old_leaf_output = tree->LeafOutput(i);
     auto new_leaf_output = output * tree->shrinkage();
-    double new_output = config_->refit_decay_rate * old_leaf_output + (1.0 - config_->refit_decay_rate) * new_leaf_output;
-    tree->SetLeafOutput(i, new_output);
+    tree->SetLeafOutput(i, config_->refit_decay_rate * old_leaf_output + (1.0 - config_->refit_decay_rate) * new_leaf_output);
     OMP_LOOP_EX_END();
   }
   OMP_THROW_EX();
   return tree.release();
 }
 
-void SerialTreeLearner::updateMemoryForLeaf(double val) {
-  if (MemoryRestrictedForest::IsEnable(config_)) {
-    mrf_->InsertLeafInformation(val);
-  }
-}
-void SerialTreeLearner::afterTrain() {
-  if (MemoryRestrictedForest::IsEnable(config_)) {
-    // mrf_->PrintInfoToFile();
-    mrf_->printForest();
-  }
-}
 void SerialTreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) {
   for (double leaf_value : leaf_value_) {
     if (leaf_value != 0.0) {
-      updateMemoryForLeaf(leaf_value);
+      mrf_->InsertLeafInformation(leaf_value);
     }
-  }
-  if (MemoryRestrictedForest::IsEnable(config_)) {
-    mrf_->UpdateMemoryForTree(tree);
-    // TODO: leave this out for now and get #features and #thresholds from mrf
-    // tree->ToArrayPointer(mrf_->features_used_global_, mrf_->thresholds_used_global_, config_->tinygbdt_precision);
   }
 }
 
@@ -758,7 +743,6 @@ int32_t SerialTreeLearner::ForceSplits(Tree* tree, int* left_leaf,
     if (best_leaf_SplitInfo.gain <= 0.0) {
       Log::Warning("No further splits with positive gain, best gain: %f",
                    best_leaf_SplitInfo.gain);
-      afterTrain();
       return config_->num_leaves;
     }
     Split(tree, best_leaf, left_leaf, right_leaf);
@@ -800,7 +784,6 @@ void SerialTreeLearner::SplitInner(Tree* tree, int best_leaf, int* left_leaf,
   SplitInfo& best_split_info = best_split_per_leaf_[best_leaf];
   const int inner_feature_index =
       train_data_->InnerFeatureIndex(best_split_info.feature);
-
   if (cegb_ != nullptr) {
     cegb_->UpdateLeafBestSplits(tree, best_leaf, &best_split_info,
                                 &best_split_per_leaf_);
@@ -878,8 +861,6 @@ void SerialTreeLearner::SplitInner(Tree* tree, int best_leaf, int* left_leaf,
         train_data_->FeatureBinMapper(inner_feature_index)->missing_type());
   }
 
-  Log::Debug("Gain: %f", best_split_info.gain);
-
 #ifdef DEBUG
   CHECK(*right_leaf == next_leaf_id);
 #endif
@@ -954,7 +935,7 @@ void SerialTreeLearner::SplitInner(Tree* tree, int best_leaf, int* left_leaf,
     RecomputeBestSplitForLeaf(tree, leaf, &best_split_per_leaf_[leaf]);
   }
   if (mrf_ != nullptr) {
-    mrf_->InsertSplitInfo(tree, train_data_);
+    mrf_->InsertSplitInfo(tree);
   }
 }
 
@@ -975,6 +956,7 @@ void SerialTreeLearner::RenewTreeOutput(Tree* tree, const ObjectiveFunction* obj
       data_size_t cnt_leaf_data = 0;
       auto index_mapper = data_partition_->GetIndexOnLeaf(i, &cnt_leaf_data);
       if (cnt_leaf_data > 0) {
+        // bag_mapper[index_mapper[i]]
         const double new_output = obj->RenewTreeOutput(output, residual_getter, index_mapper, bag_mapper, cnt_leaf_data);
         tree->SetLeafOutput(i, new_output);
       } else {
@@ -983,7 +965,6 @@ void SerialTreeLearner::RenewTreeOutput(Tree* tree, const ObjectiveFunction* obj
         n_nozeroworker_perleaf[i] = 0;
       }
     }
-
     if (num_machines > 1) {
       std::vector<double> outputs(tree->num_leaves());
       for (int i = 0; i < tree->num_leaves(); ++i) {
@@ -1027,23 +1008,15 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
   }
   new_split.feature = real_fidx;
 
-  /*[tinygbdt] BEGIN: if feature/split is not already used, the model should pay a price. */  
   if (MemoryRestrictedForest::IsEnable(config_)) {
-    consumed_memory con_mem = {};
-    const BinMapper* bin_mapper = train_data_->FeatureBinMapper(feature_index);
-    double threshold = bin_mapper->BinToValue(new_split.threshold);
-    mrf_->CalculateSplitMemoryConsumption(con_mem, threshold, real_fidx);
     new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
     new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
-
 
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
     if (mrf_->est_leftover_memory < 0) {
       new_split.gain = 0;
     }
   }
-  /*[tinygbdt] END */
-
 
   if (cegb_ != nullptr) {
     new_split.gain -=
@@ -1102,9 +1075,9 @@ void SerialTreeLearner::RecomputeBestSplitForLeaf(Tree* tree, int leaf, SplitInf
   }
 
   OMP_INIT_EX();
-  // find splits
-  std::vector<int8_t> node_used_features = col_sampler_.GetByNode(tree, leaf);
-  #pragma omp parallel for schedule(static) num_threads(share_state_->num_threads)
+// find splits
+std::vector<int8_t> node_used_features = col_sampler_.GetByNode(tree, leaf);
+#pragma omp parallel for schedule(static) num_threads(share_state_->num_threads)
   for (int feature_index = 0; feature_index < num_features_; ++feature_index) {
     OMP_LOOP_EX_BEGIN();
     if (!col_sampler_.is_feature_used_bytree()[feature_index] ||

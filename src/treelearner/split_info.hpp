@@ -50,7 +50,6 @@ struct SplitInfo {
   int64_t right_sum_gradient_and_hessian = 0;
   std::vector<uint32_t> cat_threshold;
   /*! \brief True if default split is left */
-  // TODO variables for leftmostclosestpoint and rightmostclosestpoint.
   bool default_left = true;
   int8_t monotone_type = 0;
   inline static int Size(int max_cat_threshold) {
@@ -195,7 +194,6 @@ struct SplitInfo {
     return local_feature == other_feature;
   }
 };
-
 
 struct LightSplitInfo {
  public:

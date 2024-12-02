@@ -1,34 +1,30 @@
 #!/bin/bash
 
+if cmake -B build -S . -DUSE_CUDA=0 -DUSE_DEBUG=ON; then
+    if cmake --build build -j4; then
+        echo "build complete"
+    else
+        echo "cmake --build build -j4 failed"
+        exit 1
+    fi
+else
+    echo "CMake configuration failed"
+    exit 1
+fi
 
-cd experiments || exit
+# cd experiments/python || exit
 
-ms=64000
+# TODO Call fetch Data
 
-for dataset in "kin8nm" "california_housing"; do
-  for i in $(seq -10 1 15); do
-      for j in $(seq -10 1 15); do
-          for tree in 5 10 15 20 30 40 50 100 500; do
-              for depth in 3; do
-                fp=$(python3 -c "print(float(2**$i))" )
-                tp=$(python3 -c "print(float(2**$j))" )
-                if "../lightgbm" config=train.conf objective=regression train_data=data/${dataset}.libsvm.train valid_data=data/${dataset}.libsvm.test config=train.conf max_depth=$depth num_trees=$tree tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=Model/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > Model/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out; then
-                    echo "Training model fp $fp tp $tp complete"
-                else
-                    echo "Training model fp $fp tp $tp failed / not complete"
-                fi
-              done
-          done
-      done
+# TODO adapt when testing is not longer necessary
+cd examples/binary_classification || exit
+
+for tree in 1 2 3 5 10 50 100; do
+  for depth in 3 5 7; do
+    if "../../lightgbm" config=train.conf max_depth=$depth num_trees=$tree tinygbdt_forestsize=50000 tinygbdt_penalty_split=0.9 tinygbdt_penalty_feature=0.8 output_model=Model/tree-${tree}-depth-${depth}-fp-0.9-tp-0.8.txt > Model/tree-${tree}-depth-${depth}-fp-0.9-tp-0.8.out; then
+        echo "Training model Tree ${tree} Depth ${depth} complete"
+    else
+        echo "Training model Tree ${tree} Depth ${depth} failed / not complete"
+    fi
   done
- done
-
-cd Model || exit
-
-find ./ -name 'data-kin8nmms-64000-fp-*' -type f -print0 | xargs -0 mv -t ../data/All/kin8nm/
-find ./ -name 'data-california_housingms-64000-fp-*' -type f -print0 | xargs -0 mv -t ../data/All/california_housing/
-
-cd ..
-
-./genData.sh
-
+done
