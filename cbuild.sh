@@ -26,5 +26,10 @@ for tree in 1 2 3 5 10 50 100; do
     else
         echo "Training model Tree ${tree} Depth ${depth} failed / not complete"
     fi
+    if "../../lightgbm" config=train.conf max_depth=$depth num_trees=$tree output_model=Model/tree-${tree}-depth-${depth}.txt > Model/tree-${tree}-depth-${depth}.out; then
+        echo "Training model Tree ${tree} Depth ${depth} complete"
+    else
+        echo "Training model Tree ${tree} Depth ${depth} failed / not complete"
+    fi
   done
 done

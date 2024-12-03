@@ -291,9 +291,11 @@ Tree* SerialTreeLearner::FitByExistingTree(const Tree* old_tree, const score_t* 
 }
 
 void SerialTreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) {
-  for (double leaf_value : leaf_value_) {
-    if (leaf_value != 0.0) {
-      mrf_->InsertLeafInformation(leaf_value);
+  if (mrf_ != nullptr) {
+    for (double leaf_value : leaf_value_) {
+      if (leaf_value != 0.0) {
+        mrf_->InsertLeafInformation(leaf_value);
+      }
     }
   }
 }
