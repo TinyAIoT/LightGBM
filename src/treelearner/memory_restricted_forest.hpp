@@ -291,7 +291,7 @@ namespace LightGBM {
         ref_trees_.push_back({});
         ref_trees_.back().tree_id = ref_trees_.size() - 1;
       }
-      est_leftover_memory = forestsize;
+      est_leftover_memory = forestsize_;
       forestsize = forestsize_;
       this->precision = precision;
     }
