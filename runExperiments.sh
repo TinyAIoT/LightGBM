@@ -2,8 +2,6 @@
 
 cd experiments || exit
 
-# TODO Call fetch Data
-
 rm -r models # ATTENTION: deletes all models in the models folder
 mkdir -p models 
 
