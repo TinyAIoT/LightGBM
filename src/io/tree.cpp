@@ -475,6 +475,8 @@ std::string Tree::ToString() const {
     << ArrayToString<true>(leaf_weight_, num_leaves_) << '\n';
   str_buf << "leaf_count="
     << ArrayToString(leaf_count_, num_leaves_) << '\n';
+  str_buf << "model_size="
+    << (3 * 16 * (num_leaves_ -1) + 32 * (num_leaves_ - 1) + 32 * num_leaves_) << '\n'; // 16 bit left_child + 16 bit right_child + 16 bit split_feature + 32 bit leave_value + 32 bit threshold
   str_buf << "internal_value="
     << ArrayToString(internal_value_, num_leaves_ - 1) << '\n';
   str_buf << "internal_weight="
