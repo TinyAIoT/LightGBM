@@ -27,19 +27,6 @@ def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
                       label=column, norm=norm)
     # TODO find some metric to go beyond manually selecting points accuracy/memory?
     if column == 'accuracy':
-        if data == 'breastcancer':
-            row = df[(df['tinygbdt_penalty_feature'] == 4) & (df['tinygbdt_penalty_split'] == 8)]
-        if data == 'california_housing':
-            row = df[(df['tinygbdt_penalty_feature'] == 8) & (df['tinygbdt_penalty_split'] == 0.125)]
-        if data == 'covtype':
-            row = df[(df['tinygbdt_penalty_feature'] == 1024) & (df['tinygbdt_penalty_split'] == 16384)]
-        if data == 'kin8nm':
-            row = df[(df['tinygbdt_penalty_feature'] == 0.5) & (df['tinygbdt_penalty_split'] == 0.125)]
-        if data == 'kr-vs-kp':
-            row = df[(df['tinygbdt_penalty_feature'] == 8) & (df['tinygbdt_penalty_split'] == 64)]
-        if data == 'mushroom':
-            row = df[(df['tinygbdt_penalty_feature'] == 32) & (df['tinygbdt_penalty_split'] == 16)]
-
         df['ratio'] = df['accuracy'] / df['our_bits']
         max_row = df.loc[df['ratio'].idxmax()]
         pcm = axe.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
@@ -151,7 +138,6 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False):
 
     fp=df['tinygbdt_penalty_feature'].iloc[2]
     tp=df['tinygbdt_penalty_feature'].iloc[2]
-    print(fp)
     # Create a new DataFrame to store the best accuracy rows
     best_rows_toad = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
     best_rows_naive = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
@@ -182,7 +168,6 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False):
             best_rows_naive_fp = pd.concat([best_rows_naive_fp, pd.DataFrame([zero_row], columns=test.columns)])
 
     x = np.arange(len(best_rows_toad['our_bits']))
-    print(best_rows_naive_fp)
     myitems = {
         'Naive': (best_rows_naive['accuracy']),
         'ToaD': (best_rows_naive_fp['accuracy']),
@@ -211,20 +196,23 @@ def getnaiverow(df, bits):
         returndf = pd.concat([returndf, subset.loc[subset['accuracy'].idxmax()].to_frame().T])
     return returndf
 
-datasets = ['breastcancer', 'california_housing', 'kin8nm', 'kr-vs-kp', 'mushroom'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
-binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
-regression = ['california_housing', 'kin8nm'] #  'california_housing', 'kin8nm', 'covtype' # todo covtype
+if not os.path.exists('../results/images'):
+    os.makedirs('../results/images')
+#"covtype",
+datasets = ['breastcancer', 'california_housing','kin8nm', 'kr-vs-kp', 'mushroom']  # todo covtype
+binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype']
+regression = ['california_housing', 'kin8nm']
 plt.rcParams['image.cmap'] = 'viridis'
 functions = ['simple']
 vminour_bits, vmaxour_bits, vminour_accuracy, vmaxour_accuracy = 1000, 0 , 1000, 0
 for function in functions:
     for data in datasets:
-        df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-        data_tree_550_depth_3 = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-        data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['depth'] == 3)]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-        minbits = data_tree_550_depth_3_fptp_1000['our_bits'].min()
-        vminour_bits, vmaxour_bits = min(minbits, vminour_bits), max(data_tree_550_depth_3_fptp_1000['our_bits'].max(), vmaxour_bits)
-        vminour_accuracy, vmaxour_accuracy = min(data_tree_550_depth_3_fptp_1000['accuracy'].min(), vminour_accuracy), max(data_tree_550_depth_3_fptp_1000['accuracy'].max(), vmaxour_accuracy)
+        df = pd.read_csv('../results/' + data + '/last.csv')
+        df = df[(df['our_bits'] != 0) ]
+        data_tree_550_depth_3 = df[(df['max_trees'] == 100) ] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        minbits = data_tree_550_depth_3['our_bits'].min()
+        vminour_bits, vmaxour_bits = min(minbits, vminour_bits), max(data_tree_550_depth_3['our_bits'].max(), vmaxour_bits)
+        vminour_accuracy, vmaxour_accuracy = min(data_tree_550_depth_3['accuracy'].min(), vminour_accuracy), max(data_tree_550_depth_3['accuracy'].max(), vmaxour_accuracy)
         norm = mcolors.Normalize(vmin=vminour_bits, vmax=vmaxour_bits)  # Normalize color range
         norm2 = mcolors.Normalize(vmin=vminour_accuracy, vmax=vmaxour_accuracy)  # Normalize color range
 if (plotgrid):
@@ -232,15 +220,15 @@ if (plotgrid):
         fig, axes = plt.subplots(2, 6, figsize=(15, 4), sharex=True, sharey=True)
         counter = 0
         for data in datasets:
-            df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-            data_tree_550_depth_3 = df[(df['max_trees'] == 100) & (df['depth'] == 3)]
-            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['depth'] == 3)]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
+            df = pd.read_csv('../results/' + data + '/last.csv')
+            df = df[(df['our_bits'] != 0) ]
+            data_tree_550_depth_3 = df[(df['max_trees'] == 100) ]
+            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) ]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
             #graphs
             if (data in binary):
                 axe=axes[0, counter].set_title(data + "\n(binary)")
             if (data in regression):
                 axe=axes[0, counter].set_title(data + "\n(regression)")
-            #grid_memory2 = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[2, counter], fig=fig, column='lgb_bits', norm=norm, title='Memory usage with changing penalties')
             grid_memory = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[0, counter], fig=fig, column='our_bits', data=data, norm=norm, title='Memory usage with changing penalties')
             grid_accuracy = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[1,counter], fig=fig, column='accuracy', data=data, norm=norm2, title='Accuracy with changing penalties')
             axes[1, counter].set_xlabel('Threshold Penalty')
@@ -269,9 +257,10 @@ if barplot_check:
         fig, axes = plt.subplots(1, 6, figsize=(15, 4))
         counter = 0
         for data in datasets:
-            df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-            dfn = pd.read_csv('../results/' + data + '/classic.csv')
-            dsubset = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+            df = pd.read_csv('../results/' + data + '/last.csv')
+            df = df[(df['our_bits'] != 0) ]
+            dfn = df[(df['our_bits'] == 0) ]
+            dsubset = df[(df['max_trees'] == 100) ] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             if (data in binary):
                 axes[counter].set_title(data + "\n(binary)")
             if (data in regression):
@@ -299,9 +288,10 @@ if lineplot2:
         fig, axes = plt.subplots( 2, 6, figsize=(15, 6), sharex=True, sharey=True)
         counter = 0
         for data in datasets:
-            df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-            data_tree_550_depth_3 = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['depth'] == 3) & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+            df = pd.read_csv('../results/' + data + '/last.csv')
+            df = df[(df['our_bits'] != 0) ]
+            data_tree_550_depth_3 = df[(df['max_trees'] == 100) ] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100)  & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             if (data in binary):
                 acc_good_subset = data_tree_550_depth_3[data_tree_550_depth_3['accuracy'] > 0.85] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
 
@@ -343,9 +333,10 @@ if lineplot:
         fig, axes = plt.subplots( 2, 6, figsize=(15, 6), sharex=True, sharey=True)
         counter = 0
         for data in datasets:
-            df = pd.read_csv('../results/' + data + '/' + function + '_all.csv')
-            data_tree_550_depth_3 = df[(df['max_trees'] == 100) & (df['depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['depth'] == 3) & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+            df = pd.read_csv('../results/' + data + '/last.csv')
+            df = df[(df['our_bits'] != 0) ]
+            data_tree_550_depth_3 = df[(df['max_trees'] == 100)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             if (data in binary):
                 acc_good_subset = data_tree_550_depth_3[data_tree_550_depth_3['accuracy'] > 0.85] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
 

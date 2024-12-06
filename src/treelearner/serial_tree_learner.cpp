@@ -85,7 +85,11 @@ void SerialTreeLearner::Init(const Dataset* train_data, bool is_constant_hessian
   }
   /*[tinygbdt] END */
 }
-
+void SerialTreeLearner::afterTrain() {
+  if (MemoryRestrictedForest::IsEnable(config_)) {
+    mrf_->printForest();
+  }
+}
 void SerialTreeLearner::GetShareStates(const Dataset* dataset,
                                        bool is_constant_hessian,
                                        bool is_first_time) {

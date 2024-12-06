@@ -55,5 +55,9 @@ TreeLearner* TreeLearner::CreateTreeLearner(const std::string& learner_type, con
 void TreeLearner::updateMemoryForLeaves(Tree * tree, std::vector<double> leaf_value_) {
   return;
 }
+void TreeLearner::afterTrain() {
+  return;
+}
+
 
 }  // namespace LightGBM

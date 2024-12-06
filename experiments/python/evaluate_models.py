@@ -18,35 +18,36 @@ def GetValueFromOut(filename, key):
     return ret
 
 def GetValueFromOutBits(filename):
-    key1_pattern = r'Bits Bool Thresholds: \d+ ->'
-    key2_pattern = r'Bits float thresholds: \d+ ->'
-    key3_pattern = r'Bits References inside Trees: \d+ ->'
-    key4_pattern = r'Bits Feature Threshold mapping: \d+ ->'
-    key5_pattern = r'Bits Feature float leaves: \d+ ->'
+    key1_pattern = r'Bits Bool Thresholds:\s*(\d+)'
+    key2_pattern = r'Bits float thresholds:\s*(\d+)'
+    key3_pattern = r'Bits References inside Trees:\s*(\d+)'
+    key4_pattern = r'Bits Feature Threshold mapping:\s*(\d+)'
+    key5_pattern = r'Bits Feature float leaves:\s*(\d+)'
 
-    input = open(filename, "r")
-    ret1 = 0.0
-    ret2 = 0.0
-    ret3 = 0.0
-    ret4 = 0.0
-    ret5 = 0.0
-    for line in input.readlines():
-        match1 = re.search(r'{} ([\d.]+)'.format(key1_pattern), line)
-        match2 = re.search(r'{} ([\d.]+)'.format(key2_pattern), line)
-        match3 = re.search(r'{} ([\d.]+)'.format(key3_pattern), line)
-        match4 = re.search(r'{} ([\d.]+)'.format(key4_pattern), line)
-        match5 = re.search(r'{} ([\d.]+)'.format(key5_pattern), line)
+    with open(filename, "r") as input:
+        ret1 = 0.0
+        ret2 = 0.0
+        ret3 = 0.0
+        ret4 = 0.0
+        ret5 = 0.0
 
-        if match1:
-            ret1 = float(match1.group(1))
-        if match2:
-            ret2 = float(match2.group(1))
-        if match3:
-            ret3 = float(match3.group(1))
-        if match4:
-            ret4 = float(match4.group(1))
-        if match5:
-            ret5 = float(match5.group(1))
+        for line in input:
+            match1 = re.search(key1_pattern, line)
+            match2 = re.search(key2_pattern, line)
+            match3 = re.search(key3_pattern, line)
+            match4 = re.search(key4_pattern, line)
+            match5 = re.search(key5_pattern, line)
+
+            if match1:
+                ret1 = float(match1.group(1))
+            if match2:
+                ret2 = float(match2.group(1))
+            if match3:
+                ret3 = float(match3.group(1))
+            if match4:
+                ret4 = float(match4.group(1))
+            if match5:
+                ret5 = float(match5.group(1))
     return ret1 + ret2 + ret3 + ret4 + ret5
 
 def GetValueFromTXT(filename, key, sum_up=False):

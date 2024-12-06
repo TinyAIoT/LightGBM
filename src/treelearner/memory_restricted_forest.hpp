@@ -289,6 +289,19 @@ namespace LightGBM {
       est_leftover_memory = forestsize_;
       forestsize = forestsize_;
     }
+    void printMemory() {
+      std::stringstream out;
+      memory_separation control = CalcMemoryAtTheEnd();
+
+      out << "Calculated Memory consumption:" << "\n";
+      out << "\tBits Bool Thresholds: " << control.bits_bool_thres << "\n";
+      out << "\tBits float thresholds: " << control.bits_float_thres << "\n";
+      out << "\tBits References inside Trees: " << control.bits_tree_refs << "\n";
+      out << "\tBits Feature Threshold mapping: " << control.bits_feature_threshold_mapping << "\n";
+      out << "\tBits Feature float leaves: " << control.bits_float_leaf << "\n";
+
+      std::cout << out.str();
+    }
 
     void printForest() {
       int threshold_size = 0;
