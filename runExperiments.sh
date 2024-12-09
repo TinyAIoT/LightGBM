@@ -16,6 +16,11 @@ for dataset in "california_housing" "kin8nm"; do
             else
                 echo "Training model fp $fp tp $tp failed / not complete"
             fi
+            if "../lightgbm" config=train.conf objective=regression metric=rmse train_data=data/${dataset}.train valid_data=data/${dataset}.test tinygbdt_forestsize=$ms max_depth=$depth num_trees=$tree output_model=models/${dataset}/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > models/${dataset}/data-${dataset}-ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out; then
+                echo "Training model fp $fp tp $tp trees $tree depth $depth complete"
+            else
+                echo "Training model fp $fp tp $tp failed / not complete"
+            fi
             for i in $(seq -10 1 15); do
                 for j in $(seq -10 1 15); do
                     fp=$(python3 -c "print(float(2**$i))" )

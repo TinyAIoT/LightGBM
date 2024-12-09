@@ -5,12 +5,11 @@ The steps are splitted to allow short runtimes. In case of a cluster environment
 Depending on your system this might take several hours to days! 
 
 ## Getting Datasets
-
-`python/get_datasets.py`  doenload the datasets. The files are
+`python/get_datasets.py` downloads the datasets. The files are
 stored in `python/data` having a 80/20 training/testing split. 
 ## Running `Toad`
 
-`./runExperiments.sh` bzw. `runExperiments.sh` checks for datasets in the data folder with the scheme _name_`.train`.
+`runExperiments.sh` checks for datasets in the data folder with the scheme _name_`.train`.
 It is assumed that the corresponding file with test data is called _name_`.test`. 
 
 :exclamation: The script runs for every dataset with 40620 configurations (26 feature split penalties 26 threshold penalties, 20 tree sizes, 3 depth and a run without split and threshold penalty) :exclamation:
