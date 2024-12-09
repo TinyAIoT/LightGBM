@@ -12,4 +12,4 @@ else
     exit 1
 fi
 
-sh runExperiments.sh
+sh runExperiments.sh "../Release/lightgbm"
