@@ -28,8 +28,8 @@ def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
     # TODO find some metric to go beyond manually selecting points accuracy/memory?
     if column == 'accuracy':
         df['ratio'] = df['accuracy'] / df['our_bits']
-        max_row = df.loc[df['ratio'].idxmax()]
-        pcm = axe.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
+        #max_row = df.loc[df['ratio'].idxmax()]
+        #pcm = axe.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
     #plt.annotate('Max Accuracy', (df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature']))
     axe.set_xscale('log')
     axe.set_yscale('log')  # Correct method for setting y scale
