@@ -198,8 +198,7 @@ def getnaiverow(df, bits):
 
 if not os.path.exists('../results/images'):
     os.makedirs('../results/images')
-#"covtype",
-datasets = ['breastcancer', 'california_housing','kin8nm', 'kr-vs-kp', 'mushroom']  # todo covtype
+datasets = ['breastcancer', 'california_housing','kin8nm', 'kr-vs-kp', 'mushroom', 'covtype']  
 binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype']
 regression = ['california_housing', 'kin8nm']
 plt.rcParams['image.cmap'] = 'viridis'
