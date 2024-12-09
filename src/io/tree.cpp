@@ -336,97 +336,6 @@ double Tree::GetLowerBoundValue() const {
   return lower_bound;
 }
 
-void Tree::ToArrayPointer(std::vector<uint32_t> features, std::vector<double> thresholds, double decimals) {
-  // get lightgbm ids in full tree array format
-  std::vector<int> fulltree_ids = ToFullArray();
-  tt_features_ = features;
-  tt_thresholds_ = thresholds;
-  // init tiny tree values for tree object
-  int tt_nodes = fulltree_ids.size();
-  int init_value = -1;
-  tinytree_.resize(2, std::vector<int>(tt_nodes, init_value));
-
-  // init iterators and ids
-  std::vector<double>::iterator threshold_it;
-  std::vector<uint32_t>::iterator feature_it;
-  int threshold_id;
-  int feature_id;
-  int lightgbm_id;
-
-  // iterate over all nodes in full tree
-  for (int i = 0; i < tt_nodes; i++) {
-    // get lightgbm id of current node
-    lightgbm_id = fulltree_ids[i];
-    if (lightgbm_id >= 0) {
-      // check if threshold and feature are already in lookup tables
-      const double threshold = threshold_[lightgbm_id];
-      double rounded_threshold = ((double)((int)(threshold * pow(10.0, decimals) + .5))) / pow(10.0, decimals); 
-      threshold_it = std::find(tt_thresholds_.begin(), tt_thresholds_.end(), rounded_threshold);
-      feature_it = std::find(tt_features_.begin(), tt_features_.end(), split_feature_[lightgbm_id]);
-      // get ids referencing to values in lookup tables
-      bool found = (threshold_it != tt_thresholds_.end());
-      if (found) {
-        threshold_id = std::distance(tt_thresholds_.begin(), threshold_it);
-      } else {
-        Log::Debug("We have a TINYGBDT Problem here %f", threshold_[lightgbm_id]);
-      }
-      feature_id = std::distance(tt_features_.begin(), feature_it);
-      
-      // set references to lookup tables for threshold and feature in tiny tree
-      tinytree_[0][i] = feature_id;
-      tinytree_[1][i] = threshold_id; 
-    } else if (~lightgbm_id < leaf_value_.size()) {
-      threshold_it = std::find(tt_thresholds_.begin(), tt_thresholds_.end(), leaf_value_[~lightgbm_id]);
-      bool found = (std::find(tt_thresholds_.begin(), tt_thresholds_.end(), leaf_value_[~lightgbm_id]) != tt_thresholds_.end());
-      if (found) {
-        threshold_id = std::distance(tt_thresholds_.begin(), threshold_it);
-      } else {
-        Log::Debug("We have a TINYGBDT Problem here %f", leaf_value_[~lightgbm_id]);
-      }
-      tinytree_[1][i] = threshold_id;
-    }
-  }
-}
-
-std::vector<int> Tree::ToFullArray() const {
-  std::vector<int> fulltree; 
-
-  // find max depth, adapted from RecomputeMaxDepth(); TODO: num_leaves_ vs. leaft_depth_ vs. num_leaves() -> used correct?
-  int depth = 0;
-  if (num_leaves_ == 1) {
-    depth = 0;
-  } else {
-    depth = leaf_depth_[0];
-    for (int i = 1; i < num_leaves(); ++i) {
-      if (depth < leaf_depth_[i]) depth = leaf_depth_[i];
-    }
-  }
-  // number of nodes for a full tree with given depth
-  // TODO: think about removing last level as leaves are not relevant for calculation
-  int tt_nodes = pow(2.0, (1.0+depth))-1;
-  // TODO: not possible to init empty; to use 0 the tree elements need to be shifted by 1; not possible to use negative as lightgbm assigns leaf with negative index
-  int init_value = {INT_MIN};
-  fulltree.resize(tt_nodes, init_value);
-
-  for (int i = 0; i < tt_nodes; i++)
-  {
-    // lightgbm id of root node is 0
-    if (i == 0)
-    {
-      fulltree[0] = 0;
-    }
-    // get the lightgbm id of the current node
-    int lgbm_id = fulltree[i];
-    // leaf ids are < 0, so only fill child nodes for >= 0 
-    if (lgbm_id >= 0)
-    {
-      fulltree[2 * i + 1] = left_child_[lgbm_id];
-      fulltree[2 * i + 2] = right_child_[lgbm_id];
-    }     
-  }
-  return fulltree;
-}
-
 
 std::string Tree::ToString() const {
   std::stringstream str_buf;
@@ -434,29 +343,8 @@ std::string Tree::ToString() const {
 
   using CommonC::ArrayToString;
 
-  // str_buf << "max depth: " << max_depth_ << "\n";
-  std::vector<int> fulltree = ToFullArray();
-
   str_buf << "num_leaves= " << num_leaves_ << '\n';
   str_buf << "num_cat= " << num_cat_ << '\n';
-  // TODO: create the following only for mrf
-  str_buf << "full_tree_array_lgbids= "
-    << ArrayToString(fulltree, fulltree.size()) << '\n';
-  if (tinytree_.size() > 0) // TODO: maybe change this to really greater than 0 but for test leave it like this
-  {
-    str_buf << "tiny_tree_ids_features= "
-      << ArrayToString(tinytree_[0], tinytree_[0].size()) << '\n';
-    str_buf << "tiny_tree_ids_thresholds= "
-      << ArrayToString(tinytree_[1], tinytree_[1].size()) << '\n';
-    str_buf << "tiny_tree_features= "
-      << ArrayToString(tt_features_, tt_features_.size()) << '\n';
-    str_buf << "tiny_tree_thresholds= "
-      << ArrayToString(tt_thresholds_, tt_thresholds_.size()) << '\n'; 
-    str_buf << "tt_feature_count=" 
-      <<  tt_features_.size() << '\n'; 
-    str_buf << "tt_threshold_count=" 
-      <<  tt_thresholds_.size() << '\n'; 
-  }
   str_buf << "split_feature="
     << ArrayToString(split_feature_, num_leaves_ - 1) << '\n';
   str_buf << "split_gain="
