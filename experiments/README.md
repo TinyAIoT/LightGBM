@@ -5,12 +5,13 @@ The steps are splitted to allow short runtimes.
 `buildToaD.sh` (or for Windows `buildToaD-windows.sh` respectively) builds LightGBM including the ToaD extension and automatically starts the experiments.
 (Running **.sh scripts on Windows** might require some additional steps or specific shell, e.g. calling them in Git Bash should work.)
 Prerequisites to build the project can be found in the [LightGBM documentation](https://lightgbm.readthedocs.io/en/latest/Installation-Guide.html).
-Depending on your system the training and evaluating the different model configurations might take several hours to days!
+Depending on your system the training and evaluating the different model configurations might take several hours to days! Please adapt the file to use/not use GPUs for speedup.
 
 ## Getting Datasets
 
-`python/get_datasets.py`  doenload the datasets. The files are
-stored in `python/data` having a 80/20 training/testing split.
+_We assume you install python packages yourself_
+
+`python/get_datasets.py`  downloads the datasets. The files are stored in `python/data` having a 80/20 training/testing split.
 
 ## Running `ToaD`
 
@@ -32,6 +33,8 @@ for i in $(seq -10 1 15); do
 _(`i` and `j` are converted to different power of two values and represent the penalties.)_
 
 ## Evaluation of `Toad`
+
+_Again, we assume you install python packages yourself_
 
 The data inside the models is transformed to `.csv` files with the `python/evaluate_models.py` script.
 This might require more time than you would expect as accuracy metrics need to be calculated. The .csv files are stored in
