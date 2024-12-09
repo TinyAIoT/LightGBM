@@ -2,9 +2,11 @@
 
 The folder provides the means to fetch the datasets tested, and run the Trees on a Diet (`ToaD`) variant. 
 The steps are splitted to allow short runtimes. In case of a cluster environment all steps are summarized in the `buildToaD.sh` file.
-Depending on your system this might take several hours to days! 
+Depending on your system this might take several hours to days! Please adapt the file to use/not use GPUs for speedup.
 
 ## Getting Datasets
+_We assume you install python packages yourself_
+
 `python/get_datasets.py` downloads the datasets. The files are
 stored in `python/data` having a 80/20 training/testing split. 
 ## Running `Toad`
@@ -25,6 +27,7 @@ for i in $(seq -10 1 15); do
 _(`i` and `j` are converted to different power of two values.)_
 
 ## Evaluation of `Toad`
+_Again, we assume you install python packages yourself_
 
 The data inside the models is transformed to `.csv` files with the `python/evaluate_models.py` script. 
 This might require more time than you would expect as accuracy metrics need to be calculated. The .csv files are stored in
