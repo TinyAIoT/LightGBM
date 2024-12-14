@@ -23,14 +23,15 @@ lineplot = True
 lineplot2 = False
 
 def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
+    if column == 'our_bits':
+        print(df[column])
     scm = axe.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], cmap='viridis',
                       label=column, norm=norm)
     # TODO find some metric to go beyond manually selecting points accuracy/memory?
     if column == 'accuracy':
         df['ratio'] = df['accuracy'] / df['our_bits']
-        #max_row = df.loc[df['ratio'].idxmax()]
+        max_row = df.loc[df['ratio'].idxmax()]
         #pcm = axe.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
-    #plt.annotate('Max Accuracy', (df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature']))
     axe.set_xscale('log')
     axe.set_yscale('log')  # Correct method for setting y scale
     return scm
@@ -201,7 +202,7 @@ def getnaiverow(df, bits):
 
 if not os.path.exists('../results/images'):
     os.makedirs('../results/images')
-datasets = ['breastcancer', 'california_housing','kin8nm', 'kr-vs-kp', 'mushroom', 'covtype']  
+datasets = ['breastcancer', 'california_housing','kin8nm', 'kr-vs-kp', 'mushroom']   # 'covtype'
 binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype']
 regression = ['california_housing', 'kin8nm']
 plt.rcParams['image.cmap'] = 'viridis'
