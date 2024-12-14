@@ -144,9 +144,9 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
     lgb_bits = []
     tinygbdt_penalty_feature = []
     tinygbdt_penalty_split = []
+    tinygbdt_forestsize = []
     num_iterations = 0
     max_depth = 0
-    tinygbdt_forestsize = 0
     num_classes = 0
     objective = ""
     data = ""
@@ -171,7 +171,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
             max_depth =  GetValueFromTXT(filepath, 'max_depth')
             tinygbdt_penalty_feature.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_feature'))
             tinygbdt_penalty_split.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_split'))
-            tinygbdt_forestsize =  GetValueFromTXT(filepath, 'tinygbdt_forestsize')
+            tinygbdt_forestsize.append(GetValueFromTXT(filepath, 'tinygbdt_forestsize'))
             num_classes =  GetValueFromTXT(filepath, 'num_class')
             valid_data = GetValueFromTXT(filepath, 'valid')
             label_column = GetValueFromTXT(filepath, 'label_column')
@@ -199,7 +199,8 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
         'lgb_bits': lgb_bits,
         'accuracy': accuracies,
         'tinygbdt_penalty_feature': tinygbdt_penalty_feature,
-        'tinygbdt_penalty_split': tinygbdt_penalty_split
+        'tinygbdt_penalty_split': tinygbdt_penalty_split,
+        'tinygbdt_forestsize': tinygbdt_forestsize
     })
 
     df_filename = (keyword
@@ -209,7 +210,6 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
                     +'_penT'+str(tinygbdt_penalty_split[-1])
                    +'_maxtrees'+str(num_iterations)
                    +'_maxdepth'+str(max_depth)
-                   + '_maxsize'+str(tinygbdt_forestsize)
                    +'_logscale'+str(log_scale)
                    +'.csv')
     

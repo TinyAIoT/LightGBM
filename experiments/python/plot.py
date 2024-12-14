@@ -125,8 +125,8 @@ def plotAccuracyMemByPenalty(df, axe, keyword, plot_accuracy=True, xlog=True, xl
 
     #ax2.legend(loc='upper right')
 
-def plot_memory_acc(df, dfn, axe, ylim, fig, big=False):
-    keywords = ['accuracy1', 'accuracy2','accuracy1', 'accuracy2']
+def plot_memory_acc(df, axe, ylim, fig, big=False):
+    keywords = ['k0', 'k1','k2', 'k3']
     norm = Normalize(vmin=0, vmax=len(keywords) - 1)
     colors = [viridis(norm(i)) for i in range(len(keywords))]
     width = 0.25
@@ -144,15 +144,18 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False):
     best_rows_naive_fp = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
     test = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
 
+    dfpenalty = df[(df['our_bits'] != 0) & (df['tinygbdt_penalty_feature'] != 0)]
+    dfforest = df[(df['our_bits'] != 0) & (df['tinygbdt_penalty_feature'] != 0) & (df['tinygbdt_forestsize'] == 64000)]
+    dfnative = df[(df['tinygbdt_penalty_feature'] == 0) & (df['tinygbdt_forestsize'] == 500000)]
     zero_row = [0] * 13
     for target in memory_values:
-        subset = df[(df['our_bits'] <= target)]
+        subset = dfpenalty[(dfpenalty['our_bits'] <= target)]
         if not subset.empty:
             best_row = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
             best_rows_toad = pd.concat([best_rows_toad, best_row.to_frame().T], ignore_index=True)  # Append the row
 
     for target in memory_values:
-        subset = dfn[(dfn['lgb_bits'] <= target)]
+        subset = dfnative[(dfnative['lgb_bits'] <= target)]
         if not subset.empty:
             best_row_n = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
             best_rows_naive = pd.concat([best_rows_naive, best_row_n.to_frame().T], ignore_index=True)  # Append the row
@@ -160,7 +163,7 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False):
             best_rows_naive = pd.concat([best_rows_naive, pd.DataFrame([zero_row], columns=test.columns)])
 
     for target in memory_values:
-        subset = df[(df['our_bits'] <= target) & (df['tinygbdt_penalty_feature'] <= fp) & (df['tinygbdt_penalty_split'] <= tp)]
+        subset = dfforest[(dfforest['our_bits'] <= target)]
         if not subset.empty:
             best_row_n = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
             best_rows_naive_fp = pd.concat([best_rows_naive_fp, best_row_n.to_frame().T], ignore_index=True)  # Append the row
@@ -208,7 +211,7 @@ for function in functions:
     for data in datasets:
         df = pd.read_csv('../results/' + data + '/last.csv')
         df = df[(df['our_bits'] != 0) ]
-        data_tree_550_depth_3 = df[(df['max_trees'] == 100) ] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+        data_tree_550_depth_3 = df[(df['max_trees'] == 100)&  (df['no_trees'] <= 100)& (df['tinygbdt_penalty_split'] != 0.0)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
         minbits = data_tree_550_depth_3['our_bits'].min()
         vminour_bits, vmaxour_bits = min(minbits, vminour_bits), max(data_tree_550_depth_3['our_bits'].max(), vmaxour_bits)
         vminour_accuracy, vmaxour_accuracy = min(data_tree_550_depth_3['accuracy'].min(), vminour_accuracy), max(data_tree_550_depth_3['accuracy'].max(), vmaxour_accuracy)
@@ -221,15 +224,14 @@ if (plotgrid):
         for data in datasets:
             df = pd.read_csv('../results/' + data + '/last.csv')
             df = df[(df['our_bits'] != 0) ]
-            data_tree_550_depth_3 = df[(df['max_trees'] == 100) ]
-            data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) ]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
+            data_tree_550_depth_3 = df[(df['max_trees'] == 100) & (df['no_trees'] <= 100)& (df['tinygbdt_penalty_split'] != 0.0)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             #graphs
             if (data in binary):
                 axe=axes[0, counter].set_title(data + "\n(binary)")
             if (data in regression):
                 axe=axes[0, counter].set_title(data + "\n(regression)")
-            grid_memory = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[0, counter], fig=fig, column='our_bits', data=data, norm=norm, title='Memory usage with changing penalties')
-            grid_accuracy = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[1,counter], fig=fig, column='accuracy', data=data, norm=norm2, title='Accuracy with changing penalties')
+            grid_memory = plot_grid(data_tree_550_depth_3, axe=axes[0, counter], fig=fig, column='our_bits', data=data, norm=norm, title='Memory usage with changing penalties')
+            grid_accuracy = plot_grid(data_tree_550_depth_3, axe=axes[1,counter], fig=fig, column='accuracy', data=data, norm=norm2, title='Accuracy with changing penalties')
             axes[1, counter].set_xlabel('Threshold Penalty')
             counter =counter+1
 
@@ -239,7 +241,7 @@ if (plotgrid):
         # Divide by 1000 to convert to KB
 
         #cbar3.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb))
-        cbar.ax.yaxis.set_major_formatter(FuncFormatter(hp.bits_to_kb_str))
+        #cbar.ax.yaxis.set_major_formatter(FuncFormatter(hp.bits_to_kb_str))
 
         axes[0,0].set_ylabel('Feature Penalty')
         axes[1,0].set_ylabel('Feature Penalty')
@@ -257,25 +259,23 @@ if barplot_check:
         counter = 0
         for data in datasets:
             df = pd.read_csv('../results/' + data + '/last.csv')
-            df = df[(df['our_bits'] != 0) ]
-            dfn = df[(df['our_bits'] == 0) ]
-            dsubset = df[(df['max_trees'] == 100) ] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             if (data in binary):
                 axes[counter].set_title(data + "\n(binary)")
             if (data in regression):
                 axes[counter].set_title(data + "\n(regression)")
             if data == 'breastcancer':
-                plot_memory_acc(df, dfn, axes[counter], 0.9, fig)
+                plot_memory_acc(df, axes[counter], 0.5, fig)
+                print(df[(df['tinygbdt_penalty_feature'] == 0) & (df['tinygbdt_forestsize'] == 500000)]                          )
             if data == 'california_housing':
-                plot_memory_acc(df, dfn, axes[counter], 0.1, fig, True)
+                plot_memory_acc(df, axes[counter], 0.1, fig, True)
             if data == 'covtype':
-                plot_memory_acc(df, dfn, axes[counter], 0.6, fig)
+                plot_memory_acc(df, axes[counter], 0.6, fig)
             if data == 'kin8nm':
-                plot_memory_acc(df, dfn, axes[counter], 0.1, fig, True)
+                plot_memory_acc(df, axes[counter], 0.1, fig, True)
             if data == 'kr-vs-kp':
-                plot_memory_acc(df, dfn, axes[counter], 0.85, fig)
+                plot_memory_acc(df, axes[counter], 0.5, fig)
             if data == 'mushroom':
-                plot_memory_acc(df, dfn, axes[counter], 0.9, fig)
+                plot_memory_acc(df, axes[counter], 0.5, fig)
             counter = counter +1
         mergedhandles, mergedlabels = axes[0].get_legend_handles_labels()
         fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.15,0.05), ncol=7)
