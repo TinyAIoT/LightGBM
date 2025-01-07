@@ -43,14 +43,31 @@ runSettings () {
   cd .. || exit
   rm -rf models/${dataset}
 }
-
-runSettings $1 binary auc breastcancer
-runSettings $1 binary auc kr-vs-kp
-runSettings $1 binary auc mushroom
-runSettings $1 binary auc covtype
-runSettings $1 binary auc rcv1
-runSettings $1 binary auc url_combined
-
-runSettings $1 regression rmse california_housing
-runSettings $1 regression rmse kin8nm
-runSettings $1 regression rmse yearpredictionMSD
+folder=$2
+if [[ $folder == "breastcancer" ]]; then
+  runSettings $1 binary auc breastcancer
+fi
+if [[ $folder == "kr-vs-kp" ]]; then
+  runSettings $1 binary auc kr-vs-kp
+fi
+if [[ $folder == "mushroom" ]]; then
+  runSettings $1 binary auc mushroom
+fi
+if [[ $folder == "covtype" ]]; then
+  runSettings $1 binary auc covtype
+fi
+if [[ $folder == "rcv1" ]]; then
+  runSettings $1 binary auc rcv1
+fi
+if [[ $folder == "url_combined" ]]; then
+  runSettings $1 binary auc url_combined
+fi
+if [[ $folder == "california_housing" ]]; then
+  runSettings $1 regression rmse california_housing
+fi
+if [[ $folder == "kin8nm" ]]; then
+  runSettings $1 regression rmse kin8nm
+fi
+if [[ $folder == "yearpredictionMSD" ]]; then
+  runSettings $1 regression rmse yearpredictionMSD
+fi

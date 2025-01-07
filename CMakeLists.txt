@@ -32,7 +32,9 @@ cmake_minimum_required(VERSION 3.28)
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set(CMAKE_SYSTEM_VERSION 10.0 CACHE INTERNAL "target Windows SDK version" FORCE)
 endif()
-
+if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+endif()
 project(lightgbm LANGUAGES C CXX)
 
 if(BUILD_CPP_TEST)

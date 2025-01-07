@@ -244,6 +244,7 @@ const std::unordered_set<std::string>& Config::parameter_set() {
   "tinygbdt_penalty_feature",
   "tinygbdt_penalty_split",
   "tinygbdt_forestsize",
+  "tinygbdt_otherfunction",
   "cegb_tradeoff",
   "cegb_penalty_split",
   "cegb_penalty_feature_lazy",
@@ -484,6 +485,9 @@ void Config::GetMembersFromString(const std::unordered_map<std::string, std::str
 
   GetInt(params, "tinygbdt_forestsize", &tinygbdt_forestsize);
   CHECK_GE(tinygbdt_forestsize, 0.0);
+
+  GetInt(params, "tinygbdt_otherfunction", &tinygbdt_otherfunction);
+  CHECK_GE(tinygbdt_otherfunction, 0.0);
 
   GetDouble(params, "cegb_tradeoff", &cegb_tradeoff);
   CHECK_GE(cegb_tradeoff, 0.0);
@@ -736,6 +740,7 @@ std::string Config::SaveMembersToString() const {
   str_buf << "[tinygbdt_penalty_feature: " << tinygbdt_penalty_feature << "]\n";
   str_buf << "[tinygbdt_penalty_split: " << tinygbdt_penalty_split << "]\n";
   str_buf << "[tinygbdt_forestsize: " << tinygbdt_forestsize << "]\n";
+  str_buf << "[tinygbdt_otherfunction: " << tinygbdt_otherfunction << "]\n";
   str_buf << "[cegb_tradeoff: " << cegb_tradeoff << "]\n";
   str_buf << "[cegb_penalty_split: " << cegb_penalty_split << "]\n";
   str_buf << "[cegb_penalty_feature_lazy: " << Common::Join(cegb_penalty_feature_lazy, ",") << "]\n";
@@ -864,6 +869,7 @@ const std::unordered_map<std::string, std::vector<std::string>>& Config::paramet
     {"tinygbdt_penalty_feature", {}},
     {"tinygbdt_penalty_split", {}},
     {"tinygbdt_forestsize", {}},
+    {"tinygbdt_otherfunction", {}},
     {"cegb_tradeoff", {}},
     {"cegb_penalty_split", {}},
     {"cegb_penalty_feature_lazy", {}},
@@ -1011,6 +1017,7 @@ const std::unordered_map<std::string, std::string>& Config::ParameterTypes() {
     {"tinygbdt_penalty_feature", "double"},
     {"tinygbdt_penalty_split", "double"},
     {"tinygbdt_forestsize", "int"},
+    {"tinygbdt_otherfunction", "int"},
     {"cegb_tradeoff", "double"},
     {"cegb_penalty_split", "double"},
     {"cegb_penalty_feature_lazy", "vector<double>"},

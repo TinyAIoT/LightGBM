@@ -559,6 +559,10 @@ struct Config {
   int tinygbdt_forestsize = 0;
 
   // check = >=0.0
+  // desc = [tinygbdt] using another cost function
+  int tinygbdt_otherfunction = 0;
+
+  // check = >=0.0
   // desc = cost-effective gradient boosting multiplier for all penalties
   double cegb_tradeoff = 1.0;
 

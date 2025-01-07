@@ -594,6 +594,10 @@ Learning Control Parameters
 
    -  [tinygbdt] size of the boosted tree
 
+-  ``tinygbdt_otherfunction`` :raw-html:`<a id="tinygbdt_otherfunction" title="Permalink to this parameter" href="#tinygbdt_otherfunction">&#x1F517;&#xFE0E;</a>`, default = ``0``, type = int, constraints: ``tinygbdt_otherfunction >= 0.0``
+
+   -  [tinygbdt] using another cost function
+
 -  ``cegb_tradeoff`` :raw-html:`<a id="cegb_tradeoff" title="Permalink to this parameter" href="#cegb_tradeoff">&#x1F517;&#xFE0E;</a>`, default = ``1.0``, type = double, constraints: ``cegb_tradeoff >= 0.0``
 
    -  cost-effective gradient boosting multiplier for all penalties
