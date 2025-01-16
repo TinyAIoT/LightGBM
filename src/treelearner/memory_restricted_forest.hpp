@@ -309,7 +309,7 @@ namespace LightGBM {
       std::stringstream out;
       out << "Leftover memory : " << est_leftover_memory << "\n";
       // subtract values of features not used except feature 0 itself
-      out << "features_used_global : " << features_used_global_.size() - 1 << "\n";
+      out << "features_used_global : " << features_used_global_.size() << "\n";
       out << "thresholds_used_global : " << thresholds_used_global_.size() << "\n";
       for (std::size_t i = 0; i < ref_trees_.size() - 1; i++) {
         out << ref_trees_[i];
@@ -341,7 +341,7 @@ namespace LightGBM {
           if (t_f_info.feature == 255) {
             memory.bits_float_leaf += 32;
           } else {
-            if (threshold != 0.0 && threshold != 1.0) {
+            if (threshold != 0.0 && threshold != 1.0 && threshold > 1e-34) {
               memory.bits_float_thres += 32;
             } else {
               memory.bits_bool_thres += 1;
