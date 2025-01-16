@@ -1015,8 +1015,19 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
   new_split.feature = real_fidx;
 
   if (MemoryRestrictedForest::IsEnable(config_)) {
-    new_split.gain -= ((config_->tinygbdt_penalty_feature) * mrf_->features_used_global_.size());
-    new_split.gain -= (config_->tinygbdt_penalty_split * mrf_->thresholds_used_global_.size());
+    split_info split_inf = {};
+    const BinMapper* bin_mapper = train_data_->FeatureBinMapper(feature_index);
+    double threshold = bin_mapper->BinToValue(new_split.threshold);
+    mrf_->CalculateSplitMemoryConsumption(split_inf, threshold, real_fidx);
+
+    if (split_inf.new_feature) {
+      printf("new feature %i; ", real_fidx);
+      new_split.gain -= (config_->tinygbdt_penalty_feature);
+    }
+    if (split_inf.new_threshold) {
+      printf("new threshold %f; ", threshold);
+      new_split.gain -= (config_->tinygbdt_penalty_split);
+    }
 
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
     if (mrf_->est_leftover_memory < 0) {
