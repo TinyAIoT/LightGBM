@@ -52,6 +52,14 @@ for dataset in "california_housing" "kin8nm"; do
                     else
                         echo "Training model fp $fp tp $tp failed / not complete"
                     fi
+                    if [ $i -eq $start ]; then
+                        fp=0
+                        "$1" config=train.conf objective=regression metric=rmse train_data=$data_dir/${dataset}.train valid_data=$data_dir/${dataset}.test max_depth=$depth num_trees=$tree tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=$model_dir/${dataset}/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > $model_dir/${dataset}/data-${dataset}-ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out;
+                    fi
+                    if [ $j -eq $start ]; then
+                        tp=0
+                        "$1" config=train.conf objective=regression metric=rmse train_data=$data_dir/${dataset}.train valid_data=$data_dir/${dataset}.test max_depth=$depth num_trees=$tree tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=$model_dir/${dataset}/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > $model_dir/${dataset}/data-${dataset}-ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out;
+                    fi
                 done
             done
         done
@@ -86,6 +94,14 @@ for dataset in "breastcancer" "kr-vs-kp" "covtype" "mushroom"; do
                         echo "Training model fp $fp tp $tp trees $tree depth $depth complete"
                     else
                         echo "Training model fp $fp tp $tp failed / not complete"
+                    fi
+                    if [ $i -eq $start ]; then
+                        fp=0
+                        "$1" config=train.conf objective=binary metric=auc train_data=$data_dir/${dataset}.train valid_data=$data_dir/${dataset}.test max_depth=$depth num_trees=$tree tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=$model_dir/${dataset}/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > $model_dir/${dataset}/data-${dataset}-ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out;
+                    fi
+                    if [ $j -eq $start ]; then
+                        tp=0
+                        "$1" config=train.conf objective=binary metric=auc train_data=$data_dir/${dataset}.train valid_data=$data_dir/${dataset}.test max_depth=$depth num_trees=$tree tinygbdt_forestsize=$ms tinygbdt_penalty_split=$tp tinygbdt_penalty_feature=$fp output_model=$model_dir/${dataset}/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > $model_dir/${dataset}/data-${dataset}-ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out;
                     fi
           done
           done
