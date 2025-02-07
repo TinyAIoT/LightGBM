@@ -111,7 +111,7 @@ def extract_key(filename):
     return (datams, fp, tp, tree, depth)
 
 # keyword is the substring of the filename to search for in model.txt and .out files
-def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=True, get_baseline=True, directory=''):
+def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=True, get_baseline=True, directory='', model_dir='models', result_dir='results'):
     """Evaluates the model files that end with the specified keyword in the filename and plots various metrics.
     keyword : str
         The keyword to identify the model files.
@@ -131,7 +131,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
     str
         The filename of the saved DataFrame in CSV format.
     """
-    sorted_dir = sorted(os.listdir(os.path.join("..", "models", directory)), key=extract_key)#, float("0."+x.split(".")[2])))
+    sorted_dir = sorted(os.listdir(os.path.join(model_dir, directory)), key=extract_key)#, float("0."+x.split(".")[2])))
     setting_value = []
     accuracies = []
     logloss = []
@@ -144,8 +144,8 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
     lgb_bits = []
     tinygbdt_penalty_feature = []
     tinygbdt_penalty_split = []
-    num_iterations = 0
-    max_depth = 0
+    num_iterations = []
+    max_depth = []
     tinygbdt_forestsize = 0
     num_classes = 0
     objective = ""
@@ -155,7 +155,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
         df_key = ''
 
     for fn in sorted_dir:
-        filepath = os.path.join("..", "models", directory, fn)
+        filepath = os.path.join(model_dir, directory, fn)
         if fn.endswith(".out") or (get_baseline and fn.endswith("baseline.out")):
             logloss.append(GetValueFromOut(filepath, 'logloss'))
             rmse.append(GetValueFromOut(filepath, 'rmse'))
@@ -167,8 +167,8 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
             setting_value.append(GetValueFromTXT(filepath, keyword))
             no_leaves.append(GetValueFromTXT(filepath, 'num_leaves', sum_up=True))
             lgb_bits.append(GetValueFromTXT(filepath, 'model_size', sum_up=True))
-            num_iterations = GetValueFromTXT(filepath, 'num_iterations')
-            max_depth =  GetValueFromTXT(filepath, 'max_depth')
+            num_iterations.append(GetValueFromTXT(filepath, 'num_iterations'))
+            max_depth.append(GetValueFromTXT(filepath, 'max_depth'))
             tinygbdt_penalty_feature.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_feature'))
             tinygbdt_penalty_split.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_split'))
             tinygbdt_forestsize =  GetValueFromTXT(filepath, 'tinygbdt_forestsize')
@@ -176,12 +176,14 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
             valid_data = GetValueFromTXT(filepath, 'valid')
             label_column = GetValueFromTXT(filepath, 'label_column')
             objective =  GetValueFromTXT(filepath, 'objective')
+            print(filepath)
+            print(valid_data)
             if objective == 'multiclass':
-                accuracy, roc = calcAccuracy(filepath, '../'+valid_data, classes=num_classes)
+                accuracy, roc = calcAccuracy(filepath, valid_data, classes=num_classes)
             elif objective == 'binary':
-                accuracy, roc = calcAccuracy(filepath, '../'+valid_data, classes=num_classes)
+                accuracy, roc = calcAccuracy(filepath, valid_data, classes=num_classes)
             elif objective == 'regression':
-                rmse_py, accuracy = calcAccuracy(filepath, '../'+valid_data, classes=0, label_column=label_column)
+                rmse_py, accuracy = calcAccuracy(filepath, valid_data, classes=0, label_column=label_column)
             accuracies.append(accuracy)
             data = GetValueFromTXT(filepath, 'data')
         else:
@@ -207,25 +209,26 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
                    +'_'+str(data[5:])
                     +'_penF'+str(tinygbdt_penalty_feature[-1])
                     +'_penT'+str(tinygbdt_penalty_split[-1])
-                   +'_maxtrees'+str(num_iterations)
-                   +'_maxdepth'+str(max_depth)
+                   +'_maxtrees'+str(num_iterations[-1])
+                   +'_maxdepth'+str(max_depth[-1])
                    + '_maxsize'+str(tinygbdt_forestsize)
                    +'_logscale'+str(log_scale)
                    +'.csv')
     
-    res_dir = os.path.join("..", "results", directory)
+    res_dir = os.path.join(result_dir, directory)
     if not os.path.exists(res_dir):
         os.makedirs(res_dir)  
-    df.to_csv(os.path.join(res_dir, df_filename), index=False)
+    # df.to_csv(os.path.join(res_dir, df_filename), index=False)
     df.to_csv(os.path.join(res_dir, 'last.csv'), index=False)
 
  
 parser = argparse.ArgumentParser(description="Name of the dataset")
-parser.add_argument('string_arg', type=str, help='the datasetname')
+parser.add_argument('dataset', type=str, help='the datasetname', )
+parser.add_argument('--model_dir', type=str, default='models', help='model folder name')
+parser.add_argument('--result_dir', type=str, default='results', help='result folder name')
 args = parser.parse_args()
 
 # You can access the arguments using args.string_arg and args.directory
-print(f"String argument: {args.string_arg}")
+# print(f"String argument: {args}")
 
-df_path = plotMetrics('grid', df_key='tinygbdt_penalty_split', log_scale = True, directory=args.string_arg)
-
+df_path = plotMetrics('grid', df_key='tinygbdt_penalty_split', log_scale = True, directory=args.dataset, model_dir=args.model_dir, result_dir=args.result_dir)
