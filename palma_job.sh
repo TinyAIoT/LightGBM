@@ -8,7 +8,7 @@
  
 #SBATCH --job-name=toad         # the name of your job
 #SBATCH --mail-type=ALL             # receive an email when your job starts, finishes normally or is aborted
-#SBATCH --mail-user=jan.stenkamp@uni-muenster.de # your mail address
+#SBATCH --mail-user=anon@anonymous.com # your mail address
 #SBATCH -o ./report/output.%j.out
  
 # LOAD MODULES HERE IF REQUIRED

@@ -464,7 +464,6 @@ dask-worker-space/
 *.rdp
 *_rsa
 
-# Nina
 *.output
 experiments/results/*
 experiments/Model/*
