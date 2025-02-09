@@ -190,6 +190,7 @@ namespace LightGBM {
         ref_trees_.back().thresholds.push_back(split_inf.tindex);
       }
       est_leftover_memory -= split_inf.bits;
+      est_leftover_memory -= 32; // new leaf
     }
 
     bool isAllInteger(const std::vector<double> &column) {
@@ -220,7 +221,7 @@ namespace LightGBM {
       }
       split_inf.bits += bits(currentsize - 1) + bits(features_used_global_.size());
       if (split_inf.new_threshold) {
-        if (threshold != 0.0 && threshold != 1.0) {
+        if (threshold != 0.0 && threshold != 1.0 && threshold > 1e-34) {
           split_inf.bits += 32;
         } else {
           split_inf.bits += 1;
