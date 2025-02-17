@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import re
 from matplotlib.ticker import FuncFormatter
+import matplotlib.ticker as ticker
 from matplotlib.cm import viridis
 from matplotlib.colors import Normalize
 import lightgbm as lgb
@@ -22,7 +23,10 @@ lineplot = True
 lineplot2 = False
 big = False
 memgrid = True
-max_trees = 100
+max_trees = 10
+plot_dots = False # whether to plot orange dots on grid
+log_base = 2
+
 
 def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
     scm = axe.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], cmap='viridis',
@@ -33,25 +37,29 @@ def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
         #max_row = df.loc[df['ratio'].idxmax()]
         #pcm = axe.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
     #plt.annotate('Max Accuracy', (df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature']))
-    axe.set_xscale('log')
-    axe.set_yscale('log')  # Correct method for setting y scale
+    axe.set_xscale('log', base=log_base)
+    axe.set_yscale('log', base=log_base)  # Correct method for setting y scale
     return scm
 
 def plot_maxMemGrid(df, column='accuracy', title=''):
     norm = mcolors.Normalize(vmin=df['accuracy'].min(), vmax=df['accuracy'].max())
-    fig = plt.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], norm=norm, cmap='viridis')
+    fig, ax = plt.subplots()
+    scm = ax.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], norm=norm, cmap='viridis')
     # TODO find some metric to go beyond manually selecting points accuracy/memory?
     if column == 'accuracy':
         # df['ratio'] = df['accuracy'] / df['our_bits']
         max_row = df.loc[df['accuracy'].idxmax()]
-        plt.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FF0000", label='Max Accuracy')
-    plt.annotate('Max Accuracy', (max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature']))
-    plt.title(title)
-    plt.xlabel('Threshold Penalty')
-    plt.ylabel('Feature Penalty')
-    plt.xscale('log')
-    plt.yscale('log')  # Correct method for setting y scale
-    plt.colorbar(fig)
+        ax.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FF0000", label='Max Accuracy')
+    ax.annotate('Max Accuracy', (max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature']))
+    ax.set_title(title)
+    ax.set_xlabel('Threshold Penalty')
+    ax.set_ylabel('Feature Penalty')
+    ax.set_xscale('log', base=log_base)
+    ax.set_yscale('log', base=log_base)  # Correct method for setting y scale
+    ax.xaxis.set_major_locator(ticker.LogLocator(base=log_base, numticks=6))
+    ax.yaxis.set_major_locator(ticker.LogLocator(base=log_base, numticks=6))
+    
+    fig.colorbar(scm)
 
 def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, xlog=True, xlabel='Feature Penalty', mem=True, binary=True):
     # Determine which keyword to use based on xlabel
@@ -65,10 +73,12 @@ def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, xlog
         keyword = 'tinygbdt_penalty_split'
     axe.set_xlabel(xlabel)
     if xlog:
-        axe.set_xscale('log')
+        axe.set_xscale('log', base=log_base)
     if plot_accuracy:
         axe.plot(df[keyword], df['accuracy'], '--o', label='Metric', color=colors[4], markersize=3)
         axe.tick_params(axis='y', color=colors[0])
+    
+    axe.xaxis.set_major_locator(ticker.LogLocator(base=log_base, numticks=6))
 
     ax2 = axe.twinx()
 
@@ -125,7 +135,7 @@ def plotAccuracyMemByPenalty(df, axe, keyword, plot_accuracy=True, xlog=True, xl
         keyword = 'tinygbdt_penalty_split'
     axe.set_xlabel(xlabel)
     if xlog:
-        axe.set_xscale('log')
+        axe.set_xscale('log', base=log_base)
     if plot_accuracy:
         axe.plot(df[keyword], df['accuracy'], '--o', label='Metric', color=colors[4], markersize=3)
         axe.tick_params(axis='y', color=colors[0])
@@ -240,7 +250,7 @@ regression = ['california_housing', 'kin8nm']
 plt.rcParams['image.cmap'] = 'viridis'
 functions = ['simple']
 # TODO: what do these values mean?
-vminour_bits, vmaxour_bits, vminour_accuracy, vmaxour_accuracy = 1000, 0 , 1000, 0
+vminour_bits, vmaxour_bits, vminour_accuracy, vmaxour_accuracy = 1000, 0 , 1000, 1
 # TODO check: does this loop actually do anything relevant?
 for function in functions:
     for data in datasets:
@@ -257,7 +267,7 @@ for function in functions:
 if (plotgrid):
     for function in functions:
         fig, axes = plt.subplots(2, 6, figsize=(15, 4), sharex=True, sharey=True)
-        dots = [[7,6],[11,10],[5,4],[7,7],[10,10],[10,10]]
+        dots = [[7,6],[12,10],[6,4],[8,7],[10,10],[10,10]]
         counter = 0
         for data in datasets:
             df = pd.read_csv('../results_palma/' + data + '/last.csv')
@@ -272,13 +282,16 @@ if (plotgrid):
                 axe=axes[0, counter].set_title(data + "\n(regression)")
             grid_memory = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[0, counter], fig=fig, column='our_bits', data=data, norm=norm, title='Memory usage with changing penalties')
             grid_accuracy = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[1,counter], fig=fig, column='accuracy', data=data, norm=norm2, title='Accuracy with changing penalties')
-            # axes[1,counter].scatter((2**(dots[counter][0])), (2**(dots[counter][1])), c="#FFA500")
+            if plot_dots:
+                axes[1,counter].scatter((2**(dots[counter][0])), (2**(dots[counter][1])), c="#FFA500")
             axes[1, counter].set_xlabel('Threshold Penalty')
+            axes[1,counter].xaxis.set_major_locator(plt.LogLocator(base=log_base, numticks=5))
+            axes[1,counter].yaxis.set_major_locator(plt.LogLocator(base=log_base, numticks=5))
             counter =counter+1
 
         #cbar3 = fig.colorbar(grid_memory2, ax=axes[2], orientation='vertical', location='right', shrink=0.9, pad=0.01)
-        cbar = fig.colorbar(grid_memory, ax=axes[0], orientation='vertical',  location='right', shrink=0.9, pad=0.01)
-        cbar2 = fig.colorbar(grid_accuracy, ax=axes[1], orientation='vertical',  location='right', shrink=0.9, pad=0.01)
+        cbar = fig.colorbar(grid_memory, ax=axes[0], orientation='vertical',  location='right', shrink=0.9, pad=0.1, anchor=(1.1, 1.0))
+        cbar2 = fig.colorbar(grid_accuracy, ax=axes[1], orientation='vertical',  location='right', shrink=0.9, pad=0.1, anchor=(1.1, 1.0))
         # Divide by 1000 to convert to KB
 
         #cbar3.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb))
@@ -292,12 +305,17 @@ if (plotgrid):
 
         axes[0,5].set_ylabel('Memory (KB)', labelpad=60)
         axes[1,5].set_ylabel('Metric: \nAccuracy (binary)\n R2 (regression))', labelpad=50)
+        fig.subplots_adjust(bottom=0.15)
+        # fig.tight_layout()
         plt.savefig('../results/images/' + function + 'grid.png', format='png', dpi=300)
         plt.show()
 
 if (memgrid):
-    df = pd.read_csv('../results_palma/results_mem/california_housing/last.csv')
+    # df = pd.read_csv('../results_palma/results_mem/california_housing/last.csv')
     # df = pd.read_csv('../results_palma/results_mem/covtype/last.csv')
+    df = pd.read_csv('../results_palma/results_mem/kin8nm/last.csv')
+    # df = pd.read_csv('../results_palma/results_mem/breastcancer/last.csv')
+    df = df[(df['tinygbdt_forestsize'] == 8000) ]
     grid_memory = plot_maxMemGrid(df, title='Penalty Grid Search, 2 KB')
     plt.savefig('../results/images/memory_grid.png', format='png', dpi=300)
     plt.tight_layout()
@@ -310,22 +328,22 @@ if barplot_check:
         for data in datasets:
             df = pd.read_csv('../results_palma/' + data + '/last.csv')
             df = df[(df['our_bits'] != 0.0) ]
-            dfn = df[(df['tinygbdt_penalty_feature'] == 0.0) ]
+            dfn = df[(df['tinygbdt_penalty_feature'] == 0.0) & (df['tinygbdt_penalty_split'] == 0.0)]
             dsubset = df[(df['max_trees'] == max_trees) ] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             if (data in binary):
                 axes[counter].set_title(data + "\n(binary)")
             if (data in regression):
                 axes[counter].set_title(data + "\n(regression)")
             if data == 'breastcancer':
-                plot_memory_acc(df, dfn, axes[counter], 0.95, fig, big)
+                plot_memory_acc(df, dfn, axes[counter], 0.9, fig, big)
             if data == 'california_housing':
-                plot_memory_acc(df, dfn, axes[counter], 0.7, fig, big, ylim_top=0.9)
+                plot_memory_acc(df, dfn, axes[counter], 0.2, fig, big, ylim_top=0.9)
             if data == 'covtype':
-                plot_memory_acc(df, dfn, axes[counter], 0.75, fig, big, ylim_top=0.85)
+                plot_memory_acc(df, dfn, axes[counter], 0.7, fig, big, ylim_top=0.82)
             if data == 'kin8nm':
-                plot_memory_acc(df, dfn, axes[counter], 0.4, fig, big, ylim_top=0.9)
+                plot_memory_acc(df, dfn, axes[counter], 0.1, fig, big, ylim_top=0.7)
             if data == 'kr-vs-kp':
-                plot_memory_acc(df, dfn, axes[counter], 0.95, fig, big)
+                plot_memory_acc(df, dfn, axes[counter], 0.9, fig, big)
             if data == 'mushroom':
                 plot_memory_acc(df, dfn, axes[counter], 0.99, fig, big)
             counter = counter +1
