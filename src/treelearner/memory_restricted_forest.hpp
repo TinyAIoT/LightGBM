@@ -169,7 +169,6 @@ namespace LightGBM {
         int tsize;
         for (std::size_t i = 0; i < threshold_per_feature.size(); i++) {
           if (static_cast<int>(threshold_per_feature[i].feature) == feature_to_insert) {
-
             threshold_per_feature[i].thresholds_.push_back(threshold);
             tsize = threshold_per_feature[i].thresholds_.size() - 1;
           }

@@ -164,8 +164,10 @@ void Application::LoadData() {
   Log::Info("Finished loading data in %f seconds",
             std::chrono::duration<double, std::milli>(end_time - start_time) * 1e-3);
 }
-
-void Application::InitTrain() {
+  void Application::InitTrain() {
+  double start;
+  double end;
+  start = omp_get_wtime();
   if (config_.is_parallel) {
     // need init network
     Network::Init(config_);
@@ -203,11 +205,17 @@ void Application::InitTrain() {
                                Common::ConstPtrInVectorWrapper<Metric>(valid_metrics_[i]));
     Log::Debug("Number of data points in validation set #%zu: %d", i + 1, valid_datas_[i]->num_data());
   }
+
+  end = omp_get_wtime();
+  printf("Initializing took %f seconds\n", end - start);
   Log::Info("Finished initializing training");
 }
 
 void Application::Train() {
   Log::Info("Started training...");
+  double start;
+  double end;
+  start = omp_get_wtime();
   boosting_->Train(config_.snapshot_freq, config_.output_model);
   boosting_->SaveModelToFile(0, -1, config_.saved_feature_importance_type,
                              config_.output_model.c_str());
@@ -215,6 +223,8 @@ void Application::Train() {
   if (config_.convert_model_language == std::string("cpp")) {
     boosting_->SaveModelToIfElse(-1, config_.convert_model.c_str());
   }
+  end = omp_get_wtime();
+  printf("Work took %f seconds\n", end - start);
   Log::Info("Finished training");
 }
 
