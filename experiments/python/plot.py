@@ -1,29 +1,25 @@
 import os
-from pydoc import describe
-import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.colors
-import re
 from matplotlib.ticker import FuncFormatter
 import matplotlib.ticker as ticker
 from matplotlib.cm import viridis
 from matplotlib.colors import Normalize
 import lightgbm as lgb
 import helper.helper as hp
-from pandas import read_csv
-from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
-# keyword is the substring of the filename to search for in model.txt and .out files
+import helper.cddiagram as cd
+import scikit_posthocs as sp
 
 plotgrid = True
 barplot_check = True
 barplot_notrees = False
 lineplot = True
 lineplot2 = False
+critical_difference = True
 big = False
-memgrid = True
+memgrid = False
 max_trees = 100
 plot_dots = False # whether to plot orange dots on grid
 log_base = 2
@@ -237,14 +233,14 @@ def plot_memory_acc(df, dfn, axe, ylim, big=False, ylim_top=1):
         axe.tick_params(axis='x', labelrotation=45)
     axe.set_xticklabels(kb_mem_val)  # Apply the custom labels
 
-def plot_trees_acc(df, dfn, axe, ylim, ylim_top=1):
+def plot_trees_acc(df, dfn, axe, ylim, name, ylim_top=1):
     # Dummy for color palette
     keywords = ['accuracy1', 'accuracy2','accuracy1', 'accuracy2', 'accuracy2']
     norm = Normalize(vmin=0, vmax=len(keywords) - 1)
     colors = [viridis(norm(i)) for i in range(len(keywords))]
     width = 0.2
     multiplier = 0
-    tree_values = [ 10, 20, 50, 100 ]
+    tree_values = [ 10, 20, 50 ]
 
     # Create a new DataFrame to store the best accuracy rows
     best_rows_toad = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
@@ -302,9 +298,9 @@ def plot_trees_acc(df, dfn, axe, ylim, ylim_top=1):
     my_new_dict['Naive Memory (KB)'] =  pd.DataFrame(kbnative).iloc[:, 0]
     my_new_dict['Toad Memory (KB)'] =  pd.DataFrame(kbtoad).iloc[:, 0]
     my_new_dict['Memory (KB) Improvement'] = pd.DataFrame(kbnative).iloc[:, 0] - pd.DataFrame(kbtoad).iloc[:, 0]
-    my_new_dict['Accuracy Improvement'] = my_new_dict['ToaD + Penalty'] - my_new_dict['Naive']
+    my_new_dict['Accuracy Improvement'] = (best_rows_toad['accuracy']) - (best_rows_naive['accuracy'])
 
-    # hp.dict_to_markdown_table(my_new_dict, name)
+    hp.dict_to_markdown_table(my_new_dict, name)
 
     axe.set_ylim(ylim, ylim_top)
     axe.set_xticks(x + width)  # Position the ticks at the center of the grouped bars
@@ -446,17 +442,17 @@ if barplot_notrees:
             if (data in regression):
                 axes[counter].set_title(data + "\n(regression)")
             if data == 'breastcancer':
-                plot_trees_acc(df, dfn, axes[counter], 0.9)
+                plot_trees_acc(df, dfn, axes[counter], 0.9, data)
             if data == 'california_housing':
-                plot_trees_acc(df, dfn, axes[counter], 0.2, ylim_top=0.9)
+                plot_trees_acc(df, dfn, axes[counter], 0.2, data,ylim_top=0.9)
             if data == 'covtype':
-                plot_trees_acc(df, dfn, axes[counter], 0.7, lim_top=0.9)
+                plot_trees_acc(df, dfn, axes[counter], 0.7, data,ylim_top=0.9)
             if data == 'kin8nm':
-                plot_trees_acc(df, dfn, axes[counter], 0.1, ylim_top=0.9)
+                plot_trees_acc(df, dfn, axes[counter], 0.1, data,ylim_top=0.9)
             if data == 'kr-vs-kp':
-                plot_trees_acc(df, dfn, axes[counter], 0.9)
+                plot_trees_acc(df, dfn, axes[counter], 0.9, data)
             if data == 'mushroom':
-                plot_trees_acc(df, dfn, axes[counter], 0.99)
+                plot_trees_acc(df, dfn, axes[counter], 0.99, data)
             counter = counter +1
         mergedhandles, mergedlabels = axes[0].get_legend_handles_labels()
         # fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.15,0.05), ncol=7)
@@ -556,3 +552,38 @@ if lineplot:
 
         plt.savefig('../results/images/' + function + 'lines.png', format='png', dpi=300)
         plt.show()
+
+if critical_difference:
+    results_list = []
+    #  possible values [ 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288] - aus irgendeinem Grund failed 1048576
+    target = 4096
+    for data in datasets:
+        df = pd.read_csv('../results/' + data + '/last.csv')
+        df = df[(df['our_bits'] != 0.0) ]
+        dfn = df[(df['tinygbdt_penalty_feature'] == 0.0) & (df['tinygbdt_penalty_split'] == 0.0)]
+        subset = df[(df['our_bits'] <= target)]
+        best_row = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
+        besttoad = best_row['accuracy']
+        subset = dfn[(dfn['lgb_bits'] <= target)]
+        best_row = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
+        best_naive = best_row['accuracy']
+        subset = dfn[(dfn['our_bits'] <= target)]
+        best_row = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
+        best_naive_t = best_row['accuracy']
+        results_list.append({'classifier_name': 'toad', 'dataset_name': data, 'accuracy': (best_naive_t)})
+        results_list.append({'classifier_name': 'toad+penalty', 'dataset_name': data, 'accuracy': (besttoad)})
+        results_list.append({'classifier_name': 'LGBM', 'dataset_name': data, 'accuracy': (best_naive)})
+
+    results_df = pd.DataFrame(results_list)
+    # https://github.com/hfawaz/cd-diagram/tree/master could also be an approach however it looks uglier and has different test.
+    # cd.draw_cd_diagram(results_df)
+    matrix = results_df.pivot(index='dataset_name', columns='classifier_name', values='accuracy')
+    print(matrix)
+
+    test_results = sp.posthoc_conover_friedman(matrix)
+    plt.figure(figsize=(10, 2), dpi=100)
+    plt.title('Critical difference diagram of average score ranks')
+    avg_rank = results_df.groupby('dataset_name').accuracy.rank(pct=True).groupby(results_df.classifier_name).mean()
+    sp.critical_difference_diagram(avg_rank, test_results)
+    plt.show()
+    plt.savefig('figures/figur' + str(target) + '.png')

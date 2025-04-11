@@ -35,7 +35,11 @@ def dict_to_markdown_table(data, name):
         row = []
         for column in columns:
             if i < len(data[column]):
-                row.append(str(round(data[column].iloc[i], 4)))
+                print(column)
+                if column == "Accuracy Improvement":
+                    row.append(str(round(data[column].iloc[i], 3)))
+                else:
+                    row.append(str(round(data[column].iloc[i], 1)))
             else:
                 row.append("")
         rows.append(row)
