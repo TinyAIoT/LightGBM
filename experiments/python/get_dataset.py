@@ -85,6 +85,26 @@ if not os.path.exists(directory + '/breastcancer.test'):
 
     X = breastcancer.data.features
     y = breastcancer.data.targets
-    X = X.apply(LabelEncoder().fit_transform).to_numpy()
+    X = X.to_numpy()
     y = y.apply(LabelEncoder().fit_transform).to_numpy()
     fetch_data(X, y, 'breastcancer', True)
+
+########################
+# wine quality https://archive.ics.uci.edu/dataset/186/wine+quality
+if not os.path.exists(directory + '/wine.test'):
+    wine = fetch_ucirepo(id=186)
+
+    X = wine.data.features
+    y = wine.data.targets
+    X = X.to_numpy()
+    y = y.apply(LabelEncoder().fit_transform).to_numpy()
+    fetch_data(X, y, 'wine', True)
+
+if not os.path.exists(directory + '/covtype_multi.test'):
+    covtype = fetch_ucirepo(id=31)
+
+    X = covtype.data.features
+    y = covtype.data.targets
+    X = X.to_numpy()
+    y = y.apply(LabelEncoder().fit_transform).to_numpy()
+    fetch_data(X, y, 'covtype_multi', True)
