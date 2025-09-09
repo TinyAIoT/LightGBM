@@ -121,7 +121,7 @@ def quantize(in_path, out_path, data_type="float16"):
     with open(out_path, "w") as f:
         f.writelines(new_lines)
 
-def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_file="results.csv"):
+def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_dir="./"):
     datasets={
         "breastcancer": ("breastcancer", "binary", 1),
         "kr-vs-kp": ("kr-vs-kp", "binary", 1),
@@ -136,6 +136,11 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         d, task, num_classes = datasets[dataset]
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
+    
+    result_file = os.path.join(result_dir, 'results.csv')
+    if not os.path.exists(result_file):
+        with open(result_file, "w") as f:
+            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,sk_nodes\n")
 
     (X_train, y_train), (X_test, y_test) = load_data(data_dir, dataset)
     if model_type == "lgbm_quant":
@@ -184,13 +189,13 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
 
 def main():
     parser = argparse.ArgumentParser(description='Benchmark different tree models on datasets.')
-    parser.add_argument('--result_file', required=True, help='File where results should be written to.')
     parser.add_argument('--datasets_dir', required=True, help='Directory to datasets.')
     parser.add_argument('--model', default="ccp", help='Model to train.')
     parser.add_argument('--dataset', default="breastcancer", help='Dataset to use.')
     parser.add_argument('--max_trees', type=int, default=10, help='Maximum number of trees.')
     parser.add_argument('--max_depth', type=int, default=5, help='Maximum depth of trees.')
     parser.add_argument('--alpha', type=float, default=0.0, help='Complexity parameter for pruning (ccp).')
+    parser.add_argument('--result_dir', required=True, help='File where results should be written to.')
     args = parser.parse_args()
 
     # models=["lgbm_quant", "ccp", "xgb", "cegb"] # quantization is integrated into lgbm training 
@@ -204,13 +209,15 @@ def main():
     # alpha=[0.0, 0.01, 0.02, 0.05, 0.1, 0.2]
 
     # check if result file exists, if not create it and write header
-    result_file = args.result_file
-    if not os.path.exists(result_file):
-        with open(result_file, "w") as f:
-            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,sk_nodes\n")
+    # result_file = os.path.join(args.result_dir, 'results.csv')
+    # if not os.path.exists(result_file):
+    #     with open(result_file, "w") as f:
+    #         f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,sk_nodes\n")
 
-    print(f"Training {args.model} on {args.dataset} with max_trees={args.max_trees}, max_depth={args.max_depth}")
-    train_model(args.datasets_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha, result_file=result_file)
+    # print(f"Training {args.model} on {args.dataset} with max_trees={args.max_trees}, max_depth={args.max_depth}")
+
+    # TODO: optimize number of read and write accesses!
+    train_model(args.datasets_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha, result_dir=args.result_dir)
 
 if __name__=="__main__":
     main()
