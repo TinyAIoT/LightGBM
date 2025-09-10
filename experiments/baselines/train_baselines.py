@@ -161,9 +161,19 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         model.save_model('model.txt')
         quantize('model.txt', 'model_quantized.txt', data_type="float16")
         model.model_from_string(open('model_quantized.txt').read())                    
-        train_score = None # not available after quantization
+        # not the actual training score after quantization, but still interesting to evaluate on training data
+        train_score = evaluate_model(model, X_train, y_train, task) 
         test_acc = evaluate_model(model, X_test, y_test, task)                            
         # TODO: ? actually #nodes and #trees stay the same after quantization
+
+    elif model_type == "cegb":
+        data = lgb.Dataset(X_train, label=y_train)
+        # TODO: think about evaluating further parameters like cegb_tradeoff and different costs for features, e.g. binary vs. continuous
+        model = lgb.train({'objective': task, 'max_depth': max_depth, 'num_trees': max_trees, 'num_classes': num_classes, 'cegb_penalty_feature_coupled': np.ones(X_train.shape[1]), 'cegb_tradeoff': 1.0, 'cegb_penalty_split': alpha}, data)
+        estimators = model.num_trees()
+        train_score = evaluate_model(model, X_train, y_train, task)
+        nodes = count_nodes(model)
+        test_acc = evaluate_model(model, X_test, y_test, task)
 
     elif model_type == "ccp":
         if task == "regression":
@@ -195,7 +205,7 @@ def main():
     parser.add_argument('--max_trees', type=int, default=10, help='Maximum number of trees.')
     parser.add_argument('--max_depth', type=int, default=5, help='Maximum depth of trees.')
     parser.add_argument('--alpha', type=float, default=0.0, help='Complexity parameter for pruning (ccp).')
-    parser.add_argument('--result_dir', required=True, help='File where results should be written to.')
+    parser.add_argument('--result_dir', default="", help='File where results should be written to.')
     args = parser.parse_args()
 
     # models=["lgbm_quant", "ccp", "xgb", "cegb"] # quantization is integrated into lgbm training 
