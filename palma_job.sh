@@ -16,8 +16,10 @@ module load palma/2024a
 module load GCCcore/13.3.0
 module load CMake/3.29.3
 
+pip3 install --user -r ./experiments/python/requirements.txt
+
 # BUILD THE APPLICATION IF REQUIRED
-cmake -B build -S . -DUSE_CUDA=0 -DUSE_DEBUG=ON
+cmake -B build -S . -DINSTALL_HEADERS=OFF -DUSE_CUDA=0 -DUSE_DEBUG=ON
 cmake --build build -j4
 
 # START THE APPLICATION

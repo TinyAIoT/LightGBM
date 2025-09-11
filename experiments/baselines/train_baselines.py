@@ -140,7 +140,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
-            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,sk_nodes\n")
+            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,nodes\n")
 
     (X_train, y_train), (X_test, y_test) = load_data(data_dir, dataset)
     if model_type == "lgbm_quant":
@@ -182,7 +182,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
             model = GradientBoostingClassifier(n_estimators=max_trees, max_depth=max_depth, ccp_alpha=alpha)
         model.fit(X_train, y_train)
         nodes = count_nodes(model)
-        train_score = model.train_score_
+        train_score = model.train_score_[-1]
         estimators = len(model.estimators_)
     else:
         # TODO: implement other models
