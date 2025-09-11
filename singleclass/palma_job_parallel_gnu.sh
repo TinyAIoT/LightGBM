@@ -74,8 +74,8 @@ echo "Using start=$start step=$step end=$end"
 datasets=("breastcancer")
 # "kr-vs-kp" "covtype" "mushroom")
 # trees=(1 2 3 4 5 6 7 8 9 10 15 20 30 40 50 100 200 500 1000)
-trees=(1 2)
-depths=(3 5 )
+trees=(1 2 4 8 16 32 64 128 256 512 1014)
+depths=(1 2 4 8)
 
 # build tp/fp arrays (small loop; using python for float math is OK)
 tp=(0)
@@ -123,29 +123,31 @@ PARALLEL_JOBS=$(( SLURM_CPUS_ON_NODE > 1 ? SLURM_CPUS_ON_NODE-1 : 1 ))
 # Create chunked job files directly instead of single joblist
 chunk_dir="$log_path/joblist_chunks"
 mkdir -p "$chunk_dir"
-max_chunk_trees=1000
+max_chunk_trees=1050
+max_chunk_nodes=270000 # 1024 trees * 2 ^ 8 depth 
 max_rows_per_chunk=10 # Additional safeguard to limit chunk size
 rm -f "$chunk_dir"/joblist.chunk.* # this removes any old chunk files
 chunk_index=0
 current_chunk_tree_count=0
+current_chunk_node_count=0
 current_row_count=0
-chunk_file="$chunk_dir/joblist.chunk.$chunk_index"
+chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
 touch "$chunk_file"
 for dataset in "${datasets[@]}"; do
   for tree in "${trees[@]}"; do
     for depth in "${depths[@]}"; do
       for fp_val in "${fp[@]}"; do
         for tp_val in "${tp[@]}"; do
-          # if (( current_chunk_tree_count + tree > max_chunk_trees )); then
-          if (( current_chunk_tree_count + tree > max_chunk_trees || current_row_count >= max_rows_per_chunk )); then
+          node_count=$((tree * 2**depth))
+          if (( current_chunk_node_count + node_count > max_chunk_nodes || current_row_count >= max_rows_per_chunk )); then
             ((chunk_index+=1))
-            chunk_file="$chunk_dir/joblist.chunk.$chunk_index"
+            chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
             touch "$chunk_file"
-            current_chunk_tree_count=0
+            current_chunk_node_count=0
             current_row_count=0
           fi
           echo "$dataset $tree $depth $fp_val $tp_val" >> "$chunk_file"
-          ((current_chunk_tree_count+=tree))
+          ((current_chunk_node_count+=node_count))
           ((current_row_count+=1))
         done
       done
