@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=190
+#SBATCH --cpus-per-task=192
 #SBATCH --partition=zen4
-#SBATCH --time=1:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=128G
 
 #SBATCH --job-name=toad_gnu
@@ -47,11 +47,11 @@ mkdir -p "$result_dir"
 data_dir=$WORK/toad/data
 
 # Arrays
-models=("lgbm_quant" "ccp") # "xgb" "cegb")
-datasets=("breastcancer") # "kr-vs-kp" "covtype" "mushroom" "california_housing" "kin8nm" "wine" "covtype_multi")
-trees=(1 2) # 4 8 16 32 64 128 256 512 1024)
-depths=(1) # 2 4 8)
-alpha=(0.0 0.5) # 0.25 0.125 0.0625 0.03125 0.015625 0.0078125)
+models=("cegb") # ("lgbm_quant" "ccp") # "xgb" "cegb")
+datasets=("breastcancer" "kr-vs-kp" "covtype" "mushroom" "california_housing" "kin8nm" "wine" "covtype_multi")
+trees=(1 2 4 8 16 32 64 128 256 512 1024)
+depths=(1 2 4 8)
+alpha=(0.0 0.5 0.25 0.125 0.0625 0.03125 0.015625 0.0078125)
 
 # Export variables for job environment (parallel will inherit env, but --env is explicit below)
 
@@ -70,11 +70,13 @@ PARALLEL_JOBS=$(( SLURM_CPUS_ON_NODE > 1 ? SLURM_CPUS_ON_NODE-1 : 1 ))
 # Create chunked job files directly instead of single joblist
 chunk_dir="$log_path"/joblist_chunks
 mkdir -p "$chunk_dir"
-max_chunk_trees=1000
+max_chunk_trees=1050
+max_chunk_nodes=530000 # 1014 trees * 2 ^ 8 depth * 2 for ~ multiclass
 max_rows_per_chunk=10 # Additional safeguard to limit chunk size
 rm -f "$chunk_dir"/joblist.chunk.* # this removes any old chunk files
 chunk_index=0
 current_chunk_tree_count=0
+current_chunk_node_count=0
 current_row_count=0
 chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
 touch "$chunk_file"
@@ -84,15 +86,19 @@ for model in "${models[@]}"; do
       for depth in "${depths[@]}"; do
         for al in "${alpha[@]}"; do
           # if (( current_chunk_tree_count + tree > max_chunk_trees )); then
-          if (( current_chunk_tree_count + tree > max_chunk_trees || current_row_count >= max_rows_per_chunk )); then
+          node_count=$((tree * 2**depth))
+          if [ "$model" = "covtype_multi" ]; then
+            node_count=$((node_count * 2))
+          fi
+          if (( current_chunk_node_count + node_count > max_chunk_nodes || current_row_count >= max_rows_per_chunk )); then
             ((chunk_index+=1))
             chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
             touch "$chunk_file"
-            current_chunk_tree_count=0
+            current_chunk_node_count=0
             current_row_count=0
           fi
           echo "$model $dataset $tree $depth $al" >> "$chunk_file"
-          ((current_chunk_tree_count+=tree))
+          ((current_chunk_node_count+=node_count))
           ((current_row_count+=1))
         done
       done
