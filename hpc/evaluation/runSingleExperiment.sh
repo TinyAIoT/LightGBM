@@ -1,7 +1,7 @@
 #!/bin/bash
 # Some basic error checking on input parameters
-if [ "$#" -lt 7 ]; then
-    echo "ERROR: runSingleExperiment.sh requires 7 arguments but got $#."
+if [ "$#" -lt 9 ]; then
+    echo "ERROR: runSingleExperiment.sh requires 9 arguments but got $#."
     echo "Received args:"
     idx=1
     for a in "$@"; do
@@ -13,25 +13,21 @@ if [ "$#" -lt 7 ]; then
 fi
 
 # Assign input parameters to named variables for clarity
-data_dir="$1"
-model="$2"
-dataset="$3"
-tree="$4"
-depth="$5"
-al="$6"
-result_dir="$7"
+lgbm="$1"
+dataset="$2"
+ms="$3"
+fp="$4"
+tp="$5"
+tree="$6"
+depth="$7"
+result_dir="$8"
+model_dir="$9"
 
 # Ensure output directory exists
-mkdir -p "$result_dir"
+outdir="$result_dir/$dataset"
+mkdir -p "$outdir"
 
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
 
-python experiments/baselines/train_baselines.py \
-    --datasets_dir $data_dir \
-    --model $model \
-    --dataset $dataset \
-    --max_trees $tree \
-    --max_depth $depth \
-    --alpha $al \
-    --result_dir $result_dir  \
+python ./hpc/evaluation/evaluate_models.py --filename "$model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth" --resultfile "$outdir/results.csv"

@@ -7,7 +7,7 @@ import re
 import argparse
 import os
 import lightgbm as lgb
-from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score, root_mean_squared_error
 
 def GetValueFromOut(filename, key):
     input = open(filename, "r")
@@ -83,7 +83,7 @@ def calcAccuracy(model_path, data_path, classes=1, label_column=None):
 
     if classes == 0: # regression
         other = r2_score(test_data.get_label(), y_pred)
-        accuracy = mean_squared_error(test_data.get_label(), y_pred)
+        accuracy = root_mean_squared_error(test_data.get_label(), y_pred)
     elif classes > 1:
         other = roc_auc_score(test_data.get_label(), y_pred, multi_class='ovo')
         accuracy = accuracy_score(test_data.get_label(), np.argmax(y_pred, axis=1))
@@ -111,10 +111,10 @@ def extract_key(filename):
     return (datams, fp, tp, tree, depth)
 
 # keyword is the substring of the filename to search for in model.txt and .out files
-def evaluateModel(filename, result_file):
+def evaluateModel(filename, resultfile):
 
-    if not os.path.exists(result_file):
-        with open(result_file, "w") as f:
+    if not os.path.exists(resultfile):
+        with open(resultfile, "w") as f:
             f.write(f"no_trees,max_trees,max_depth,no_features,no_thresholds,no_leaves,our_bits,lgb_bits,accuracy,tinygbdt_penalty_feature,tinygbdt_penalty_split,tinygbdt_forestsize\n")
     
     filepath = (filename + ".txt")
@@ -130,7 +130,7 @@ def evaluateModel(filename, result_file):
     tinygbdt_penalty_split = GetValueFromTXT(filepath, 'tinygbdt_penalty_split')
     valid_data = GetValueFromTXT(filepath, 'valid')
     if objective == 'multiclass':
-                accuracy, roc = calcAccuracy(filepath, valid_data, classes=num_classes)
+        accuracy, roc = calcAccuracy(filepath, valid_data, classes=num_classes)
     elif objective == 'binary':
         accuracy, roc = calcAccuracy(filepath, valid_data, classes=num_classes)
     elif objective == 'regression':
@@ -141,16 +141,16 @@ def evaluateModel(filename, result_file):
     no_features = GetValueFromOut(filepath, '#features')
     no_thresholds = GetValueFromOut(filepath, '#thresholds')
 
-    with open(result_file, "a") as f:
+    with open(resultfile, "a") as f:
         f.write(f"{no_trees},{num_iterations},{max_depth},{no_features},{no_thresholds},{no_leaves},{our_bits},{lgb_bits},{accuracy},{tinygbdt_penalty_feature},{tinygbdt_penalty_split},{tinygbdt_forestsize}\n")
 
  
 parser = argparse.ArgumentParser(description='Evaluate LightGBM models and logged results.')
 parser.add_argument('--filename', required=True, type=str, help='Path to the model file without extension')
-parser.add_argument('--result_file', required=True, type=str, help='Path to the result file to append results to')
+parser.add_argument('--resultfile', required=True, type=str, help='Path to the result file to append results to')
 args = parser.parse_args()
 
 # You can access the arguments using args.string_arg and args.directory
 # print(f"String argument: {args}")
 
-df_path = evaluateModel(filename=args.filename, result_file=args.result_file)
+df_path = evaluateModel(filename=args.filename, resultfile=args.resultfile)

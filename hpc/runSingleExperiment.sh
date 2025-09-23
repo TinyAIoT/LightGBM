@@ -1,6 +1,5 @@
 #!/bin/bash
-
-# Do some basic error checking on input parameters
+# Some basic error checking on input parameters
 if [ "$#" -lt 9 ]; then
     echo "ERROR: runSingleExperiment.sh requires 9 arguments but got $#."
     echo "Received args:"
@@ -28,14 +27,29 @@ model_dir="$9"
 outdir="$model_dir/$dataset"
 mkdir -p "$outdir"
 
+# check if dataset is one of wine or covtype_multi, than use multiclass mode
+if [ "$dataset" = "wine" ] || [ "$dataset" = "covtype_multi" ]; then
+    objective=multiclass
+    num_classes=7
+    metric=multi_logloss
+elif [ "$dataset" = "california_housing" ] || [ "$dataset" = "kin8nm" ]; then
+    objective=regression
+    num_classes=1
+    metric=rmse
+else
+    objective=binary
+    num_classes=1
+    metric=auc
+fi
+
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
 
 if "$lgbm" \
     config=train.conf \
-    objective=multiclass \
-    metric=multi_logloss \
-    num_classes=7 \
+    objective=$objective \
+    num_class=$num_classes \
+    metric=$metric \
     train_data=$data_dir/${dataset}.train \
     valid_data=$data_dir/${dataset}.test \
     max_depth=$depth \
@@ -46,7 +60,6 @@ if "$lgbm" \
     output_model=$model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.txt \
     > $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.out; then
     :  # no-op, do nothing
-    # Uncomment for debug:
     # echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
 else
     echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth failed / not complete!"

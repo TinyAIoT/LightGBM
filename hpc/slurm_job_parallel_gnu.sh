@@ -12,16 +12,15 @@
 
 # Load modules
 
-module load palma/2024a
+# TODO: load relevant software stack from your HPC environment
 module load GCCcore/13.3.0
 module load CMake/3.29.3
 module load parallel/20240722
 
 # Make sure any threaded libraries don't spawn extra threads
-
-export OMP_NUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
-export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
+export OPENBLAS_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
+export MKL_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 
 # Build application (use available CPUs)
 
@@ -37,12 +36,14 @@ code="$HOME"/toad/LightGBM
 log_path="$WORK"/toad/report/sublogs/toad_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
 
+model_dir=$wd/models/$SLURM_JOB_ID
+mkdir -p "$model_dir"
+
 # Unused as we do not evaluate results currently:
 # result_dir=$wd/results
 # mkdir -p "$result_dir"
 
-result_dir=$WORK/toad/results_base2
-mkdir -p "$result_dir"
+data_dir=$WORK/toad/data
 
 # Fixed parameters
 ms=6400000
@@ -56,26 +57,22 @@ lgbm="./lightgbm"
 start=-10
 step=1
 end=15
-job_id=0
 # user needs to execute this script with -- e.g. sbatch palma_job_parallel_gnu.sh --start -10 --step 1 --end 15
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    --job_id) job_id="$2"; shift ;;
-    # --step) step="$2"; shift ;;
-    # --end) end="$2"; shift ;;
+    --start) start="$2"; shift ;;
+    --step) step="$2"; shift ;;
+    --end) end="$2"; shift ;;
     *) echo "Unknown parameter passed: $1"; exit 1 ;;
   esac
   shift
 done
-echo "Using job_id=$job_id start=$start step=$step end=$end"
-
-model_dir=$wd/models/$job_id
+echo "Using start=$start step=$step end=$end"
 
 # Arrays
-datasets=("breastcancer" "kr-vs-kp" "covtype" "mushroom")
+datasets=("breastcancer" "kr-vs-kp" "covtype" "mushroom" "covtype_multi" "wine" "california_housing" "kin8nm")
 # trees=(1 2 3 4 5 6 7 8 9 10 15 20 30 40 50 100 200 500 1000)
-# binary models actually trained with 1014 instead of 1024.. 
-trees=(1 2 4 8 16 32 64 128 256 512 1014)
+trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
 
 # build tp/fp arrays (small loop; using python for float math is OK)
@@ -108,9 +105,10 @@ echo "Total jobs: $total_jobs"
 
 
 # Export variables for job environment (parallel will inherit env, but --env is explicit below)
-
-export lgbm ms result_dir model_dir log_path
-PARALLEL_JOBS=$(( SLURM_CPUS_ON_NODE > 1 ? SLURM_CPUS_ON_NODE-1 : 1 ))
+export lgbm ms data_dir model_dir log_path
+PARALLEL_JOBS_THEORETICAL=$(((SLURM_CPUS_ON_NODE-1)/NUMBER_OF_CPUS_PER_JOB))
+# make sure value is > 1
+PARALLEL_JOBS=$(( PARALLEL_JOBS_THEORETICAL > 1 ? PARALLEL_JOBS_THEORETICAL : 1 ))
 
 
 
@@ -125,10 +123,12 @@ PARALLEL_JOBS=$(( SLURM_CPUS_ON_NODE > 1 ? SLURM_CPUS_ON_NODE-1 : 1 ))
 chunk_dir="$log_path/joblist_chunks"
 mkdir -p "$chunk_dir"
 max_chunk_trees=1050
+max_chunk_nodes=270000 # 1024 trees * 2 ^ 8 depth 
 max_rows_per_chunk=10 # Additional safeguard to limit chunk size
 rm -f "$chunk_dir"/joblist.chunk.* # this removes any old chunk files
 chunk_index=0
 current_chunk_tree_count=0
+current_chunk_node_count=0
 current_row_count=0
 chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
 touch "$chunk_file"
@@ -137,15 +137,16 @@ for dataset in "${datasets[@]}"; do
     for depth in "${depths[@]}"; do
       for fp_val in "${fp[@]}"; do
         for tp_val in "${tp[@]}"; do
-          if (( current_chunk_tree_count + tree > max_chunk_trees || current_row_count >= max_rows_per_chunk )); then
+          node_count=$((tree * 2**depth))
+          if (( current_chunk_node_count + node_count > max_chunk_nodes || current_row_count >= max_rows_per_chunk )); then
             ((chunk_index+=1))
             chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
             touch "$chunk_file"
-            current_chunk_tree_count=0
+            current_chunk_node_count=0
             current_row_count=0
           fi
           echo "$dataset $tree $depth $fp_val $tp_val" >> "$chunk_file"
-          ((current_chunk_tree_count+=tree))
+          ((current_chunk_node_count+=node_count))
           ((current_row_count+=1))
         done
       done
@@ -157,40 +158,6 @@ echo "Total chunked job files: $total_jobs"
 
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-  ./evaluation/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$result_dir" "$model_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
-
-
-# Option 2: Chunked execution with fixed-size chunks (not recommended, as some chunks may contain very short jobs, while others very long jobs)
-
-# Create chunked job files 
-# split -l 300 "$joblist" "$joblist.chunk."
-
-# Run chunks in parallel
-# parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-#   ./singleclass/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" ::: "$joblist.chunk."*
-
-
-
-# ============================================================================================================================================
-# ===== Direct job execution with GNU Parallel (not recommmend, as some jobs are very short, creating large overhead in job management) ======
-# ============================================================================================================================================
-
-# Option 3: Logs to separate files in a directory (per-job logs, CREATES ENOURMOUS NUMBER OF FILES)
-# parallel --jobs "$PARALLEL_JOBS" --lb --eta --joblog "$log_path/parallel_joblog.txt" \
-# --env lgbm,ms,data_dir,model_dir,log_path --colsep ' ' \
-# './singleclass/runSingleExperiment.sh '"$lgbm"' {1} '"$ms"' {4} {5} {2} {3} '"$data_dir"' '"$model_dir"' \
-# >'"$log_path"'/out_{#}.log' :::: "$joblist"
-
-# Option 4: Logs to single file (may be messy) (using >> appends to the log file; use > to overwrite; 
-# parallel --jobs "$PARALLEL_JOBS" --lb --eta --joblog "$log_path/parallel_joblog.txt" \
-# --env lgbm,ms,data_dir,model_dir,log_path --colsep ' ' \
-# './singleclass/runSingleExperiment.sh '"$lgbm"' {1} '"$ms"' {4} {5} {2} {3} '"$data_dir"' '"$model_dir"' \
-# >> '"$log_path"'/all_jobs.log 2>&1' :::: "$joblist"
-
-# Option 5: No progress info, logs to single file (may be messy)
-# parallel --jobs "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_joblog.txt" \
-# --env lgbm,ms,data_dir,model_dir,log_path --colsep ' ' \
-# './singleclass/runSingleExperiment.sh '"$lgbm"' {1} '"$ms"' {4} {5} {2} {3} '"$data_dir"' '"$model_dir"' \
-# >> '"$log_path"'/all_jobs.log 2>&1' :::: "$joblist"
+  ./hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
 
 # End of script
