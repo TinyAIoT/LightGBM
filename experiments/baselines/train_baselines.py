@@ -161,10 +161,8 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         model.save_model('model.txt')
         quantize('model.txt', 'model_quantized.txt', data_type="float16")
         model.model_from_string(open('model_quantized.txt').read())                    
-        # not the actual training score after quantization, but still interesting to evaluate on training data
         train_score = evaluate_model(model, X_train, y_train, task) 
         test_acc = evaluate_model(model, X_test, y_test, task)                            
-        # TODO: ? actually #nodes and #trees stay the same after quantization
 
     elif model_type == "cegb":
         data = lgb.Dataset(X_train, label=y_train)
@@ -208,25 +206,6 @@ def main():
     parser.add_argument('--result_dir', default="", help='File where results should be written to.')
     args = parser.parse_args()
 
-    # models=["lgbm_quant", "ccp", "xgb", "cegb"] # quantization is integrated into lgbm training 
-    # datasets=["breastcancer", "kr-vs-kp", "covtype", "mushroom", "california_housing", "kin8nm", "wine", "covtype_multi"]
-    # tasks=["binary", "binary", "binary", "binary", "regression", "regression", "multiclass", "multiclass"]
-    # num_classes=[1, 1, 1, 1, 1, 1, 7, 7] # lightgbm also expects 1 for binary classification
-    # # dataset dictionary with path, task, num_classes
-    
-    # trees=[1,2,4,8,16,32,64,128,256,512,1024] # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30, 40, 50, 100, 200, 500, 1000]
-    # depths=[3, 5, 7]
-    # alpha=[0.0, 0.01, 0.02, 0.05, 0.1, 0.2]
-
-    # check if result file exists, if not create it and write header
-    # result_file = os.path.join(args.result_dir, 'results.csv')
-    # if not os.path.exists(result_file):
-    #     with open(result_file, "w") as f:
-    #         f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,sk_nodes\n")
-
-    # print(f"Training {args.model} on {args.dataset} with max_trees={args.max_trees}, max_depth={args.max_depth}")
-
-    # TODO: optimize number of read and write accesses!
     train_model(args.datasets_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha, result_dir=args.result_dir)
 
 if __name__=="__main__":
