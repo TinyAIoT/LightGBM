@@ -20,7 +20,8 @@
 
 #load modules 
 module purge
-module load palma/2023a foss/2023a scikit-learn/1.3.1
+# TODO: load relevant software stack from your HPC environment
+module load foss/2023a scikit-learn/1.3.1
 pip install wget
 pip install ucimlrepo
 

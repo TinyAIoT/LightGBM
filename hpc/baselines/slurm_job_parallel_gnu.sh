@@ -9,12 +9,11 @@
 #SBATCH --job-name=toad_gnu
 #SBATCH --mail-type=ALL
 #SBATCH --output=/scratch/tmp/%u/toad/report/output.%j.out
-#SBATCH --mail-user=j_sten07@uni-muenster.de # your mail address
 
 # Load modules
 
 # TODO: adjust modules and requirements
-module load palma/2022b
+# TODO: load relevant software stack from your HPC environment
 module load GCC/12.2.0
 module load scikit-learn/1.2.1
 module load parallel/20230722
@@ -110,40 +109,6 @@ echo "Total chunked job files: $total_jobs"
 
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-  ./baselines/runBatchOfExperiments.sh {1} "$data_dir" "$result_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
-
-
-# Option 2: Chunked execution with fixed-size chunks (not recommended, as some chunks may contain very short jobs, while others very long jobs)
-
-# Create chunked job files 
-# split -l 300 "$joblist" "$joblist.chunk."
-
-# Run chunks in parallel
-# parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-#   ./singleclass/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" ::: "$joblist.chunk."*
-
-
-
-# ============================================================================================================================================
-# ===== Direct job execution with GNU Parallel (not recommmend, as some jobs are very short, creating large overhead in job management) ======
-# ============================================================================================================================================
-
-# Option 3: Logs to separate files in a directory (per-job logs, CREATES ENOURMOUS NUMBER OF FILES)
-# parallel --jobs "$PARALLEL_JOBS" --lb --eta --joblog "$log_path/parallel_joblog.txt" \
-# --env lgbm,ms,data_dir,model_dir,log_path --colsep ' ' \
-# './singleclass/runSingleExperiment.sh '"$lgbm"' {1} '"$ms"' {4} {5} {2} {3} '"$data_dir"' '"$model_dir"' \
-# >'"$log_path"'/out_{#}.log' :::: "$joblist"
-
-# Option 4: Logs to single file (may be messy) (using >> appends to the log file; use > to overwrite; 
-# parallel --jobs "$PARALLEL_JOBS" --lb --eta --joblog "$log_path/parallel_joblog.txt" \
-# --env lgbm,ms,data_dir,model_dir,log_path --colsep ' ' \
-# './singleclass/runSingleExperiment.sh '"$lgbm"' {1} '"$ms"' {4} {5} {2} {3} '"$data_dir"' '"$model_dir"' \
-# >> '"$log_path"'/all_jobs.log 2>&1' :::: "$joblist"
-
-# Option 5: No progress info, logs to single file (may be messy)
-# parallel --jobs "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_joblog.txt" \
-# --env lgbm,ms,data_dir,model_dir,log_path --colsep ' ' \
-# './singleclass/runSingleExperiment.sh '"$lgbm"' {1} '"$ms"' {4} {5} {2} {3} '"$data_dir"' '"$model_dir"' \
-# >> '"$log_path"'/all_jobs.log 2>&1' :::: "$joblist"
+  ./hpc/baselines/runBatchOfExperiments.sh {1} "$data_dir" "$result_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
 
 # End of script
