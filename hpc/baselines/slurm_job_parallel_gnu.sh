@@ -46,7 +46,7 @@ mkdir -p "$result_dir"
 data_dir=$WORK/toad/data
 
 # Arrays
-models=("cegb") # ("lgbm_quant" "ccp") # "xgb" "cegb")
+models=("lgbm_quant" "ccp" "cegb")
 datasets=("breastcancer" "kr-vs-kp" "covtype" "mushroom" "california_housing" "kin8nm" "wine" "covtype_multi")
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
