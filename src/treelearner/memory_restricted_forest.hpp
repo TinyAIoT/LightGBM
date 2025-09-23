@@ -307,7 +307,7 @@ namespace LightGBM {
       }
       out << "\n";
       for (std::size_t i = 0; i < threshold_per_feature.size(); i++) {
-        out << threshold_per_feature[i];
+        // out << threshold_per_feature[i];
         threshold_size += threshold_per_feature[i].thresholds_.size();
       }
       out << "\n";
