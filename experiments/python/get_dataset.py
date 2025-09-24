@@ -20,7 +20,7 @@ def fetch_data(data, target, name, flatten=False):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Get datasets for experiments')
-    parser.add_argument('--directory', type=str, help='Directory to save datasets')
+    parser.add_argument('--directory', type=str, default='../data', help='Directory to save datasets')
     args = parser.parse_args()
     directory = args.directory
 
