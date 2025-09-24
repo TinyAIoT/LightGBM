@@ -72,8 +72,8 @@ tp=0
 for dataset in "breastcancer" "kr-vs-kp" "covtype" "mushroom"; do 
     echo "$dataset"
     mkdir -p $model_dir/${dataset}
-    for tree in  1 2 3 4 5 6 7 8 9 10 15 20 30 40 50 100 200 500 1000; do 
-        for depth in 3 5 7; do 
+    for tree in  1 2 4 8 16 32 63 128 256 512 1024; do 
+        for depth in 1 2 4 8; do 
             tp=0
             fp=0
             if "$1" config=train.conf objective=binary metric=auc train_data=$data_dir/${dataset}.train valid_data=$data_dir/${dataset}.test max_depth=$depth num_trees=$tree output_model=$model_dir/${dataset}/data-${dataset}ms-$ms-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.txt > $model_dir/${dataset}/data-${dataset}-ms-default-fp-$fp-tp-$tp-tree-${tree}-depth-${depth}.out; then
