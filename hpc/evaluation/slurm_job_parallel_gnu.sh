@@ -56,7 +56,7 @@ start=-10
 step=1
 end=15
 job_id=0
-# user needs to execute this script with -- e.g. sbatch palma_job_parallel_gnu.sh --start -10 --step 1 --end 15
+# user needs to execute this script with -- e.g. sbatch slurm_job_parallel_gnu.sh --start -10 --step 1 --end 15
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --job_id) job_id="$2"; shift ;;

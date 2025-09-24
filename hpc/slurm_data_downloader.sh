@@ -25,7 +25,7 @@ module load foss/2023a scikit-learn/1.3.1
 pip install wget
 pip install ucimlrepo
 
-# place of code in palma
+# place of code
 home="$HOME"/toad
 wd="$WORK"/toad
 
