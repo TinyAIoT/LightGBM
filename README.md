@@ -1,5 +1,10 @@
 <img src=https://github.com/microsoft/LightGBM/blob/master/docs/logo/LightGBM_logo_black_text.svg width=300 />
 
+Trees on a Diet Extension
+=========================
+
+For the conference paper "BOOSTED TREES ON A DIET: COMPACT MODELS FOR RESOURCE-CONSTRAINED DEVICES" the LightGBM framework was adapted by integrating the respective methods. Further explanations on how this was done, how to apply ToaD and how to reproduce the paper results can be found in the README of the `experiments` folder. 
+
 Light Gradient Boosting Machine
 ===============================
 
