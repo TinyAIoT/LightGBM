@@ -676,9 +676,9 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot results from experiments')
-    parser.add_argument('--results_folder', type=str, default='../../hpc/evaluation/results/seed42/',
+    parser.add_argument('--results_folder', type=str, default='../results/seed42/',
                         help='Directory where ToaD results are stored')
-    parser.add_argument('--baseline_results_folder', type=str, default='../baselines',
+    parser.add_argument('--baseline_results_folder', type=str, default='../results/seed42/baselines',
                         help='Directory where baseline results are stored')
     parser.add_argument('--images_folder', type=str, default='../results/images/',
                         help='Directory where images are saved')
