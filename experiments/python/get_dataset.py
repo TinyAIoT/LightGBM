@@ -88,13 +88,11 @@ if __name__ == "__main__":
     # breastcancer wisconsin (diagnostic) https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic
     if not os.path.exists(directory + '/breastcancer.test'):
         breastcancer = fetch_ucirepo(id=17)
-
-
-    X = breastcancer.data.features
-    y = breastcancer.data.targets
-    X = X.to_numpy()
-    y = y.apply(LabelEncoder().fit_transform).to_numpy()
-    fetch_data(X, y, 'breastcancer', True)
+        X = breastcancer.data.features
+        y = breastcancer.data.targets
+        X = X.to_numpy()
+        y = y.apply(LabelEncoder().fit_transform).to_numpy()
+        fetch_data(X, y, 'breastcancer', True)
 
 ########################
 # wine quality https://archive.ics.uci.edu/dataset/186/wine+quality
