@@ -128,8 +128,8 @@ def evaluateModel(filename, resultfile):
 
     if not os.path.exists(resultfile):
         with open(resultfile, "w") as f:
-            f.write(f"no_trees,max_trees,max_depth,no_features,no_thresholds,no_leaves,our_bits,lgb_bits,accuracy,tinygbdt_penalty_feature,tinygbdt_penalty_split,tinygbdt_forestsize\n")
-    
+            f.write(f"no_trees,max_trees,max_depth,no_features,no_thresholds,no_leaves,our_bits,lgb_bits,accuracy,val_acc,tinygbdt_penalty_feature,tinygbdt_penalty_split,tinygbdt_forestsize\n")
+
     filepath = (filename + ".txt")
     no_trees = GetValueFromTXT(filepath, 'Tree')+1
     num_iterations = GetValueFromTXT(filepath, 'num_iterations')
