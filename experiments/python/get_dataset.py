@@ -8,14 +8,17 @@ from ucimlrepo import fetch_ucirepo
 from sklearn.preprocessing import LabelEncoder
 
 def fetch_data(data, target, name, flatten=False):
-    X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.2, random_state=42)
+    X_trainpre, X_val, y_trainpre, y_val = train_test_split(data, target, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X_trainpre, y_trainpre, test_size=0.1, random_state=42)
+
     if flatten:
         datasets.dump_svmlight_file(X_train, y_train.flatten(), os.path.join(directory, name + '.train'), zero_based=False)
         datasets.dump_svmlight_file(X_test, y_test.flatten(), os.path.join(directory, name + '.test'), zero_based=False)
+        datasets.dump_svmlight_file(X_val, y_val.flatten(), os.path.join(directory, name + '.val'), zero_based=False)
     else:
         datasets.dump_svmlight_file(X_train, y_train, os.path.join(directory, name + '.train'), zero_based=False)
         datasets.dump_svmlight_file(X_test, y_test, os.path.join(directory, name + '.test'), zero_based=False)
-
+        datasets.dump_svmlight_file(X_val, y_val, os.path.join(directory, name + '.val'), zero_based=False)
 # main function:
 if __name__ == "__main__":
     import argparse

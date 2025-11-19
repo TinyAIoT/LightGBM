@@ -91,7 +91,19 @@ def calcAccuracy(model_path, data_path, classes=1, label_column=None):
         other = roc_auc_score(test_data.get_label(), y_pred)
         accuracy = accuracy_score(test_data.get_label(), (y_pred > 0.5).astype(int))
 
-    return accuracy, other
+    if classes == 0: # regression
+        otherval = r2_score(y_pred_val.get_label(), y_pred)
+        accuracyval = root_mean_squared_error(y_pred_val.get_label(), y_pred)
+    elif classes > 1:
+        otherval = roc_auc_score(y_pred_val.get_label(), y_pred, multi_class='ovo')
+        accuracyval = accuracy_score(y_pred_val.get_label(), np.argmax(y_pred, axis=1))
+    else:
+        otherval = roc_auc_score(y_pred_val.get_label(), y_pred)
+        accuracyval = accuracy_score(y_pred_val.get_label(), (y_pred > 0.5).astype(int))
+
+
+    return accuracy, accuracyval, other, otherval
+
 def extract_key(filename):
     # Use regular expressions to find the numbers after specific prefixes
     match_datams = re.search(r'datams-(\d+)', filename)
@@ -129,12 +141,13 @@ def evaluateModel(filename, resultfile):
     tinygbdt_penalty_feature = GetValueFromTXT(filepath, 'tinygbdt_penalty_feature')
     tinygbdt_penalty_split = GetValueFromTXT(filepath, 'tinygbdt_penalty_split')
     valid_data = GetValueFromTXT(filepath, 'valid')
+    out = 'val'.join(valid_data.rsplit('test', 1))
     if objective == 'multiclass':
-        accuracy, roc = calcAccuracy(filepath, valid_data, classes=num_classes)
+        accuracy, val_acc, roc, val_oth = calcAccuracy(filepath, valid_data, out, classes=num_classes)
     elif objective == 'binary':
-        accuracy, roc = calcAccuracy(filepath, valid_data, classes=num_classes)
+        accuracy, val_acc, roc, val_oth = calcAccuracy(filepath, valid_data, out, classes=num_classes)
     elif objective == 'regression':
-        rmse_py, accuracy = calcAccuracy(filepath, valid_data, classes=0)
+        rmse_py, val_rmse, accuracy, val_acc = calcAccuracy(filepath, valid_data, out, classes=0)
 
     filepath = (filename + ".out")
     our_bits = GetValueFromOutBits(filepath)
@@ -142,9 +155,9 @@ def evaluateModel(filename, resultfile):
     no_thresholds = GetValueFromOut(filepath, '#thresholds')
 
     with open(resultfile, "a") as f:
-        f.write(f"{no_trees},{num_iterations},{max_depth},{no_features},{no_thresholds},{no_leaves},{our_bits},{lgb_bits},{accuracy},{tinygbdt_penalty_feature},{tinygbdt_penalty_split},{tinygbdt_forestsize}\n")
+        f.write(f"{no_trees},{num_iterations},{max_depth},{no_features},{no_thresholds},{no_leaves},{our_bits},{lgb_bits},{accuracy},{val_acc},{tinygbdt_penalty_feature},{tinygbdt_penalty_split},{tinygbdt_forestsize}\n")
 
- 
+
 parser = argparse.ArgumentParser(description='Evaluate LightGBM models and logged results.')
 parser.add_argument('--filename', required=True, type=str, help='Path to the model file without extension')
 parser.add_argument('--resultfile', required=True, type=str, help='Path to the result file to append results to')

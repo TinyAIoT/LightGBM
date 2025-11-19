@@ -10,7 +10,7 @@ import argparse
 import os
 
 
-# in nested ensemble count all predictions not None or null 
+# in nested ensemble count all predictions not None or null
 def count_leaves(ensemble):
     # number of leaves equals number of nodes that make predictions, i.e. prediction != None or prediction != null
     count = 0
@@ -66,7 +66,7 @@ def load_data(dir,dataset_name):
     Load dataset by name. Supported names:.
     Returns (X_train, y_train), (X_test, y_test)"""
     # TODO: adapt to other paths
-    return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name))
+    return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name)),load_svmlight_file('{}/{}.val'.format(dir,dataset_name))
 
 def quantize(in_path, out_path, data_type="float16"):
     """
@@ -94,7 +94,7 @@ def quantize(in_path, out_path, data_type="float16"):
             converted = []
             for v in values:
                 # Convert to desired dtype
-                # cover values out of range for int8; recover initial v length 
+                # cover values out of range for int8; recover initial v length
                 if data_type == "int8":
                     if float(v) < -128:
                         v = "-128." + "0" * (len(v) - 5)
@@ -136,13 +136,13 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         d, task, num_classes = datasets[dataset]
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
-    
+
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
-            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,nodes\n")
+            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes\n")
 
-    (X_train, y_train), (X_test, y_test) = load_data(data_dir, dataset)
+    (X_train, y_train), (X_test, y_test), (X_val, y_val)= load_data(data_dir, dataset)
     if model_type == "lgbm_quant":
         if alpha != 0.0:
             return
@@ -153,16 +153,19 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         nodes = count_nodes(model)
         # already save results to enable quantization step
         test_acc = evaluate_model(model, X_test, y_test, task)
+        val_accuracy = evaluate_model(model, X_val, y_val, task)
+
         with open(result_file, "a") as f:
             name = "lgbm_base"
-            f.write(f"{name},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{nodes}\n")
+            f.write(f"{name},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes}\n")
 
         # quantize
         model.save_model('model.txt')
         quantize('model.txt', 'model_quantized.txt', data_type="float16")
-        model.model_from_string(open('model_quantized.txt').read())                    
-        train_score = evaluate_model(model, X_train, y_train, task) 
-        test_acc = evaluate_model(model, X_test, y_test, task)                            
+        model.model_from_string(open('model_quantized.txt').read())
+        train_score = evaluate_model(model, X_train, y_train, task)
+        test_acc = evaluate_model(model, X_test, y_test, task)
+        val_accuracy = evaluate_model(model, X_val, y_val, task)
 
     elif model_type == "cegb":
         data = lgb.Dataset(X_train, label=y_train)
@@ -172,6 +175,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         train_score = evaluate_model(model, X_train, y_train, task)
         nodes = count_nodes(model)
         test_acc = evaluate_model(model, X_test, y_test, task)
+        val_accuracy = evaluate_model(model, X_val, y_val, task)
 
     elif model_type == "ccp":
         if task == "regression":
@@ -187,10 +191,11 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         return
 
     test_acc = evaluate_model(model, X_test, y_test, task)
-    
+    val_accuracy = evaluate_model(model, X_val, y_val, task)
+
     # write in new line of csv file
     with open(result_file, "a") as f:
-        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{nodes}\n")
+        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes}\n")
 
 
 

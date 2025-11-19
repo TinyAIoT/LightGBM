@@ -1023,12 +1023,12 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     if (split_inf.new_feature) {
       float k = split_inf.bits;
       printf("new feature %i; ", real_fidx);
-      new_split.gain -= (config_->tinygbdt_penalty_feature) * std::log1p(k);
+      new_split.gain -= (config_->tinygbdt_penalty_feature);
     }
     if (split_inf.new_threshold) {
       float k = split_inf.bits;
       printf("new feature %i; ", real_fidx);
-      new_split.gain -= (config_->tinygbdt_penalty_feature) * std::log1p(k);
+      new_split.gain -= (config_->tinygbdt_penalty_split);
     }
 
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
