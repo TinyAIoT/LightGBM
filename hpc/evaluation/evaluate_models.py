@@ -68,7 +68,7 @@ def GetValueFromTXT(filename, key, sum_up=False):
                 ret = line.split(key+': ')[-1][:-2]
     return ret
 
-def calcAccuracy(model_path, data_path, classes=1, label_column=None):
+def calcAccuracy(model_path, data_path, val_path, classes=1, label_column=None):
     model = lgb.Booster(model_file=model_path)
 
     if data_path.endswith('.csv'):
@@ -76,10 +76,11 @@ def calcAccuracy(model_path, data_path, classes=1, label_column=None):
         test_data = lgb.Dataset(df.iloc[:,:int(label_column)], label=df.iloc[:,int(label_column)], free_raw_data=False)
     else:
         test_data = lgb.Dataset(data_path, free_raw_data=False)
+        val_data = lgb.Dataset(val_path, free_raw_data=False)
     test_data.construct()
-
+    val_data.construct()
     y_pred = model.predict(test_data.get_data(), predict_disable_shape_check=True)
-
+    y_pred_val = model.predict(val_data.get_data(), predict_disable_shape_check=True)
 
     if classes == 0: # regression
         other = r2_score(test_data.get_label(), y_pred)
@@ -92,14 +93,14 @@ def calcAccuracy(model_path, data_path, classes=1, label_column=None):
         accuracy = accuracy_score(test_data.get_label(), (y_pred > 0.5).astype(int))
 
     if classes == 0: # regression
-        otherval = r2_score(y_pred_val.get_label(), y_pred)
-        accuracyval = root_mean_squared_error(y_pred_val.get_label(), y_pred)
+        otherval = r2_score(val_data.get_label(), y_pred_val)
+        accuracyval = root_mean_squared_error(val_data.get_label(), y_pred_val)
     elif classes > 1:
-        otherval = roc_auc_score(y_pred_val.get_label(), y_pred, multi_class='ovo')
-        accuracyval = accuracy_score(y_pred_val.get_label(), np.argmax(y_pred, axis=1))
+        otherval = roc_auc_score(val_data.get_label(), y_pred_val, multi_class='ovo')
+        accuracyval = accuracy_score(val_data.get_label(), np.argmax(y_pred_val, axis=1))
     else:
-        otherval = roc_auc_score(y_pred_val.get_label(), y_pred)
-        accuracyval = accuracy_score(y_pred_val.get_label(), (y_pred > 0.5).astype(int))
+        otherval = roc_auc_score(val_data.get_label(), y_pred_val)
+        accuracyval = accuracy_score(val_data.get_label(), (y_pred_val > 0.5).astype(int))
 
 
     return accuracy, accuracyval, other, otherval
