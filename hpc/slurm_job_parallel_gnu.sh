@@ -2,21 +2,26 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=190
-#SBATCH --partition=zen4
-#SBATCH --time=12:00:00
+#SBATCH --partition=zen4,zen4x
+#SBATCH --time=48:00:00
 #SBATCH --mem=128G
 
-#SBATCH --job-name=toad_gnu
+#SBATCH --job-name=toadkfolds_gnu
 #SBATCH --mail-type=ALL
-#SBATCH --output=/scratch/tmp/%u/toad/report/output.%j.out
-
+#SBATCH --output=/scratch/tmp/%u/toadkfolds/report/%j.out
+#SBATCH --error=/scratch/tmp/%u/toadkfolds/report/%j.error
 # Load modules
 
 # TODO: load relevant software stack from your HPC environment
+module load palma/2024a
 module load GCCcore/13.3.0
 module load CMake/3.29.3
 module load parallel/20240722
-
+# set -euo pipefail
+#pip install subprocess
+#pip install os 
+#pip install pandas
+NUMBER_OF_CPUS_PER_JOB=1
 # Make sure any threaded libraries don't spawn extra threads
 export OMP_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 export OPENBLAS_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
@@ -29,21 +34,21 @@ cmake --build build -j "$SLURM_CPUS_ON_NODE"
 
 # Paths, environment setup
 
-home="$HOME"/toad
-wd="$WORK"/toad
-code="$HOME"/toad/LightGBM
+home="$HOME"/toadkfolds
+wd="$WORK"/toadkfolds
+code="$HOME"/toadkfolds
 
-log_path="$WORK"/toad/report/sublogs/toad_"$SLURM_JOB_ID"
+log_path="$WORK"/toadkfolds/report/sublogs/toadkfolds_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
 
 model_dir=$wd/models/$SLURM_JOB_ID
 mkdir -p "$model_dir"
 
 # Unused as we do not evaluate results currently:
-result_dir=$WORK/toad/results
+result_dir=$WORK/toadkfolds/results
 mkdir -p "$result_dir"
 
-data_dir=$WORK/toad/data
+data_dir=$WORK/toadkfolds/data
 
 # Fixed parameters
 ms=6400000
@@ -70,7 +75,7 @@ done
 echo "Using start=$start step=$step end=$end"
 
 # Arrays
-datasets=("breastcancer" "kr-vs-kp" "covtype" "mushroom" "covtype_multi" "wine" "california_housing" "kin8nm")
+datasets=("breastcancer" "kr-vs-kp")
 # trees=(1 2 3 4 5 6 7 8 9 10 15 20 30 40 50 100 200 500 1000)
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
@@ -105,7 +110,7 @@ echo "Total jobs: $total_jobs"
 
 
 # Export variables for job environment (parallel will inherit env, but --env is explicit below)
-export lgbm ms data_dir model_dir log_path
+export lgbm ms data_dir model_dir log_path result_dir
 PARALLEL_JOBS_THEORETICAL=$(((SLURM_CPUS_ON_NODE-1)/NUMBER_OF_CPUS_PER_JOB))
 # make sure value is > 1
 PARALLEL_JOBS=$(( PARALLEL_JOBS_THEORETICAL > 1 ? PARALLEL_JOBS_THEORETICAL : 1 ))
@@ -156,8 +161,10 @@ done
 total_jobs=$(ls "$chunk_dir"/joblist.chunk.* | wc -l)
 echo "Total chunked job files: $total_jobs"
 
+# printf 'DEBUG:' "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" "$result_dir" "$chunk_dir"
+
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-  ./hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" "$result_dir"::: "$chunk_dir"/joblist.chunk.*
+  /home/n/n_herr03/toadkfolds/hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" "$result_dir" ::: "$chunk_dir"/joblist.chunk.*
 
 # End of script

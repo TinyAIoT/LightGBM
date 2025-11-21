@@ -16,18 +16,19 @@
 
 #SBATCH --mail-type=ALL
 
-#SBATCH --output /scratch/tmp/%u/toad/download_datasets_%j.log
+#SBATCH --output /scratch/tmp/%u/toadkfoldskfolds/download_datasets_%j.log
 
 #load modules 
 module purge
 # TODO: load relevant software stack from your HPC environment
+module load palma/2023a
 module load foss/2023a scikit-learn/1.3.1
 pip install wget
 pip install ucimlrepo
 
 # place of code
-home="$HOME"/toad
-wd="$WORK"/toad
+home="$HOME"/toadkfoldskfolds
+wd="$WORK"/toadkfoldskfolds
 
 
-python "$home"/LightGBM/experiments/python/get_dataset.py --directory "$wd"/data
+python "$home"/experiments/python/get_dataset.py --directory "$wd"/data

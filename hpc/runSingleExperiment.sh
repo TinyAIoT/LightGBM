@@ -45,8 +45,9 @@ fi
 
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
+cd /home/n/n_herr03/toadkfolds/
 
-if  python hpc/executekFolds.py --lightgbm $lgbm \
+if python hpc/executekFolds.py --lightgbm $lgbm \
     --config train.conf \
     --objective $objective \
     --num_class $num_classes \
@@ -61,7 +62,7 @@ if  python hpc/executekFolds.py --lightgbm $lgbm \
     --output_model $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
     --modeldir $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
     --resdir data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
-    --outdir $out_dir; then
+    --outdir "/scratch/tmp/n_herr03/toadkfolds/results/"; then
     :  # no-op, do nothing
     # echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
 else

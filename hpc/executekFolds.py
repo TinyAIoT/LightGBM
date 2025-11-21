@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('--outdir', type=str,help='Directory to save datasets')
     parser.add_argument('--resdir', type=str, help='Directory to save datasets')
     args = parser.parse_args()
-    for fold in [0,1,2]:
+    for fold in [0,1,2,3,4]:
         subprocess.call(f"mkdir -p {args.output_model}", shell=True)
         subprocess.call(f"./{args.lightgbm} config={args.config} \
             objective={args.objective} \
@@ -38,7 +38,8 @@ if __name__ == "__main__":
             output_model={args.output_model}/{fold}.txt \
                 > {args.modeldir}/{fold}.out", shell=True)
         subprocess.call(f"mkdir -p {args.outdir}/{args.resdir}", shell=True)
-        subprocess.call(f"python ./hpc/evaluation/evaluate_models.py \
+        print(f"{args.outdir}/{args.resdir}/kfold.csv")
+        subprocess.call(f"python /home/n/n_herr03/toadkfolds/hpc/evaluation/evaluate_models.py \
          --filename {args.modeldir}/{fold} --resultfile {args.outdir}/{args.resdir}/kfold.csv --test", shell=True)
     kfoldresults = pd.read_csv(args.outdir + '/' + args.resdir + "/kfold.csv")
     meanval = kfoldresults["accuracy"].mean()
@@ -56,7 +57,7 @@ if __name__ == "__main__":
                 output_model={args.output_model}.txt \
                 > {args.modeldir}.out", shell=True)
     resultfile = f"{args.outdir}/results.csv"
-    subprocess.call(f"python ./hpc/evaluation/evaluate_models.py \
+    subprocess.call(f"python /home/n/n_herr03/toadkfolds/hpc/evaluation/evaluate_models.py \
             --filename {args.modeldir} --resultfile {args.outdir}/results.csv --val --mean={meanval}", shell=True)
     subprocess.call(f"rm -rf {args.modeldir}", shell=True)
     subprocess.call(f"rm -rf {args.modeldir}", shell=True)

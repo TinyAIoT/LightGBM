@@ -8,5 +8,5 @@ model_dir="$5"
 result_dir="$6"
 
 while IFS=' ' read -r dataset tree depth fp tp; do
-    ./hpc/runSingleExperiment.sh "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir" "$result_dir"
+    /home/n/n_herr03/toadkfolds/hpc/runSingleExperiment.sh "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir" "$result_dir"
 done < "$chunkfile"
