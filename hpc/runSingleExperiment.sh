@@ -62,7 +62,7 @@ if python hpc/executekFolds.py --lightgbm $lgbm \
     --output_model $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
     --modeldir $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
     --resdir data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
-    --outdir "/scratch/tmp/n_herr03/toadkfolds/results/"; then
+    --outdir $out_dir/$dataset; then
     :  # no-op, do nothing
     # echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
 else

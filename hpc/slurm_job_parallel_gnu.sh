@@ -19,7 +19,7 @@ module load CMake/3.29.3
 module load parallel/20240722
 # set -euo pipefail
 #pip install subprocess
-#pip install os 
+#pip install os
 #pip install pandas
 NUMBER_OF_CPUS_PER_JOB=1
 # Make sure any threaded libraries don't spawn extra threads
@@ -128,7 +128,7 @@ PARALLEL_JOBS=$(( PARALLEL_JOBS_THEORETICAL > 1 ? PARALLEL_JOBS_THEORETICAL : 1 
 chunk_dir="$log_path/joblist_chunks"
 mkdir -p "$chunk_dir"
 max_chunk_trees=1050
-max_chunk_nodes=270000 # 1024 trees * 2 ^ 8 depth 
+max_chunk_nodes=270000 # 1024 trees * 2 ^ 8 depth
 max_rows_per_chunk=10 # Additional safeguard to limit chunk size
 rm -f "$chunk_dir"/joblist.chunk.* # this removes any old chunk files
 chunk_index=0
@@ -165,6 +165,5 @@ echo "Total chunked job files: $total_jobs"
 
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-  /home/n/n_herr03/toadkfolds/hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" "$result_dir" ::: "$chunk_dir"/joblist.chunk.*
-
+  ./hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" "$result_dir" ::: "$chunk_dir"/joblist.chunk.*
 # End of script
