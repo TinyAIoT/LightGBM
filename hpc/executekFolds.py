@@ -57,9 +57,7 @@ if __name__ == "__main__":
                 > {args.modeldir}.out", shell=True)
     resultfile = f"{args.outdir}/results.csv"
     subprocess.call(f"python ./hpc/evaluation/evaluate_models.py \
-            --filename {args.modeldir} --resultfile {args.outdir}/results.csv --val", shell=True)
-    with open(resultfile, "a") as f:
-        f.write(f",{meanval}")
+            --filename {args.modeldir} --resultfile {args.outdir}/results.csv --val --mean={meanval}", shell=True)
     subprocess.call(f"rm -rf {args.modeldir}", shell=True)
     subprocess.call(f"rm -rf {args.modeldir}", shell=True)
     subprocess.call(f"rm -rf {args.modeldir}.txt", shell=True)

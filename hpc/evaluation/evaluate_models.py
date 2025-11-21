@@ -127,11 +127,9 @@ def extract_key(filename):
     return (datams, fp, tp, tree, depth)
 
 # keyword is the substring of the filename to search for in model.txt and .out files
-def evaluateModel(filename, resultfile, val=False, test=False):
-    first=False
+def evaluateModel(filename, resultfile, val=False, test=False, mean=0.0):
     if not os.path.exists(resultfile):
         with open(resultfile, "w") as f:
-            first = True
             f.write(f"no_trees,max_trees,max_depth,no_features,no_thresholds,no_leaves,our_bits,lgb_bits,accuracy,val_acc,tinygbdt_penalty_feature,tinygbdt_penalty_split,tinygbdt_forestsize, meankfold\n")
 
     filepath = (filename + ".txt")
@@ -164,9 +162,7 @@ def evaluateModel(filename, resultfile, val=False, test=False):
     no_thresholds = GetValueFromOut(filepath, '#thresholds')
 
     with open(resultfile, "a") as f:
-        if not first:
-            f.write("\n")
-        f.write(f"{no_trees},{num_iterations},{max_depth},{no_features},{no_thresholds},{no_leaves},{our_bits},{lgb_bits},{accuracy},{val_acc},{tinygbdt_penalty_feature},{tinygbdt_penalty_split},{tinygbdt_forestsize}")
+        f.write(f"{no_trees},{num_iterations},{max_depth},{no_features},{no_thresholds},{no_leaves},{our_bits},{lgb_bits},{accuracy},{val_acc},{tinygbdt_penalty_feature},{tinygbdt_penalty_split},{tinygbdt_forestsize},{mean}\n")
 
 
 parser = argparse.ArgumentParser(description='Evaluate LightGBM models and logged results.')
@@ -174,8 +170,10 @@ parser.add_argument('--filename', required=True, type=str, help='Path to the mod
 parser.add_argument('--resultfile', required=True, type=str, help='Path to the result file to append results to')
 parser.add_argument('--val', action=argparse.BooleanOptionalAction)
 parser.add_argument('--test', action=argparse.BooleanOptionalAction)
+parser.add_argument('--mean', required=False, type=float, default=0.0)
+
 args = parser.parse_args()
 
 # You can access the arguments using args.string_arg and args.directory
 # print(f"String argument: {args}")
-df_path = evaluateModel(filename=args.filename, resultfile=args.resultfile, val=args.val, test=args.test)
+df_path = evaluateModel(filename=args.filename, resultfile=args.resultfile, val=args.val, test=args.test, mean=args.mean)
