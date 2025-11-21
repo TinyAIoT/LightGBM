@@ -40,8 +40,8 @@ model_dir=$wd/models/$SLURM_JOB_ID
 mkdir -p "$model_dir"
 
 # Unused as we do not evaluate results currently:
-# result_dir=$wd/results
-# mkdir -p "$result_dir"
+result_dir=$WORK/toad/results
+mkdir -p "$result_dir"
 
 data_dir=$WORK/toad/data
 
@@ -158,6 +158,6 @@ echo "Total chunked job files: $total_jobs"
 
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-  ./hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
+  ./hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" "$result_dir"::: "$chunk_dir"/joblist.chunk.*
 
 # End of script

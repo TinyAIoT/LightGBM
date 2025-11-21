@@ -22,6 +22,7 @@ tree="$6"
 depth="$7"
 data_dir="$8"
 model_dir="$9"
+out_dir="${10}"
 
 # Ensure output directory exists
 outdir="$model_dir/$dataset"
@@ -45,20 +46,22 @@ fi
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
 
-if "$lgbm" \
-    config=train.conf \
-    objective=$objective \
-    num_class=$num_classes \
-    metric=$metric \
-    train_data=$data_dir/${dataset}.train \
-    valid_data=$data_dir/${dataset}.test \
-    max_depth=$depth \
-    num_trees=$tree \
-    tinygbdt_forestsize=$ms \
-    tinygbdt_penalty_split=$tp \
-    tinygbdt_penalty_feature=$fp \
-    output_model=$model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.txt \
-    > $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.out; then
+if  python hpc/executekFolds.py --lightgbm $lgbm \
+    --config train.conf \
+    --objective $objective \
+    --num_class $num_classes \
+    --metric $metric \
+    --dataset $dataset \
+    --data_dir $data_dir \
+    --max_depth $depth \
+    --num_trees $tree \
+    --tinygbdt_forestsize $ms \
+    --tinygbdt_penalty_split $tp \
+    --tinygbdt_penalty_feature $fp \
+    --output_model $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
+    --modeldir $model_dir/$dataset/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
+    --resdir data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
+    --outdir $out_dir; then
     :  # no-op, do nothing
     # echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
 else
