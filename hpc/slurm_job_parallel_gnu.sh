@@ -2,8 +2,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=190
-#SBATCH --partition=zen4,zen4x
-#SBATCH --time=48:00:00
+#SBATCH --partition=zen4,zen4x,requeue-zen
+#SBATCH --time=24:00:00
 #SBATCH --mem=128G
 
 #SBATCH --job-name=toadkfolds_gnu
