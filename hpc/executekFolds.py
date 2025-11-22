@@ -25,7 +25,8 @@ if __name__ == "__main__":
     seeds = [3, 4, 10, 11, 12]
     for seed in seeds:
         for fold in [0,1,2,3,4]:
-            subprocess.call(f"mkdir -p {args.output_model}", shell=True)
+            subprocess.call(f"mkdir -p {args.output_model}/{seed}/", shell=True)
+            subprocess.call(f"mkdir -p {args.modeldir}/{seed}/", shell=True)
             subprocess.call(f"./{args.lightgbm} config={args.config} \
                 objective={args.objective} \
                 num_class={args.num_class} \
@@ -59,7 +60,9 @@ if __name__ == "__main__":
                     output_model={args.output_model}/{seed}/{args.resdir}.txt \
                     > {args.modeldir}/{seed}/{args.resdir}.out", shell=True)
         resultfile = f"{args.outdir}/results.csv"
-        subprocess.call(f"python /home/n/n_herr03/toadkfolds/hpc/evaluation/evaluate_models.py \
+        subprocess.call(f"mkdir -p {args.modeldir}/{seed}/{args.resdir}", shell=True)
+        subprocess.call(f"mkdir -p {args.outdir}/{seed}", shell=True)
+        subprocess.call(f"python  /home/n/n_herr03/toadkfolds/hpc/evaluation/evaluate_models.py \
                 --filename {args.modeldir}/{seed}/{args.resdir} --resultfile {args.outdir}/{seed}/results.csv --val --mean={meanval}", shell=True)
         subprocess.call(f"rm -rf {args.modeldir}", shell=True)
         subprocess.call(f"rm -rf {args.modeldir}", shell=True)
