@@ -27,8 +27,8 @@ mkdir -p "$result_dir"
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
 
-python ./experiments/baselines/train_baselines.py \
-    --datasets_dir $data_dir \
+python ./experiments/baselines/kfoldsbaselines.py \
+    --data_dir $data_dir \
     --model $model \
     --dataset $dataset \
     --max_trees $tree \

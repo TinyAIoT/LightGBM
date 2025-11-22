@@ -36,7 +36,7 @@ code="$HOME"/toad/LightGBM
 log_path="$WORK"/toad/report/baselines/sublogs/toad_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
 
-result_dir=$wd/results_baselines_base2/$SLURM_JOB_ID
+result_dir=$wd/results_baselines/$SLURM_JOB_ID
 mkdir -p "$result_dir"
 
 # Unused as we do not evaluate results currently:
@@ -47,7 +47,7 @@ data_dir=$WORK/toad/data
 
 # Arrays
 models=("lgbm_quant" "ccp" "cegb")
-datasets=("breastcancer" "kr-vs-kp" "covtype" "mushroom" "california_housing" "kin8nm" "wine" "covtype_multi")
+datasets=("breastcancer" "kr-vs-kp")
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
 alpha=(0.0 0.5 0.25 0.125 0.0625 0.03125 0.015625 0.0078125)

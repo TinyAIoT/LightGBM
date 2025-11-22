@@ -61,12 +61,15 @@ def evaluate_model(model, X_test, y_test, task):
         raise ValueError(f"Unknown task: {task}")
     return test_acc
 
-def load_data(dir,dataset_name):
+def load_data(dir,dataset_name, val=False):
     """
     Load dataset by name. Supported names:.
     Returns (X_train, y_train), (X_test, y_test)"""
     # TODO: adapt to other paths
-    return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name)),load_svmlight_file('{}/{}.val'.format(dir,dataset_name))
+    if val:
+        return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)),load_svmlight_file('{}/{}.val'.format(dir,dataset_name))
+    else:
+        return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name))
 
 def quantize(in_path, out_path, data_type="float16"):
     """
@@ -121,7 +124,7 @@ def quantize(in_path, out_path, data_type="float16"):
     with open(out_path, "w") as f:
         f.writelines(new_lines)
 
-def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_dir="./"):
+def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_dir="./", val=False, mean=0.0):
     datasets={
         "breastcancer": ("breastcancer", "binary", 1),
         "kr-vs-kp": ("kr-vs-kp", "binary", 1),
@@ -140,9 +143,11 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
-            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_accuracy,nodes\n")
-
-    (X_train, y_train), (X_test, y_test), (X_val, y_val)= load_data(data_dir, dataset)
+            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes, mean\n")
+    if val:
+        (X_train, y_train), (X_val, y_val)= load_data(data_dir, dataset, val)
+    else:
+        (X_train, y_train), (X_test, y_test) = load_data(data_dir, dataset, val)
     if model_type == "lgbm_quant":
         if alpha != 0.0:
             return
@@ -152,19 +157,22 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         train_score = evaluate_model(model, X_train, y_train, task)
         nodes = count_nodes(model)
         # already save results to enable quantization step
-        test_acc = evaluate_model(model, X_test, y_test, task)
-        val_accuracy = evaluate_model(model, X_val, y_val, task)
+        test_acc = 0.0
+        val_accuracy = 0.0
+        if val:
+            val_accuracy = evaluate_model(model, X_val, y_val, task)
+        else:
+            test_acc = evaluate_model(model, X_test, y_test, task)
 
         with open(result_file, "a") as f:
             name = "lgbm_base"
-            f.write(f"{name},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes}\n")
+            f.write(f"{name},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes},{mean}\n")
 
         # quantize
         model.save_model('model.txt')
         quantize('model.txt', 'model_quantized.txt', data_type="float16")
         model.model_from_string(open('model_quantized.txt').read())
         train_score = evaluate_model(model, X_train, y_train, task)
-        test_acc = evaluate_model(model, X_test, y_test, task)
 
     elif model_type == "cegb":
         data = lgb.Dataset(X_train, label=y_train)
@@ -173,9 +181,6 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         estimators = model.num_trees()
         train_score = evaluate_model(model, X_train, y_train, task)
         nodes = count_nodes(model)
-        test_acc = evaluate_model(model, X_test, y_test, task)
-        val_accuracy = evaluate_model(model, X_val, y_val, task)
-
 
     elif model_type == "ccp":
         if task == "regression":
@@ -190,26 +195,33 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         # TODO: implement other models
         return
 
-    test_acc = evaluate_model(model, X_test, y_test, task)
-    val_accuracy = evaluate_model(model, X_val, y_val, task)
+    test_acc = 0.0
+    val_accuracy = 0.0
+    if val:
+        val_accuracy = evaluate_model(model, X_val, y_val, task)
+    else:
+        test_acc = evaluate_model(model, X_test, y_test, task)
 
     # write in new line of csv file
     with open(result_file, "a") as f:
-        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes}\n")
+        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes},{mean}\n")
 
 
 def main():
     parser = argparse.ArgumentParser(description='Benchmark different tree models on datasets.')
-    parser.add_argument('--datasets_dir', required=True, help='Directory to datasets.')
+    parser.add_argument('--data_dir', required=True, help='Directory to datasets.')
     parser.add_argument('--model', default="ccp", help='Model to train.')
     parser.add_argument('--dataset', default="breastcancer", help='Dataset to use.')
     parser.add_argument('--max_trees', type=int, default=10, help='Maximum number of trees.')
     parser.add_argument('--max_depth', type=int, default=5, help='Maximum depth of trees.')
     parser.add_argument('--alpha', type=float, default=0.0, help='Complexity parameter for pruning (ccp).')
     parser.add_argument('--result_dir', default="", help='File where results should be written to.')
+    parser.add_argument('--mean', type=float, default=0.0, help='mean accuracy')
+    parser.add_argument('--val', action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
 
-    train_model(args.datasets_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha, result_dir=args.result_dir)
+    train_model(args.data_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha,
+                result_dir=args.result_dir, val=args.val, mean=args.mean)
 
 if __name__=="__main__":
     main()
