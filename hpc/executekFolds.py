@@ -58,17 +58,15 @@ if __name__ == "__main__":
                     tinygbdt_penalty_split={args.tinygbdt_penalty_split} \
                     tinygbdt_penalty_feature={args.tinygbdt_penalty_feature} \
                     output_model={args.output_model}/{seed}/{args.resdir}.txt \
-                    > {args.modeldir}/{seed}/{args.resdir}.out", shell=True)
+                    > {args.output_model}/{seed}/{args.resdir}.out", shell=True)
         resultfile = f"{args.outdir}/results.csv"
         subprocess.call(f"mkdir -p {args.modeldir}/{seed}/{args.resdir}", shell=True)
         subprocess.call(f"mkdir -p {args.outdir}/{seed}", shell=True)
+        subprocess.call(f"mkdir -p /scratch/tmp/n_herr03/toadkfolds/results/{args.dataset}/{seed}", shell=True)
+        print(f"readfrom {args.output_model}/{seed}/{args.resdir}")
         subprocess.call(f"python  /home/n/n_herr03/toadkfolds/hpc/evaluation/evaluate_models.py \
-                --filename {args.modeldir}/{seed}/{args.resdir} --resultfile {args.outdir}/{seed}/results.csv --val --mean={meanval}", shell=True)
-        subprocess.call(f"rm -rf {args.modeldir}", shell=True)
-        subprocess.call(f"rm -rf {args.modeldir}", shell=True)
-        subprocess.call(f"rm -rf {args.modeldir}.txt", shell=True)
-        subprocess.call(f"rm -rf {args.modeldir}.out", shell=True)
-        subprocess.call(f"rm -rf {args.outdir}/{args.resdir}", shell=True)
+                --filename {args.output_model}/{seed}/{args.resdir} --resultfile /scratch/tmp/n_herr03/toadkfolds/results/{args.dataset}/{seed}/results.csv --val --mean={meanval}", shell=True)
+        subprocess.call(f"rm -rf {args.output_model}/{seed}/{args.resdir}", shell=True)
 
 
 

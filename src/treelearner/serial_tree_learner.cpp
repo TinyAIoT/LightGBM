@@ -87,7 +87,7 @@ void SerialTreeLearner::Init(const Dataset* train_data, bool is_constant_hessian
 }
 void SerialTreeLearner::afterTrain() {
   if (MemoryRestrictedForest::IsEnable(config_)) {
-    // mrf_->printForest();
+     mrf_->printForest();
   }
 }
 void SerialTreeLearner::GetShareStates(const Dataset* dataset,
