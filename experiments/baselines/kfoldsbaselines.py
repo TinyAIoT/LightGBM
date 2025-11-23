@@ -29,9 +29,6 @@ if __name__ == "__main__":
                 --result_dir={args.result_dir}/{args.dataset}-{seed}-{args.alpha}-{args.max_depth}-{args.max_trees}-{args.model}", shell=True)
         kfoldresults = pd.read_csv(f"{args.result_dir}/{args.dataset}-{seed}-{args.alpha}-{args.max_depth}-{args.max_trees}-{args.model}/results.csv")
         meanval = kfoldresults["test_accuracy"].mean()
-        print(kfoldresults)
-        print(f"{args.result_dir}/{args.dataset}-{seed}-{args.alpha}-{args.max_depth}-{args.max_trees}-{args.model}/results.csv")
-
         subprocess.call(f"python ./experiments/baselines/train_baselines.py \
                         --data_dir={args.data_dir}/{seed}/ \
                         --model={args.model} \
