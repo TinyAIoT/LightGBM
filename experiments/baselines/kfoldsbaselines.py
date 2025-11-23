@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str,help='Directory to save datasets')
     parser.add_argument('--max_depth', type=int,help='Directory to save datasets')
     parser.add_argument('--max_trees', type=int,help='Directory to save datasets')
-    parser.add_argument('--alpha', type=int,help='Directory to save datasets')
+    parser.add_argument('--alpha', type=float,help='Directory to save datasets')
     parser.add_argument('--result_dir', type=str, help='Directory to save datasets')
     args = parser.parse_args()
     seeds = [3, 4, 10, 11, 12]
@@ -42,5 +42,5 @@ if __name__ == "__main__":
                         --result_dir={args.result_dir}/{seed} \
                         --val \
                         --mean={meanval}", shell=True)
-        #subprocess.call(f"rm -rf {args.result_dir}/{args.dataset}-{seed}-{args.alpha}-{args.max_depth}-{args.max_trees}-{args.model}/", shell=True)
+        subprocess.call(f"rm -rf {args.result_dir}/{args.dataset}-{seed}-{args.alpha}-{args.max_depth}-{args.max_trees}-{args.model}/", shell=True)
 

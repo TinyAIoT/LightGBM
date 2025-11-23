@@ -2,18 +2,19 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=192
-#SBATCH --partition=zen4
+#SBATCH --partition=zen4,requeue-zen
 #SBATCH --time=24:00:00
 #SBATCH --mem=128G
 
-#SBATCH --job-name=toad_gnu
+#SBATCH --job-name=toadkfolds_gnu
 #SBATCH --mail-type=ALL
-#SBATCH --output=/scratch/tmp/%u/toad/report/output.%j.out
+#SBATCH --output=/scratch/tmp/%u/toadkfolds/report/output.%j.out
 
 # Load modules
 
 # TODO: adjust modules and requirements
 # TODO: load relevant software stack from your HPC environment
+module load palma/2022b
 module load GCC/12.2.0
 module load scikit-learn/1.2.1
 module load parallel/20230722
@@ -29,11 +30,11 @@ export MKL_NUM_THREADS=1
 
 # Paths, environment setup
 
-home="$HOME"/toad
-wd="$WORK"/toad
-code="$HOME"/toad/LightGBM
+home="$HOME"/toadkfolds
+wd="$WORK"/toadkfolds
+code="$HOME"/toadkfolds/LightGBM
 
-log_path="$WORK"/toad/report/baselines/sublogs/toad_"$SLURM_JOB_ID"
+log_path="$WORK"/toadkfolds/report/baselines/sublogs/toadkfolds_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
 
 result_dir=$wd/results_baselines/$SLURM_JOB_ID
@@ -43,7 +44,7 @@ mkdir -p "$result_dir"
 # result_dir=$wd/results
 # mkdir -p "$result_dir"
 
-data_dir=$WORK/toad/data
+data_dir=$WORK/toadkfolds/data
 
 # Arrays
 models=("lgbm_quant" "ccp" "cegb")
