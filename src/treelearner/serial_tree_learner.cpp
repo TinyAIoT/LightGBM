@@ -1021,9 +1021,11 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     mrf_->CalculateSplitMemoryConsumption(split_inf, threshold, real_fidx);
 
     if (split_inf.new_feature) {
+      int k = split_inf.nfeatures;
       new_split.gain -= (config_->tinygbdt_penalty_feature);
     }
     if (split_inf.new_threshold) {
+      int k = split_inf.nthresholds;
       new_split.gain -= (config_->tinygbdt_penalty_split);
     }
 

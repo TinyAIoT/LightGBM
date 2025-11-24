@@ -10,7 +10,7 @@ import argparse
 import os
 
 
-# in nested ensemble count all predictions not None or null 
+# in nested ensemble count all predictions not None or null
 def count_leaves(ensemble):
     # number of leaves equals number of nodes that make predictions, i.e. prediction != None or prediction != null
     count = 0

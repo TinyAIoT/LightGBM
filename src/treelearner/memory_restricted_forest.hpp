@@ -21,6 +21,8 @@ namespace LightGBM {
     int tindex;
     int findex;
     int feature_bits;
+    int nfeatures;
+    int nthresholds;
   };
 
   struct memory_separation {
@@ -209,6 +211,8 @@ namespace LightGBM {
           }
         }
       }
+      split_inf.nthresholds = currentsize;
+      split_inf.nfeatures = features_used_global_.size();
       split_inf.bits += bits(currentsize - 1) + bits(features_used_global_.size());
       if (split_inf.new_threshold) {
         if (threshold != 0.0 && threshold != 1.0 && threshold > 1e-34) {
