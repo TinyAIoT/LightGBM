@@ -97,14 +97,14 @@ if __name__ == "__main__":
 
         ########################
         # chess kr-vs-kp dataset https://archive.ics.uci.edu/dataset/22/chess+king+rook+vs+king+pawn
-        if not os.path.exists(directory + '/kr-vs-kp.test'):
-            chess = fetch_ucirepo(id=22)
-
-            X = chess.data.features
-            y = chess.data.targets
-            X = X.apply(LabelEncoder().fit_transform).to_numpy()
-            y = y.apply(LabelEncoder().fit_transform).to_numpy()
-            fetch_data(X, y, 'kr-vs-kp', True, seed=seed)
+        # if not os.path.exists(directory + '/kr-vs-kp.test'):
+        #     chess = fetch_ucirepo(id=22)
+        #
+        #     X = chess.data.features
+        #     y = chess.data.targets
+        #     X = X.apply(LabelEncoder().fit_transform).to_numpy()
+        #     y = y.apply(LabelEncoder().fit_transform).to_numpy()
+        #     fetch_data(X, y, 'kr-vs-kp', True, seed=seed)
 
         ########################
         # breastcancer wisconsin (diagnostic) https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic

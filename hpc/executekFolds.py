@@ -42,11 +42,12 @@ if __name__ == "__main__":
                     > {args.modeldir}/{seed}/{fold}.out", shell=True)
             subprocess.call(f"mkdir -p {args.outdir}/{args.resdir}/{seed}", shell=True)
             print(f"{args.outdir}/{args.resdir}/{seed}/kfold.csv")
-            subprocess.call(f"python /home/n/n_herr03/toadkfolds/hpc/evaluation/evaluate_models.py \
+            subprocess.call(f"python hpc/evaluation/evaluate_models.py \
              --filename {args.modeldir}/{seed}/{fold} --resultfile {args.outdir}/{args.resdir}/{seed}/kfold.csv --test", shell=True)
         kfoldresults = pd.read_csv(f"{args.outdir}/{args.resdir}/{seed}/kfold.csv")
         meanval = kfoldresults["accuracy"].mean()
         print(meanval)
+# {args.output_model}/{seed}/
         subprocess.call(f"./{args.lightgbm} config={args.config} \
                     objective={args.objective} \
                     num_class={args.num_class} \
@@ -67,6 +68,6 @@ if __name__ == "__main__":
         subprocess.call(f"python  /home/n/n_herr03/toadkfolds/hpc/evaluation/evaluate_models.py \
                 --filename {args.output_model}/{seed}/{args.resdir} --resultfile /scratch/tmp/n_herr03/toadkfolds/results/{args.dataset}/{seed}/results.csv --val --mean={meanval}", shell=True)
         subprocess.call(f"rm -rf {args.output_model}/{seed}/{args.resdir}", shell=True)
-
-
+        subprocess.call(f"rm -rf {args.outdir}/{seed}/{args.resdir}", shell=True)
+        subprocess.call(f"rm -rf {args.output_model}/{seed}", shell=True)
 

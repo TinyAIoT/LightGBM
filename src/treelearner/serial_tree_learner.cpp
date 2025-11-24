@@ -14,7 +14,7 @@
 #include <set>
 #include <unordered_map>
 #include <utility>
-#include <numeric> 
+#include <numeric>
 
 #include "cost_effective_gradient_boosting.hpp"
 #include "memory_restricted_forest.hpp"

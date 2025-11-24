@@ -97,7 +97,7 @@ def quantize(in_path, out_path, data_type="float16"):
             converted = []
             for v in values:
                 # Convert to desired dtype
-                # cover values out of range for int8; recover initial v length 
+                # cover values out of range for int8; recover initial v length
                 if data_type == "int8":
                     if float(v) < -128:
                         v = "-128." + "0" * (len(v) - 5)

@@ -45,7 +45,7 @@ fi
 
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
-cd /home/n/n_herr03/toadkfolds/
+# cd /home/n/n_herr03/toadkfolds/
 
 if python hpc/executekFolds.py --lightgbm $lgbm \
     --config train.conf \
