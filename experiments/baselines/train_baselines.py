@@ -2,12 +2,14 @@ import lightgbm as lgb
 from tqdm import tqdm
 # import matplotlib.pyplot as plt
 from sklearn.datasets import load_svmlight_file
-from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, RandomForestClassifier
+from PyPruning.RankPruningClassifier import RankPruningClassifier, individual_margin_diversity
 from sklearn.metrics import accuracy_score, mean_squared_error
 import numpy as np
 import pandas as pd
 import argparse
 import os
+import math
 
 
 # in nested ensemble count all predictions not None or null
@@ -173,6 +175,31 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         quantize('model.txt', 'model_quantized.txt', data_type="float16")
         model.model_from_string(open('model_quantized.txt').read())
         train_score = evaluate_model(model, X_train, y_train, task)
+
+    # this could be merged however it was just so much easier for kfolds.... shame on me.
+    elif model_type == "rf":
+        if task == "regression":
+            raise ValueError("only classification supported.")
+        model = RandomForestClassifier(n_estimators=max_trees, max_depth=max_depth)
+        model.fit(X_train, y_train)
+        nodes = count_nodes(model)
+        train_score = evaluate_model(model, X_train, y_train, task)
+        estimators = len(model.estimators_)
+
+    elif model_type == "rf_guo":
+        if task == "regression":
+            raise ValueError("only classification supported.")
+        model = RandomForestClassifier(n_estimators=max_trees, max_depth=max_depth)
+        model.fit(X_train, y_train)
+        # now prune using Guo et al. method
+        n_prune = int(math.ceil(max_trees*alpha))
+        n_prune = max(1, n_prune)
+        guo_pruner = RankPruningClassifier(metric = individual_margin_diversity, n_estimators = n_prune)
+        guo_pruner.prune(X_train, y_train, model.estimators_)
+        estimators = len(guo_pruner.estimators_)
+        nodes = count_nodes(guo_pruner)
+        train_score = evaluate_model(guo_pruner, X_train, y_train, task)
+        model_type = "rf_guo"
 
     elif model_type == "cegb":
         data = lgb.Dataset(X_train, label=y_train)
