@@ -69,15 +69,8 @@ void loop()
         {
             unsigned long StartRandom = micros();
             randomSeed(j);
-            for (int i = 0; i < 10; i++)
-            {
-                model_input[i] = random(0, 4000);
-                // Serial.println(model_input[i]);
-            }
-            for (int i = 10; i < 54; i++)
-            {
-                model_input[i] = random(0, 2);
-                // Serial.println(model_input[i]);
+            for (int i = 0; i < 54; i++) {
+                model_input[i] = (double)random(0, 6000);
             }
             unsigned long EndRandom = micros();
             randomtime = randomtime + (EndRandom - StartRandom);
