@@ -86,7 +86,7 @@ def calcAccuracy(model_path, data_path, val_path, classes=1, label_column=None):
         other = r2_score(test_data.get_label(), y_pred)
         accuracy = root_mean_squared_error(test_data.get_label(), y_pred)
     elif classes > 1:
-        other = roc_auc_score(test_data.get_label(), y_pred, multi_class='ovo')
+        other = roc_auc_score(test_data.get_label(), y_pred, multi_class='ovo', labels=range(int(classes)))
         accuracy = accuracy_score(test_data.get_label(), np.argmax(y_pred, axis=1))
     else:
         other = roc_auc_score(test_data.get_label(), y_pred)
@@ -96,7 +96,7 @@ def calcAccuracy(model_path, data_path, val_path, classes=1, label_column=None):
         otherval = r2_score(val_data.get_label(), y_pred_val)
         accuracyval = root_mean_squared_error(val_data.get_label(), y_pred_val)
     elif classes > 1:
-        otherval = roc_auc_score(val_data.get_label(), y_pred_val, multi_class='ovo')
+        otherval = roc_auc_score(val_data.get_label(), y_pred_val, multi_class='ovo', labels=range(int(classes)))
         accuracyval = accuracy_score(val_data.get_label(), np.argmax(y_pred_val, axis=1))
     else:
         otherval = roc_auc_score(val_data.get_label(), y_pred_val)

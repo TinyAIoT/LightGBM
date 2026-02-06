@@ -1,18 +1,20 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=190
-#SBATCH --partition=zen4
-#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=192
+#SBATCH --partition=zen4,zen4x,requeue-zen
+#SBATCH --time=24:00:00
 #SBATCH --mem=128G
 
 #SBATCH --job-name=toad_gnu
 #SBATCH --mail-type=ALL
-#SBATCH --output=/scratch/tmp/%u/toad/report/output.%j.out
-
+#SBATCH --mail-user=n_herr03@uni-muenster.de
+#SBATCH --output=/scratch/tmp/%u/seed10toad/report/output.%j.out
+#SBATCH --error=/scratch/tmp/%u/seed10toad/report/output.%j.error
 # Load modules
 
 # TODO: load relevant software stack from your HPC environment
+module load palma/2024a
 module load GCCcore/13.3.0
 module load CMake/3.29.3
 module load parallel/20240722
@@ -29,11 +31,11 @@ cmake --build build -j "$SLURM_CPUS_ON_NODE"
 
 # Paths, environment setup
 
-home="$HOME"/toad
-wd="$WORK"/toad
-code="$HOME"/toad/LightGBM
+home="$HOME"/seed10toad
+wd="$WORK"/seed10toad
+code="$HOME"/seed10toad/LightGBM
 
-log_path="$WORK"/toad/report/sublogs/toad_"$SLURM_JOB_ID"
+log_path="$WORK"/seed10toad/report/sublogs/seed10toad_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
 
 model_dir=$wd/models/$SLURM_JOB_ID
@@ -43,7 +45,7 @@ mkdir -p "$model_dir"
 # result_dir=$wd/results
 # mkdir -p "$result_dir"
 
-data_dir=$WORK/toad/data
+data_dir=$WORK/seed10toad/data
 
 # Fixed parameters
 ms=6400000
