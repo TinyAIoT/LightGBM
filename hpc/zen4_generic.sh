@@ -19,8 +19,9 @@ module load GCCcore/13.3.0
 module load CMake/3.29.3
 module load parallel/20240722
 module load Python/3.12.3
-random=$1
-dataset=$2
+
+random="$1"
+dataset="$2"
 # Make sure any threaded libraries don't spawn extra threads
 # export OMP_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 # export OPENBLAS_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
@@ -67,7 +68,7 @@ start=-10
 step=1
 end=15
 # user needs to execute this script with -- e.g. sbatch slurm_job_parallel_gnu.sh --start -10 --step 1 --end 15
-while [[ "$#" -gt 0 ]]; do
+while [[ "$#" -gt 2 ]]; do
   case $1 in
     --start) start="$2"; shift ;;
     --step) step="$2"; shift ;;
