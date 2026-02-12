@@ -8,7 +8,7 @@
 #SBATCH --time=0-01:00:00
 #SBATCH --job-name=data_downloader
 #SBATCH --mail-type=ALL
-#SBATCH --output /scratch/tmp/%u/seed10toad/download_datasets_%j.log
+#SBATCH --output /scratch/tmp/%u/toad/download_datasets_%j.log
 
 #load modules 
 module purge
@@ -20,7 +20,7 @@ pip install ucimlrepo
 
 # place of code
 home="$HOME"/seed10toad
-wd="$WORK"/seed10toad
+wd="$WORK"/toad
 
 
 python "$home"/experiments/python/get_dataset.py --directory "$wd"/data

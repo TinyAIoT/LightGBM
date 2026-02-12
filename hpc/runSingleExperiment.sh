@@ -24,7 +24,7 @@ depth="$8"
 data_dir="$9"
 model_dir="${10}"
 
-WORK="/Users/xxx" # set path for local testing.
+#WORK="/Users/xxx" # set path for local testing.
 # Ensure output directory exists
 outdir="$model_dir/$dataset${rs}"
 mkdir -p "$outdir"
@@ -52,8 +52,8 @@ if "$lgbm" \
     objective=$objective \
     num_class=$num_classes \
     metric=$metric \
-    train_data="$data_dir"/"${rs}"/"${dataset}".train \
-    valid_data="$data_dir"/"${rs}"/"${dataset}".test \
+    train_data="$data_dir/data${rs}"/"${dataset}".train \
+    valid_data="$data_dir/data${rs}"/"${dataset}".test \
     max_depth="$depth" \
     num_trees="$tree" \
     tinygbdt_forestsize="$ms" \

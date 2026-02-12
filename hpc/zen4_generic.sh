@@ -39,7 +39,6 @@ wd="$WORK"/toad
 pip install numpy 
 pip install pandas
 pip install matplotlib
-pip install os
 pip install lightgbm
 pip install scikit-learn
 
