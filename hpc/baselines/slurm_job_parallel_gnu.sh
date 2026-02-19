@@ -44,7 +44,7 @@ mkdir -p "$result_dir"
 # result_dir=$wd/results
 # mkdir -p "$result_dir"
 
-data_dir=$WORK/toad/data{$1}
+data_dir=$WORK/toad/data
 random="$1"
 dataset="$2"
 # Arrays
