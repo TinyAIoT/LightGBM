@@ -6,10 +6,10 @@
 #SBATCH --time=24:00:00
 #SBATCH --mem=128G
 
-#SBATCH --job-name=bl12
+#SBATCH --job-name=baselinetoad
 #SBATCH --mail-type=ALL
-#SBATCH --output=/scratch/tmp/%u/seed10toad/report/output.%j.out
-#SBATCH --error=/scratch/tmp/%u/seed10toad/report/output.%j.error
+#SBATCH --output=/scratch/tmp/%u/toad/report/output.%j.out
+#SBATCH --error=/scratch/tmp/%u/toad/report/output.%j.error
 # Load modules
 
 # TODO: adjust modules and requirements
@@ -30,11 +30,11 @@ export MKL_NUM_THREADS=1
 
 # Paths, environment setup
 
-home="$HOME"/seed10toad
-wd="$WORK"/seed10toad
-code="$HOME"/seed10toad/LightGBM
+home="$HOME"/toad
+wd="$WORK"/toad
+code="$HOME"/toad/LightGBM
 
-log_path="$WORK"/seed10toad/report/baselines/sublogs/seed10toad_"$SLURM_JOB_ID"
+log_path="$WORK"/toad/report/baselines/sublogs/toad_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
 
 result_dir=$wd/results_baselines_base2/$SLURM_JOB_ID
@@ -44,11 +44,12 @@ mkdir -p "$result_dir"
 # result_dir=$wd/results
 # mkdir -p "$result_dir"
 
-data_dir=$WORK/seed10toad/data
-
+data_dir=$WORK/toad/data{$1}
+random="$1"
+dataset="$2"
 # Arrays
 models=("lgbm_quant" "ccp" "cegb")
-datasets=("breastcancer" "kr-vs-kp" "covtype" "mushroom" "california_housing" "kin8nm" "wine" "covtype_multi")
+datasets=($dataset)
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
 alpha=(0.0 0.5 0.25 0.125 0.0625 0.03125 0.015625 0.0078125)
@@ -97,7 +98,7 @@ for model in "${models[@]}"; do
             current_chunk_node_count=0
             current_row_count=0
           fi
-          echo "$model $dataset $tree $depth $al" >> "$chunk_file"
+          echo "$model $dataset $tree $depth $al $random" >> "$chunk_file"
           ((current_chunk_node_count+=node_count))
           ((current_row_count+=1))
         done

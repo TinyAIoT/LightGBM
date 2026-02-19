@@ -121,7 +121,7 @@ def quantize(in_path, out_path, data_type="float16"):
     with open(out_path, "w") as f:
         f.writelines(new_lines)
 
-def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_dir="./"):
+def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed=1, result_dir="./"):
     datasets={
         "breastcancer": ("breastcancer", "binary", 1),
         "kr-vs-kp": ("kr-vs-kp", "binary", 1),
@@ -136,12 +136,13 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         d, task, num_classes = datasets[dataset]
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
-
+    result_dir = result_dir+f'{seed}'
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
             f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes\n")
 
+    data_dir = data_dir+f'{seed}'
     (X_train, y_train), (X_test, y_test), (X_val, y_val)= load_data(data_dir, dataset)
     if model_type == "lgbm_quant":
         if alpha != 0.0:
@@ -209,9 +210,10 @@ def main():
     parser.add_argument('--max_depth', type=int, default=5, help='Maximum depth of trees.')
     parser.add_argument('--alpha', type=float, default=0.0, help='Complexity parameter for pruning (ccp).')
     parser.add_argument('--result_dir', default="", help='File where results should be written to.')
+    parser.add_argument('--randomseed', type=int, default=1, help='randomseedtouse')
     args = parser.parse_args()
 
-    train_model(args.datasets_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha, result_dir=args.result_dir)
+    train_model(args.datasets_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha, seed=args.randomseed, result_dir=args.result_dir)
 
 if __name__=="__main__":
     main()

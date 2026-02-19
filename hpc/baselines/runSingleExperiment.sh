@@ -1,7 +1,7 @@
 #!/bin/bash
 # Some basic error checking on input parameters
-if [ "$#" -lt 7 ]; then
-    echo "ERROR: runSingleExperiment.sh requires 7 arguments but got $#."
+if [ "$#" -lt 8 ]; then
+    echo "ERROR: runSingleExperiment.sh requires 8 arguments but got $#."
     echo "Received args:"
     idx=1
     for a in "$@"; do
@@ -19,7 +19,8 @@ dataset="$3"
 tree="$4"
 depth="$5"
 al="$6"
-result_dir="$7"
+rs="$7"
+result_dir="$8"
 
 # Ensure output directory exists
 mkdir -p "$result_dir"
@@ -34,4 +35,5 @@ python ./experiments/baselines/train_baselines.py \
     --max_trees $tree \
     --max_depth $depth \
     --alpha $al \
+    --randomseed $rs \
     --result_dir $result_dir  \
