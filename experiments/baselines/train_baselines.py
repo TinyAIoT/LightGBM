@@ -137,6 +137,8 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
     result_dir = result_dir+f'{seed}'
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
