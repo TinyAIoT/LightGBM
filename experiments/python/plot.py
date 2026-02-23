@@ -27,9 +27,9 @@ def preprocess_baselineresults(input_file, output_file):
 
     # Merge multi-line bracketed fields into a single line
     # This regex finds [ ... ] possibly spanning multiple lines
-    text = re.sub(r"\[(.*?)\]", 
-                lambda m: "[" + " ".join(m.group(1).split()) + "]", 
-                text, 
+    text = re.sub(r"\[(.*?)\]",
+                lambda m: "[" + " ".join(m.group(1).split()) + "]",
+                text,
                 flags=re.S)
 
     # Parse with CSV reader
@@ -333,7 +333,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
             axes[0,7].set_ylabel('Memory (KB)', labelpad=70)
             axes[1,7].set_ylabel('Metric: Accuracy\n R2 (regression))', labelpad=50)
             fig.subplots_adjust(bottom=0.15)
-            # fig.tight_layout()
+            # fig.tight_layout() simplegrid_goodlayout
             plt.savefig(images_folder + function + 'grid.png', format='png', dpi=300)
             plt.savefig(images_folder + function + 'grid.pdf', format='pdf')
             plt.show()
@@ -467,7 +467,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
         # for regression datasets convert rmse to R2 score
         # calculate variance of target column for each regression dataset
         for data in regression:
-            d = load_svmlight_file(f"{data_folder}/{data}.test")
+            d = load_svmlight_file(f"{data_folder}{data}.test")
             y_true = d[1]
             var = np.var(y_true, ddof=0)
             # where results_all is in regression_datasets and dataset == data convert rmse to R2 score
@@ -475,10 +475,13 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
 
 
         for data in datasets:
-            path = os.path.join(results_folder, data, 'results.csv')
-            if not os.path.exists(path):
-                continue
-            df = pd.read_csv(path)
+            df = pd.DataFrame()
+            for sed in [1,2,3,4,5,6,7,10,11,12]:
+                path = os.path.join(f'{results_folder}{data}/{sed}/results.csv')
+                if not os.path.exists(path):
+                    continue
+                df_int = pd.read_csv(path)
+                df = pd.concat([df, df_int])
             for memory in memory_limits:
                 # our_bits != 0 because of some weird results with 0 memory
                 # TODO: evaluate/train again (covtype_multi)
@@ -618,21 +621,21 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot results from experiments')
-    parser.add_argument('--results_folder', type=str, default='../../hpc/evaluation/results/', help='Directory where ToaD results are stored')
-    parser.add_argument('--baseline_results_folder', type=str, default='../baselines', help='Directory where baseline results are stored')
-    parser.add_argument('--images_folder', type=str, default='../results/images/', help='Directory where images are saved')
-    parser.add_argument('--data_folder', type=str, default='../data/', help='Directory where datasets are stored')
+    parser.add_argument('--results_folder', type=str, default='./results/', help='Directory where ToaD results are stored')
+    parser.add_argument('--baseline_results_folder', type=str, default='./baselines', help='Directory where baseline results are stored')
+    parser.add_argument('--images_folder', type=str, default='./results/images/', help='Directory where images are saved')
+    parser.add_argument('--data_folder', type=str, default='./results/data/', help='Directory where datasets are stored')
     args = parser.parse_args()
     results_folder = args.results_folder
     images_folder = args.images_folder
     baseline_folder = args.baseline_results_folder
     data_folder = args.data_folder
 
-    univariate = True
-    multivariate = True
+    univariate = False
+    multivariate = False
     baselines = True
     plot_dots = True # whether to plot orange dots on grid
-    memgrid = True
+    memgrid = False
     log_base = 2
     barplot_check = False
 
@@ -640,7 +643,7 @@ if __name__ == "__main__":
         os.makedirs(results_folder)
     if not os.path.exists(images_folder):
         os.makedirs(images_folder)
-    datasets = ['california_housing','kin8nm', 'covtype', 'breastcancer', 'kr-vs-kp', 'mushroom', 'wine', 'covtype_multi']  
+    datasets = ['california_housing','kin8nm', 'covtype', 'breastcancer', 'kr-vs-kp', 'mushroom', 'wine', 'covtype_multi']
     binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype']
     regression = ['california_housing', 'kin8nm']
     multiclass = ['covtype_multi', 'wine']
