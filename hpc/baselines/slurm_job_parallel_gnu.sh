@@ -11,6 +11,7 @@
 #SBATCH --mail-user=n_herr03@uni-muenster.de
 #SBATCH --output=/scratch/tmp/%u/toadkfolds/report/output.%j.out
 #SBATCH --error=/scratch/tmp/%u/toadkfolds/report/output.%j.error
+#SBATCH --error=/scratch/tmp/%u/toadkfolds/report/%j.error
 # Load modules
 
 # TODO: adjust modules and requirements
@@ -46,8 +47,7 @@ mkdir -p "$result_dir"
 
 data_dir=$WORK/toadkfolds/data
 dataset="$1"
-# Arrays
-models=("lgbm_quant" "ccp" "cegb")
+models=("rf" "rf_guo" "lgbm_quant" "ccp" "cegb")
 datasets=($dataset)
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
