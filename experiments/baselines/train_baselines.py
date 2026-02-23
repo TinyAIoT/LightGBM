@@ -164,8 +164,6 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
         quantize('model.txt', 'model_quantized.txt', data_type="float16")
         model.model_from_string(open('model_quantized.txt').read())
         train_score = evaluate_model(model, X_train, y_train, task)
-        test_acc = evaluate_model(model, X_test, y_test, task)
-        val_accuracy = evaluate_model(model, X_val, y_val, task)
 
     elif model_type == "cegb":
         data = lgb.Dataset(X_train, label=y_train)
