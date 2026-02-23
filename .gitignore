@@ -466,12 +466,7 @@ dask-worker-space/
 
 *.output
 experiments/results/*
-!experiments/results/olddata/oldtest/seed42/breastcancer
-!experiments/results/olddata/oldtest/seed42/california_housing
-!experiments/results/olddata/oldtest/seed42/covtype
-!experiments/results/olddata/oldtest/seed42/kin8nm
-!experiments/results/olddata/oldtest/seed42/kr-vs-kp
-!experiments/results/olddata/oldtest/seed42/mushroom
+!experiments/results/valtest/*
 experiments/Model/*
 experiments/Output/*
 experiments/plots/*

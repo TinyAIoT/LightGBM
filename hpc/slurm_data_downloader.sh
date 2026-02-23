@@ -1,24 +1,17 @@
 #!/bin/bash
 
 #SBATCH --nodes=1
-
 #SBATCH --tasks-per-node=1
-
 #SBATCH --cpus-per-task=4
-
-#SBATCH --partition=express
-
+#SBATCH --partition=normal,zen4
 #SBATCH --mem=18GB
-
 #SBATCH --time=0-01:00:00
-
 #SBATCH --job-name=data_downloader
-
 #SBATCH --mail-type=ALL
-
 #SBATCH --output /scratch/tmp/%u/toadkfoldskfolds/download_datasets_%j.log
+#SBATCH --error /scratch/tmp/%u/toadkfoldskfolds/download_datasets_%j.error
 
-#load modules 
+#load modules
 module purge
 # TODO: load relevant software stack from your HPC environment
 module load palma/2023a
@@ -27,8 +20,8 @@ pip install wget
 pip install ucimlrepo
 
 # place of code
-home="$HOME"/toadkfoldskfolds
-wd="$WORK"/toadkfoldskfolds
+home="$HOME"/toadkfolds
+wd="$WORK"/toadkfolds
 
 
 python "$home"/experiments/python/get_dataset.py --directory "$wd"/data

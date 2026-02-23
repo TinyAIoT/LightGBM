@@ -8,6 +8,7 @@
 
 #SBATCH --job-name=toadkfolds_gnu
 #SBATCH --mail-type=ALL
+#SBATCH --mail-user=n_herr03@uni-muenster.de
 #SBATCH --output=/scratch/tmp/%u/toadkfolds/report/%j.out
 #SBATCH --error=/scratch/tmp/%u/toadkfolds/report/%j.error
 # Load modules
@@ -17,10 +18,6 @@ module load palma/2024a
 module load GCCcore/13.3.0
 module load CMake/3.29.3
 module load parallel/20240722
-# set -euo pipefail
-#pip install subprocess
-#pip install os
-#pip install pandas
 NUMBER_OF_CPUS_PER_JOB=1
 # Make sure any threaded libraries don't spawn extra threads
 export OMP_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
@@ -32,7 +29,6 @@ export MKL_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 cmake -B build -S . -DUSE_CUDA=0 -DUSE_DEBUG=ON
 cmake --build build -j "$SLURM_CPUS_ON_NODE"
 
-# Paths, environment setup
 
 home="$HOME"/toadkfolds
 wd="$WORK"/toadkfolds
@@ -75,7 +71,7 @@ done
 echo "Using start=$start step=$step end=$end"
 
 # Arrays
-datasets=("breastcancer" "kr-vs-kp")
+datasets=($1)
 # trees=(1 2 3 4 5 6 7 8 9 10 15 20 30 40 50 100 200 500 1000)
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
@@ -160,8 +156,6 @@ for dataset in "${datasets[@]}"; do
 done
 total_jobs=$(ls "$chunk_dir"/joblist.chunk.* | wc -l)
 echo "Total chunked job files: $total_jobs"
-
-# printf 'DEBUG:' "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" "$result_dir" "$chunk_dir"
 
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \

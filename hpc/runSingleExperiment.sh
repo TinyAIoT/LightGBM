@@ -21,13 +21,10 @@ tp="$5"
 tree="$6"
 depth="$7"
 data_dir="$8"
-model_dir="$9"
-out_dir="${10}"
-
+model_dir="${9}"
 # Ensure output directory exists
 outdir="$model_dir/$dataset"
 mkdir -p "$outdir"
-
 # check if dataset is one of wine or covtype_multi, than use multiclass mode
 if [ "$dataset" = "wine" ] || [ "$dataset" = "covtype_multi" ]; then
     objective=multiclass
@@ -45,7 +42,6 @@ fi
 
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
-# cd /home/n/n_herr03/toadkfolds/
 
 if python hpc/executekFolds.py --lightgbm $lgbm \
     --config train.conf \
@@ -68,3 +64,5 @@ if python hpc/executekFolds.py --lightgbm $lgbm \
 else
     echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth failed / not complete!"
 fi
+
+

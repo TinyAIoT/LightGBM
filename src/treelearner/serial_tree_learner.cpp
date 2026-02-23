@@ -87,7 +87,7 @@ void SerialTreeLearner::Init(const Dataset* train_data, bool is_constant_hessian
 }
 void SerialTreeLearner::afterTrain() {
   if (MemoryRestrictedForest::IsEnable(config_)) {
-     mrf_->printForest();
+    mrf_->printForest();
   }
 }
 void SerialTreeLearner::GetShareStates(const Dataset* dataset,
@@ -1021,11 +1021,11 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     mrf_->CalculateSplitMemoryConsumption(split_inf, threshold, real_fidx);
 
     if (split_inf.new_feature) {
-      int k = split_inf.nfeatures;
+      printf("new feature %i; ", real_fidx);
       new_split.gain -= (config_->tinygbdt_penalty_feature);
     }
     if (split_inf.new_threshold) {
-      int k = split_inf.nthresholds;
+      printf("new threshold %f; ", threshold);
       new_split.gain -= (config_->tinygbdt_penalty_split);
     }
 

@@ -66,7 +66,6 @@ def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
     axe.set_yscale('log', base=log_base)  # Correct method for setting y scale
     return scm
 
-
 def plot_maxMemGrid(df, column='accuracy', title=''):
     norm = mcolors.Normalize(vmin=df['accuracy'].min(), vmax=df['accuracy'].max())
     fig, ax = plt.subplots(figsize=(5, 4))

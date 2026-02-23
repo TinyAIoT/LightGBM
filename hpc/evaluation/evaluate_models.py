@@ -48,7 +48,6 @@ def GetValueFromOutBits(filename):
                 ret4 = float(match4.group(1))
             if match5:
                 ret5 = float(match5.group(1))
-    print(ret1 + ret2 + ret3 + ret4 + ret5)
     return ret1 + ret2 + ret3 + ret4 + ret5
 
 def GetValueFromTXT(filename, key, sum_up=False):

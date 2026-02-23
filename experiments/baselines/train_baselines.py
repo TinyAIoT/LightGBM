@@ -141,7 +141,6 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         d, task, num_classes = datasets[dataset]
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
-
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
@@ -245,6 +244,7 @@ def main():
     parser.add_argument('--result_dir', default="", help='File where results should be written to.')
     parser.add_argument('--mean', type=float, default=0.0, help='mean accuracy')
     parser.add_argument('--val', action=argparse.BooleanOptionalAction)
+    parser.add_argument('--randomseed', type=int, default=1, help='randomseedtouse')
     args = parser.parse_args()
 
     train_model(args.data_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha,

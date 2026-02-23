@@ -1,7 +1,7 @@
 #!/bin/bash
 # Some basic error checking on input parameters
 if [ "$#" -lt 7 ]; then
-    echo "ERROR: runSingleExperiment.sh requires 7 arguments but got $#."
+    echo "ERROR: runSingleExperiment.sh requires 8 arguments but got $#."
     echo "Received args:"
     idx=1
     for a in "$@"; do
