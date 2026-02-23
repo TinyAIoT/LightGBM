@@ -136,15 +136,11 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
         d, task, num_classes = datasets[dataset]
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
-    result_dir = result_dir+f'{seed}'
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
             f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes\n")
 
-    data_dir = data_dir+f'{seed}'
     (X_train, y_train), (X_test, y_test), (X_val, y_val)= load_data(data_dir, dataset)
     if model_type == "lgbm_quant":
         if alpha != 0.0:
