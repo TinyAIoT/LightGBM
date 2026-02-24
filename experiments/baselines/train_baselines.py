@@ -176,7 +176,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         train_score = evaluate_model(model, X_train, y_train, task)
 
     # this could be merged however it was just so much easier for kfolds.... shame on me.
-    elif model_type == "rf":
+    if model_type == "rf":
         if task == "regression":
             raise ValueError("only classification supported.")
         model = RandomForestClassifier(n_estimators=max_trees, max_depth=max_depth)
@@ -185,7 +185,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         train_score = evaluate_model(model, X_train, y_train, task)
         estimators = len(model.estimators_)
 
-    elif model_type == "rf_guo":
+    if model_type == "rf_guo":
         if task == "regression":
             raise ValueError("only classification supported.")
         model = RandomForestClassifier(n_estimators=max_trees, max_depth=max_depth)
@@ -200,7 +200,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         train_score = evaluate_model(guo_pruner, X_train, y_train, task)
         model_type = "rf_guo"
 
-    elif model_type == "cegb":
+    if model_type == "cegb":
         data = lgb.Dataset(X_train, label=y_train)
         # TODO: think about evaluating further parameters like cegb_tradeoff and different costs for features, e.g. binary vs. continuous
         model = lgb.train({'objective': task, 'max_depth': max_depth, 'num_trees': max_trees, 'num_classes': num_classes, 'cegb_penalty_feature_coupled': np.ones(X_train.shape[1]), 'cegb_tradeoff': 1.0, 'cegb_penalty_split': alpha}, data)
@@ -208,7 +208,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         train_score = evaluate_model(model, X_train, y_train, task)
         nodes = count_nodes(model)
 
-    elif model_type == "ccp":
+    if model_type == "ccp":
         if task == "regression":
             model = GradientBoostingRegressor(n_estimators=max_trees, max_depth=max_depth, ccp_alpha=alpha)
         else:
