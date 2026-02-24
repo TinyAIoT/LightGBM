@@ -65,4 +65,4 @@ if __name__ == "__main__":
             y = breastcancer.data.targets
             X = X.apply(LabelEncoder().fit_transform).to_numpy()
             y = y.apply(LabelEncoder().fit_transform).to_numpy()
-            fetch_data(X, y, 'breastcancer', True)
+            fetch_data(X, y, 'breastcancer', seed,True)

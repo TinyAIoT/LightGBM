@@ -1,4 +1,4 @@
-model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes,mean
+model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes,meankfold
 ccp,kr-vs-kp,2,2,4,0.5,1.3847633119176872,0.0,0.5328125,2,0.519554947407045
 cegb,breastcancer,64,2,4,0.5,0.6395604395604395,0.0,0.5789473684210527,6,0.7296703296703296
 cegb,breastcancer,4,2,8,0.5,0.6395604395604395,0.0,0.5789473684210527,6,0.7296703296703296

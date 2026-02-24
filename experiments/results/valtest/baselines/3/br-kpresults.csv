@@ -1,4 +1,4 @@
-model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes,mean
+model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes,meankfold
 cegb,breastcancer,8,8,2,0.03125,0.9692307692307692,0.0,0.9298245614035088,54,0.9296703296703296
 cegb,breastcancer,1,1,4,0.125,0.621978021978022,0.0,0.6491228070175439,7,0.621978021978022
 cegb,breastcancer,2,2,4,0.5,0.621978021978022,0.0,0.6491228070175439,6,0.621978021978022
