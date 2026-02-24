@@ -1,5 +1,3 @@
-#include "predict.hpp"
-
 #define SUCCESS 0
 #define ERROR_INVALID_ARGUMENT -1
 #define ERROR_INVALID_INPUT -2
@@ -327,11 +325,8 @@ void loop() {
   unsigned long EndRandom;
   unsigned long startpredict;
   unsigned long endpredict;
-  unsigned long startpredictifelse;
-  unsigned long endpredictifelse;
-  unsigned long predicttimeifelse = 0;
-  Serial.println("Overall Time, Random Time, Read Features Time, Predict Time, Predict Time If-Else");
-  //Serial << "Overall Time, Random Time, Read Features Time, Predict Time, Predict Time If-Else" << "\n";
+  Serial.println("Read Features Time, Predict Time");
+  //Serial << "Read Features Time, Predict Time" << "\n";
   for (int x = 0; x <= 20; x++) {
      overall = 0;
 	 randomtime = 0;
@@ -343,9 +338,6 @@ void loop() {
    EndRandom= 0;
    startpredict= 0;
    endpredict= 0;
-   startpredictifelse= 0;
-   endpredictifelse= 0;
-   predicttimeifelse = 0;
   for (int i = 0; i <= 500; i++) {
 		StartRandom = micros();
 		randomSeed(i);
@@ -397,7 +389,6 @@ void loop() {
         isfloat = true;
       } 
       byte nthres = 0;
-      // TODO change -6 in case we are switching the number 
       if (8-offset-7 < 0 & 8-offset-7-5 < 0) {
         //Serial << "bytetobyterange(number2, 8 + (8-offset-7), 8 + (8-offset-7-5))" << number2 << " " << 8 + (8-offset-7) << " " <<  8 + (8-offset-7-5) << "\n";
         nthres = bytetobyterange(number2, 8 + (8-offset-7), 8 + (8-offset-7-5));
@@ -416,7 +407,6 @@ void loop() {
     // for (int j = 0; j <= 6; j++){
     //   Serial << " Feature " << thosefeatures[j].tindex << " size " << thosefeatures[j].size << " type " << thosefeatures[j].type << " nthres " << thosefeatures[j].nthres <<  " refsize " << thosefeatures[j].refsize << "\n";
     // }
-    // TODO evaluation
     startpredict = micros();
 
     float val0 = evaltree(tree0, input, thosefeatures);
@@ -426,17 +416,12 @@ void loop() {
     float finalresult =  1.0f / (1.0f + exp(-1.0 * (val3 + val2 + val1 + val0)));
     endpredict = micros();
 		predicttime = predicttime + (endpredict-startpredict);
-
-    startpredictifelse = micros();
-		LightGBM::CovTypeClassifier classifier;
-		float finalresultifelse = classifier.Predict(input);
-		endpredictifelse = micros();
-		predicttimeifelse = predicttimeifelse + (endpredictifelse-startpredictifelse);
 	}
 	unsigned long EndTime = micros();
 	overall = EndTime-StartTime;
-	//Serial << overall << ", " << randomtime<< ", " << endreadfeatures - startreadfeatures << ", " << predicttime << ", " << predicttimeifelse << "\n";
+	//Serial << overall << ", " << randomtime<< ", " << endreadfeatures - startreadfeatures << ", " << predicttime << "\n";
 	Serial.print(endreadfeatures - startreadfeatures);
+  Serial.print(",");
   Serial.print(predicttime);
   delay(1000); 
   }

@@ -24,8 +24,6 @@ double PredictRaw(const double *features)
 {
     double raw = 0.0;
     // compile-time count
-    int num_tree_per_iteration_ = sizeof(LightGBM::PredictTreePtr) / sizeof(LightGBM::PredictTreePtr[0]);
-    Serial.println(num_tree_per_iteration_);
     for (int i = 0; i < num_iteration_for_pred_; ++i)
     {
         for (int k = 0; k < num_tree_per_iteration_; ++k)
@@ -71,15 +69,8 @@ void loop()
         {
             unsigned long StartRandom = micros();
             randomSeed(j);
-            for (int i = 0; i < 10; i++)
-            {
-                model_input[i] = random(0, 4000);
-                // Serial.println(model_input[i]);
-            }
-            for (int i = 10; i < 54; i++)
-            {
-                model_input[i] = random(0, 2);
-                // Serial.println(model_input[i]);
+            for (int i = 0; i < 54; i++) {
+                model_input[i] = (double)random(0, 6000);
             }
             unsigned long EndRandom = micros();
             randomtime = randomtime + (EndRandom - StartRandom);
@@ -91,13 +82,12 @@ void loop()
         }
         unsigned long EndTime = micros();
         overall = EndTime - StartTime;
-        Serial.print("Overall Time ");
-        Serial.println(overall);
-        Serial.print("Random Time ");
-        Serial.println(randomtime);
-        Serial.print("Predict Time ");
+        Serial.print(overall);
+        Serial.print(", ");
+        Serial.print(randomtime);
+        Serial.print(", ");
         Serial.println(predicttime);
     }
 
-    delay(10000);
+    delay(100);
 }
