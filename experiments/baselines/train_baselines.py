@@ -2,12 +2,14 @@ import lightgbm as lgb
 from tqdm import tqdm
 # import matplotlib.pyplot as plt
 from sklearn.datasets import load_svmlight_file
-from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, RandomForestClassifier
+from PyPruning.RankPruningClassifier import RankPruningClassifier, individual_margin_diversity
 from sklearn.metrics import accuracy_score, mean_squared_error
 import numpy as np
 import pandas as pd
 import argparse
 import os
+import math
 
 
 # in nested ensemble count all predictions not None or null 
@@ -18,6 +20,14 @@ def count_leaves(ensemble):
         for node in model.nodes:
             if node.prediction is not None:
                 count += 1
+    return count
+
+# in nested ensemble count all predictions not None or null 
+def count_rf_leaves(model):
+    # number of leaves equals number of nodes that make predictions, i.e. prediction != None or prediction != null
+    count = 0
+    for tree in model.estimators_:
+        count += tree.tree_.n_leaves
     return count
 
 # replace int64 values with int values for json serialization
@@ -38,6 +48,9 @@ def count_nodes(model):
         for estimator in model.estimators_:
             for tree in estimator:
                     count += tree.tree_.node_count
+    if isinstance(model, (RandomForestClassifier, RankPruningClassifier)):
+        for estimator in model.estimators_: 
+             count += estimator.tree_.node_count
     if isinstance(model, lgb.Booster):
         model_json = model.dump_model()
         for tree in model_json['tree_info']:
@@ -138,9 +151,10 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         raise ValueError(f"Dataset {dataset} not implemented.")
     
     result_file = os.path.join(result_dir, 'results.csv')
+    print(result_file)
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
-            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,nodes\n")
+            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,nodes,leaves\n")
 
     (X_train, y_train), (X_test, y_test) = load_data(data_dir, dataset)
     if model_type == "lgbm_quant":
@@ -172,6 +186,31 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         train_score = evaluate_model(model, X_train, y_train, task)
         nodes = count_nodes(model)
         test_acc = evaluate_model(model, X_test, y_test, task)
+    
+    elif model_type == "rf":
+        if task == "regression":
+            raise ValueError("only classification supported.")
+        model = RandomForestClassifier(n_estimators=max_trees, max_depth=max_depth)
+        model.fit(X_train, y_train)
+        nodes = count_nodes(model)
+        train_score = evaluate_model(model, X_train, y_train, task)
+        estimators = len(model.estimators_)
+        leaves = count_rf_leaves(model)
+        test_acc = evaluate_model(model, X_test, y_test, task)
+        with open(result_file, "a") as f:
+            name = "rf_base"
+            f.write(f"{name},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{nodes},{leaves}\n")
+        # now prune using Guo et al. method
+        n_prune = int(math.ceil(max_trees*alpha))
+        n_prune = max(1, n_prune)
+        print(n_prune)
+        guo_pruner = RankPruningClassifier(metric = individual_margin_diversity, n_estimators = n_prune)
+        guo_pruner.prune(X_train, y_train, model.estimators_)
+        estimators = len(guo_pruner.estimators_)
+        nodes = count_nodes(guo_pruner)
+        train_score = evaluate_model(guo_pruner, X_train, y_train, task)
+        test_acc = evaluate_model(guo_pruner, X_test, y_test, task)
+        model_type = "rf_guo"
 
     elif model_type == "ccp":
         if task == "regression":
@@ -190,7 +229,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
     
     # write in new line of csv file
     with open(result_file, "a") as f:
-        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{nodes}\n")
+        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{nodes},{leaves}\n")
 
 
 
