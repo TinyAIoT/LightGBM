@@ -2,7 +2,7 @@
 
 ## Implementation
 
-To implement Boosted Trees on a Diet (ToaD) we made some adaptations to the LightGBM framework. We included a new penalizer in the serial tree learner; see the `mrf_` pointer enabled functions in `src/treeldarner/serial_tree_learner.cpp` for details.
+To implement Boosted Trees on a Diet (ToaD) we made some adaptations to the LightGBM framework. We included a new penalizer in the serial tree learner; see the `mrf_` pointer enabled functions in `src/treelearner/serial_tree_learner.cpp` for details.
 Moreover, we added various helper functionalities that are implemented in `src/treelearner/memory_restricted_forest.hpp`.
 
 ## Experiments
@@ -34,7 +34,7 @@ For testing purposes, you might want to modify the for-loops inside the script.
 ```bash
 for i in $(seq -10 1 15); do
     for j in $(seq -10 1 15); do
-        for tree in  1 2 4 8 16 32 63 128 256 512 1024; do 
+        for tree in  1 2 4 8 16 32 64 128 256 512 1024; do 
             for depth in 1 2 4 8; do 
 ```
 
