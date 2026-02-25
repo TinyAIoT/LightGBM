@@ -23,4 +23,45 @@ def bits_to_kb_str(x, pos):
     x = x / (8 * 1024)
     return f"{x:.1f} KB"
 
+def dict_to_markdown_table(data, name):
+    # Bestimme die Spaltennamen
+    columns = list(data.keys())
 
+    # Erstelle die Tabellenzeilen
+    print(range(len(list(data.values()))))
+    rows = []
+    max_length = max([len(value) for value in data.values()])
+    for i in range(max_length):
+        row = []
+        for column in columns:
+            if i < len(data[column]):
+                print(column)
+                if column == "Accuracy Improvement":
+                    row.append(str(round(data[column].iloc[i], 3)))
+                else:
+                    row.append(str(round(data[column].iloc[i], 1)))
+            else:
+                row.append("")
+        rows.append(row)
+
+    table = ""
+    # Erstelle die Markdown-Tabelle
+    if name == 'breastcancer':
+        table = "|" + "|".join(columns) + "|\n"
+        table += "|" + "|".join("---" for _ in columns) + "|\n"
+    table += "|" + name + "|\n"
+    for row in rows:
+        table += "|" + "|".join(row) + "|\n"
+
+    # writes the table to a file called markdown tables
+    filename = "markdowntables.md"
+
+    # Schreibe den String in die Datei
+    if name == 'breastcancer':
+        with open(filename, "w") as file:
+            file.write(table)
+    else:
+        with open(filename, "a") as file:
+            file.write(table)
+
+    return table

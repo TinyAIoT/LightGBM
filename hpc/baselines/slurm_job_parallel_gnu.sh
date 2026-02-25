@@ -6,11 +6,11 @@
 #SBATCH --time=24:00:00
 #SBATCH --mem=128G
 
-#SBATCH --job-name=baselinetoad
+#SBATCH --job-name=toad
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=n_herr03@uni-muenster.de
-#SBATCH --output=/scratch/tmp/%u/toad/report/output.%j.out
-#SBATCH --error=/scratch/tmp/%u/toad/report/output.%j.error
+#SBATCH --output=/scratch/tmp/%u/toad/report/%j.out
+#SBATCH --error=/scratch/tmp/%u/toad/report/%j.error
 # Load modules
 
 # TODO: adjust modules and requirements
@@ -27,25 +27,27 @@ pip install --user lightgbm
 export OMP_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
-export SLURM_CPUS_ON_NODE=192
+
+
 # Paths, environment setup
 
 home="$HOME"/toad
 wd="$WORK"/toad
-code="$HOME"/toad/LightGBM
+
 
 log_path="$WORK"/toad/report/baselines/sublogs/toad_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
+
+result_dir=$wd/results_baselines/$SLURM_JOB_ID
+mkdir -p "$result_dir"
 
 # Unused as we do not evaluate results currently:
 # result_dir=$wd/results
 # mkdir -p "$result_dir"
 
-data_dir=$WORK/toad/data"$1"/
+data_dir=$WORK/toad/data/{$1}
 random="$1"
 dataset="$2"
-result_dir=$wd/results_baselines_base2/"$2"/"$1"
-mkdir -p "$result_dir"
 # Arrays
 models=("lgbm_quant" "ccp" "cegb")
 datasets=($dataset)

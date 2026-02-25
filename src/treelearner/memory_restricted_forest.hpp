@@ -21,6 +21,8 @@ namespace LightGBM {
     int tindex;
     int findex;
     int feature_bits;
+    int nfeatures;
+    int nthresholds;
   };
 
   struct memory_separation {
@@ -122,24 +124,18 @@ namespace LightGBM {
           }
         }
       }
-#pragma omp critical
       ref_trees_.back().feature_ids.push_back(255);
       if (found) {
-#pragma omp critical
         ref_trees_.back().thresholds.push_back(tcounter);
       } else {
-#pragma omp critical
         thresholds_used_global_.push_back(leaf_value);
         if (!featurefound) {
-#pragma omp critical
           threshold_per_feature.push_back({255, leaf_value, 32});
           ref_trees_.back().thresholds.push_back(0);
         } else {
           for (std::size_t i = 0; i < threshold_per_feature.size(); i++) {
             if (threshold_per_feature[i].feature == 255) {
-#pragma omp critical
               threshold_per_feature[i].thresholds_.push_back(leaf_value);
-#pragma omp critical
               ref_trees_.back().thresholds.push_back(threshold_per_feature[i].thresholds_.size() - 1);
             }
           }
@@ -148,7 +144,6 @@ namespace LightGBM {
     }
 
     void UpdateMemoryForTree(Tree *tree) {
-#pragma omp critical
       ref_trees_.push_back({});
       ref_trees_.back().tree_id = ref_trees_.size() - 1;
     }
@@ -163,30 +158,27 @@ namespace LightGBM {
       if (split_inf.new_feature) {
         feature_to_insert = feature;
         features_used_global_.push_back(feature);
-#pragma omp critical
+
         ref_trees_.back().feature_ids.push_back(feature);
-#pragma omp critical
+
         threshold_per_feature.push_back({static_cast<int>(feature)});
       } else {
         feature_to_insert = split_inf.findex;
-#pragma omp critical
+
         ref_trees_.back().feature_ids.push_back(feature);
       }
       if (split_inf.new_threshold) {
         int tsize;
         for (std::size_t i = 0; i < threshold_per_feature.size(); i++) {
           if (static_cast<int>(threshold_per_feature[i].feature) == feature_to_insert) {
-#pragma omp critical
             threshold_per_feature[i].thresholds_.push_back(threshold);
             tsize = threshold_per_feature[i].thresholds_.size() - 1;
           }
         }
-#pragma omp critical
+
         thresholds_used_global_.push_back(threshold);
-#pragma omp critical
         ref_trees_.back().thresholds.push_back(tsize);
       } else {
-#pragma omp critical
         ref_trees_.back().thresholds.push_back(split_inf.tindex);
       }
       est_leftover_memory -= split_inf.bits;
@@ -219,6 +211,8 @@ namespace LightGBM {
           }
         }
       }
+      split_inf.nthresholds = currentsize;
+      split_inf.nfeatures = features_used_global_.size();
       split_inf.bits += bits(currentsize - 1) + bits(features_used_global_.size());
       if (split_inf.new_threshold) {
         if (threshold != 0.0 && threshold != 1.0 && threshold > 1e-34) {

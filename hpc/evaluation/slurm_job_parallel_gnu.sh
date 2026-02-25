@@ -1,47 +1,41 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=192
-#SBATCH --partition=zen4,zen4x,requeue-zen
+#SBATCH --cpus-per-task=190
+#SBATCH --partition=zen4
 #SBATCH --time=12:00:00
 #SBATCH --mem=128G
 
-#SBATCH --job-name=ev_seed10_bmk
+#SBATCH --job-name=toad_gnu
 #SBATCH --mail-type=ALL
-#SBATCH --output=/scratch/tmp/%u/seed10toad/report/output.%j.out
+#SBATCH --output=/scratch/tmp/%u/toad/report/output.%j.out
 
 # Load modules
 
 # TODO: load relevant software stack from your HPC environment
-module load palma/2024a
 module load GCCcore/13.3.0
 module load CMake/3.29.3
 module load parallel/20240722
+
 NUMBER_OF_CPUS_PER_JOB=1
 # Make sure any threaded libraries don't spawn extra threads
 export OMP_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 export OPENBLAS_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 export MKL_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 
-# Build application (use available CPUs)
 
-#cmake -B build -S . -DUSE_CUDA=0 -DUSE_DEBUG=ON
-#cmake --build build -j "$SLURM_CPUS_ON_NODE"
+home="$HOME"/toad
+wd="$WORK"/toad
+code="$HOME"/toad/LightGBM
 
-# Paths, environment setup
-
-home="$HOME"/seed10toad
-wd="$WORK"/seed10toad
-code="$HOME"/seed10toad/LightGBM
-
-log_path="$WORK"/seed10toad/report/sublogs/seed10toad_"$SLURM_JOB_ID"
+log_path="$WORK"/toad/report/sublogs/toad_"$SLURM_JOB_ID"
 mkdir -p "$log_path"
 
 # Unused as we do not evaluate results currently:
 # result_dir=$wd/results
 # mkdir -p "$result_dir"
 
-result_dir=$WORK/seed10toad/results
+result_dir=$WORK/toad/results
 mkdir -p "$result_dir"
 
 # Fixed parameters
@@ -56,7 +50,7 @@ lgbm="./lightgbm"
 start=-10
 step=1
 end=15
-job_id=35731185
+job_id=0
 # user needs to execute this script with -- e.g. sbatch slurm_job_parallel_gnu.sh --start -10 --step 1 --end 15
 while [[ "$#" -gt 0 ]]; do
   case $1 in

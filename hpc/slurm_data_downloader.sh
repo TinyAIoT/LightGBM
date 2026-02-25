@@ -8,9 +8,10 @@
 #SBATCH --time=0-01:00:00
 #SBATCH --job-name=data_downloader
 #SBATCH --mail-type=ALL
-#SBATCH --output /scratch/tmp/%u/toad/download_datasets_%j.log
+#SBATCH --output /scratch/tmp/%u/toadkfoldskfolds/download_datasets_%j.log
+#SBATCH --error /scratch/tmp/%u/toadkfoldskfolds/download_datasets_%j.error
 
-#load modules 
+#load modules
 module purge
 # TODO: load relevant software stack from your HPC environment
 module load palma/2023a
@@ -19,7 +20,7 @@ pip install wget
 pip install ucimlrepo
 
 # place of code
-home="$HOME"/seed10toad
+home="$HOME"/toad
 wd="$WORK"/toad
 
 

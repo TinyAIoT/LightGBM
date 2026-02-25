@@ -14,7 +14,7 @@
 #include <set>
 #include <unordered_map>
 #include <utility>
-#include <numeric> 
+#include <numeric>
 
 #include "cost_effective_gradient_boosting.hpp"
 #include "memory_restricted_forest.hpp"
@@ -1021,13 +1021,11 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
     mrf_->CalculateSplitMemoryConsumption(split_inf, threshold, real_fidx);
 
     if (split_inf.new_feature) {
-      float k = split_inf.bits;
       printf("new feature %i; ", real_fidx);
       new_split.gain -= (config_->tinygbdt_penalty_feature);
     }
     if (split_inf.new_threshold) {
-      float k = split_inf.bits;
-      printf("new feature %i; ", real_fidx);
+      printf("new threshold %f; ", threshold);
       new_split.gain -= (config_->tinygbdt_penalty_split);
     }
 

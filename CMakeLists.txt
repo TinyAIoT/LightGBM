@@ -36,9 +36,9 @@ endif()
 project(lightgbm LANGUAGES C CXX)
 
 if(BUILD_CPP_TEST)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 else()
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

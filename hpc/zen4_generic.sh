@@ -36,7 +36,7 @@ cmake --build build -j "$SLURM_CPUS_ON_NODE"
 
 home="$HOME"/toad
 wd="$WORK"/toad
-pip install numpy 
+pip install numpy
 pip install pandas
 pip install matplotlib
 pip install lightgbm
@@ -48,9 +48,6 @@ mkdir -p "$log_path"
 model_dir=$wd/models/$SLURM_JOB_ID
 mkdir -p "$model_dir"
 
-# Unused as we do not evaluate results currently:
-# result_dir=$wd/results
-# mkdir -p "$result_dir"
 
 data_dir=$WORK/toad/
 
@@ -79,11 +76,11 @@ done
 echo "Using start=$start step=$step end=$end"
 
 # Arrays
+dataset=$1
 datasets=($dataset)
 # trees=(1 2 3 4 5 6 7 8 9 10 15 20 30 40 50 100 200 500 1000)
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
-randomseeds=($random)
 
 # build tp/fp arrays (small loop; using python for float math is OK)
 tp=(0)
@@ -98,8 +95,7 @@ done
 joblist="$log_path/joblist.txt"
 rm -f "$joblist"
 
-for rs in "${randomseeds[@]}"; do
-  for dataset in "${datasets[@]}"; do
+for dataset in "${datasets[@]}"; do
     for tree in "${trees[@]}"; do
       for depth in "${depths[@]}"; do
         for fp_val in "${fp[@]}"; do
@@ -109,8 +105,8 @@ for rs in "${randomseeds[@]}"; do
         done
       done
     done
-  done
 done
+
 
 total_jobs=$(wc -l < "$joblist")
 echo "Total jobs: $total_jobs"
@@ -144,29 +140,28 @@ current_chunk_node_count=0
 current_row_count=0
 chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
 touch "$chunk_file"
-for rs in "${randomseeds[@]}"; do
-    for dataset in "${datasets[@]}"; do
-      for tree in "${trees[@]}"; do
-        for depth in "${depths[@]}"; do
-          for fp_val in "${fp[@]}"; do
-            for tp_val in "${tp[@]}"; do
-              node_count=$((tree * 2**depth))
-              if (( current_chunk_node_count + node_count > max_chunk_nodes || current_row_count >= max_rows_per_chunk )); then
-                ((chunk_index+=1))
-                chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
-                touch "$chunk_file"
-                current_chunk_node_count=0
-                current_row_count=0
-              fi
-              echo "$dataset $tree $depth $fp_val $tp_val $rs" >> "$chunk_file"
-              ((current_chunk_node_count+=node_count))
-              ((current_row_count+=1))
-            done
-          done
+for dataset in "${datasets[@]}"; do
+  for tree in "${trees[@]}"; do
+    for depth in "${depths[@]}"; do
+      for fp_val in "${fp[@]}"; do
+        for tp_val in "${tp[@]}"; do
+          node_count=$((tree * 2**depth))
+          if (( current_chunk_node_count + node_count > max_chunk_nodes || current_row_count >= max_rows_per_chunk )); then
+            ((chunk_index+=1))
+            chunk_file="$chunk_dir"/joblist.chunk."$chunk_index"
+            touch "$chunk_file"
+            current_chunk_node_count=0
+            current_row_count=0
+          fi
+          echo "$dataset $tree $depth $fp_val $tp_val $rs" >> "$chunk_file"
+          ((current_chunk_node_count+=node_count))
+          ((current_row_count+=1))
         done
       done
     done
+  done
 done
+
 total_jobs=$(ls "$chunk_dir"/joblist.chunk.* | wc -l)
 echo "Total chunked job files: $total_jobs"
 

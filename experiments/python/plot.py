@@ -81,7 +81,7 @@ def plot_maxMemGrid(df, column='accuracy', title=''):
     ax.set_yscale('log', base=log_base)  # Correct method for setting y scale
     ax.xaxis.set_major_locator(ticker.LogLocator(base=log_base, numticks=6))
     ax.yaxis.set_major_locator(ticker.LogLocator(base=log_base, numticks=6))
-    
+
     fig.colorbar(scm, label="R2 score")
 
 def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, xlog=True, xlabel='Feature Penalty', mem=True, binary=True):
@@ -100,7 +100,7 @@ def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, xlog
     if plot_accuracy:
         axe.plot(df[keyword], df['accuracy'], '--o', label='Metric', color=colors[4], markersize=4, linewidth=1)
         axe.tick_params(axis='y', color=colors[0])
-    
+
     axe.xaxis.set_major_locator(ticker.LogLocator(base=log_base, numticks=6))
 
     ax2 = axe.twinx()
@@ -179,7 +179,7 @@ def plotAccuracyMemByPenalty(df, axe, keyword, plot_accuracy=True, xlog=True, xl
     handles_axe4, labels_axe4 = ax4.get_legend_handles_labels()
     merged_handles = merged_handles +handles_axe4
     merged_labels = merged_labels + labels_axe4
-    return merged_handles, merged_labels 
+    return merged_handles, merged_labels
 
     #ax2.legend(loc='upper right')
 
@@ -196,10 +196,18 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False, ylim_top=1):
         memory_values = [ 4096, 8192, 16384, 32768, 65536]
         # memory_values = [ 8192, 16384, 32768, 65536, 131072]
     # Create a new DataFrame to store the best accuracy rows
-    best_rows_toad = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
-    best_rows_naive = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
-    best_rows_naive_fp = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
-    test = pd.DataFrame(columns=['no_trees','no_features','no_thresholds','no_leaves','our_bits','lgb_bits','logloss','rmse','accuracy','tinygbdt_penalty_feature','tinygbdt_penalty_split','max_trees','depth'])
+    best_rows_toad = pd.DataFrame(
+        columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
+                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
+    best_rows_naive = pd.DataFrame(
+        columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
+                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
+    best_rows_naive_fp = pd.DataFrame(
+        columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
+                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
+    test = pd.DataFrame(
+        columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
+                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
 
     zero_row = [0] * 13
     for target in memory_values:
@@ -213,7 +221,7 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False, ylim_top=1):
         if not subset.empty:
             best_row_n = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
             best_rows_naive = pd.concat([best_rows_naive, best_row_n.to_frame().T], ignore_index=True)  # Append the row
-        else :
+        else:
             best_rows_naive = pd.concat([best_rows_naive, pd.DataFrame([zero_row], columns=test.columns)])
 
     for target in memory_values:
@@ -222,8 +230,9 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False, ylim_top=1):
         # subset = df[(df['our_bits'] <= target) & (df['tinygbdt_penalty_feature'] <= fp) & (df['tinygbdt_penalty_split'] <= tp)]
         if not subset.empty:
             best_row_n = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
-            best_rows_naive_fp = pd.concat([best_rows_naive_fp, best_row_n.to_frame().T], ignore_index=True)  # Append the row
-        else :
+            best_rows_naive_fp = pd.concat([best_rows_naive_fp, best_row_n.to_frame().T],
+                                           ignore_index=True)  # Append the row
+        else:
             best_rows_naive_fp = pd.concat([best_rows_naive_fp, pd.DataFrame([zero_row], columns=test.columns)])
 
     x = np.arange(len(best_rows_toad['our_bits']))
@@ -232,11 +241,7 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False, ylim_top=1):
         'ToaD': (best_rows_naive_fp['accuracy']),
         'ToaD + Penalty': (best_rows_toad['accuracy'])
     }
-    
-    # print(best_rows_naive)
-    # print(best_rows_naive_fp)
-    # print(best_rows_toad)
-    
+
     for attribute, measurement in myitems.items():
         offset = width * multiplier
         rects = axe.bar(x + offset, measurement, width, label=attribute, color=colors[multiplier])
@@ -270,7 +275,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
     vminour_accuracy, vmaxour_accuracy = float('inf'), float('-inf')
     plt.rcParams['image.cmap'] = 'viridis'
     big = True
-    
+
     for function in functions:
         for data in datasets:
             df = pd.read_csv(results_folder + data + '/results.csv')
@@ -280,8 +285,10 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
             data_tree_550_depth_3 = df[(df['max_trees'] == max_trees) & (df['max_depth'] == max_depth)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
             minbits = data_tree_550_depth_3['our_bits'].min()
             # check for the minimum and maximum values of the bits and accuracy compared to values set above
-            vminour_bits, vmaxour_bits = min(minbits, vminour_bits), max(data_tree_550_depth_3['our_bits'].max(), vmaxour_bits)
-            vminour_accuracy, vmaxour_accuracy = min(data_tree_550_depth_3['accuracy'].min(), vminour_accuracy), max(data_tree_550_depth_3['accuracy'].max(), vmaxour_accuracy)
+            vminour_bits, vmaxour_bits = min(minbits, vminour_bits), max(data_tree_550_depth_3['our_bits'].max(),
+                                                                         vmaxour_bits)
+            vminour_accuracy, vmaxour_accuracy = min(data_tree_550_depth_3['accuracy'].min(), vminour_accuracy), max(
+                data_tree_550_depth_3['accuracy'].max(), vmaxour_accuracy)
             norm = mcolors.Normalize(vmin=vminour_bits, vmax=vmaxour_bits)  # Normalize color range
             norm2 = mcolors.Normalize(vmin=vminour_accuracy, vmax=vmaxour_accuracy)  # Normalize color range
     if (multivariate):
@@ -295,52 +302,59 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                 # TODO !: also filter for depth when its varied in the experiments
                 # data_tree_550_depth_3 = df[(df['max_trees'] == 100) ]
                 if data in multiclass:
-                    data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == max_trees) & (df['max_depth'] == max_depth)]
+                    data_tree_550_depth_3_fptp_1000 = df[
+                        (df['max_trees'] == max_trees) & (df['max_depth'] == max_depth)]
                 else:
-                    data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == max_trees) & (df['max_depth'] == max_depth)]# & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
-                #graphs
+                    data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == max_trees) & (df[
+                                                                                               'max_depth'] == max_depth)]  # & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
+                # graphs
                 if (data in binary):
-                    axe=axes[0, counter].set_title(data + "\n(binary)")
+                    axe = axes[0, counter].set_title(data + "\n(binary)")
                 if (data in regression):
-                    axe=axes[0, counter].set_title(data + "\n(regression)")
+                    axe = axes[0, counter].set_title(data + "\n(regression)")
                 if (data in multiclass):
-                    axe=axes[0, counter].set_title(data + "\n(multiclass)")
-                grid_memory = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[0, counter], fig=fig, column='our_bits', data=data, norm=norm, title='Memory usage with changing penalties')
-                grid_accuracy = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[1,counter], fig=fig, column='accuracy', data=data, norm=norm2, title='Accuracy with changing penalties')
+                    axe = axes[0, counter].set_title(data + "\n(multiclass)")
+                grid_memory = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[0, counter], fig=fig,
+                                        column='our_bits', data=data, norm=norm,
+                                        title='Memory usage with changing penalties')
+                grid_accuracy = plot_grid(data_tree_550_depth_3_fptp_1000, axe=axes[1, counter], fig=fig,
+                                          column='accuracy', data=data, norm=norm2,
+                                          title='Accuracy with changing penalties')
                 if plot_dots:
-                    axes[0,counter].scatter((2**(dots[counter][0])), (2**(dots[counter][1])), c="#FFA500")
-                    axes[1,counter].scatter((2**(dots[counter][0])), (2**(dots[counter][1])), c="#FFA500")
+                    axes[0, counter].scatter((2 ** (dots[counter][0])), (2 ** (dots[counter][1])), c="#FFA500")
+                    axes[1, counter].scatter((2 ** (dots[counter][0])), (2 ** (dots[counter][1])), c="#FFA500")
                 axes[1, counter].set_xlabel('Threshold Penalty')
-                axes[1,counter].xaxis.set_major_locator(plt.LogLocator(base=log_base, numticks=5))
-                axes[1,counter].yaxis.set_major_locator(plt.LogLocator(base=log_base, numticks=5))
-                counter =counter+1
+                axes[1, counter].xaxis.set_major_locator(plt.LogLocator(base=log_base, numticks=5))
+                axes[1, counter].yaxis.set_major_locator(plt.LogLocator(base=log_base, numticks=5))
+                counter = counter + 1
 
-            #cbar3 = fig.colorbar(grid_memory2, ax=axes[2], orientation='vertical', location='right', shrink=0.9, pad=0.01)
-            cbar = fig.colorbar(grid_memory, ax=axes[0], orientation='vertical',  location='right', shrink=0.9, pad=0.1, anchor=(1.1, 1.0))
-            cbar2 = fig.colorbar(grid_accuracy, ax=axes[1], orientation='vertical',  location='right', shrink=0.9, pad=0.1, anchor=(1.1, 1.0))
-            # Divide by 1000 to convert to KB
+            # cbar3 = fig.colorbar(grid_memory2, ax=axes[2], orientation='vertical', location='right', shrink=0.9, pad=0.01)
+            cbar = fig.colorbar(grid_memory, ax=axes[0], orientation='vertical', location='right', shrink=0.9, pad=0.1,
+                                anchor=(1.1, 1.0))
+            cbar2 = fig.colorbar(grid_accuracy, ax=axes[1], orientation='vertical', location='right', shrink=0.9,
+                                 pad=0.1, anchor=(1.1, 1.0))
 
-            #cbar3.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb))
+            # cbar3.ax.yaxis.set_major_formatter(FuncFormatter(bits_to_kb))
             cbar.locator = MaxNLocator(nbins=5)
             cbar.update_ticks()
             cbar.ax.yaxis.set_major_formatter(FuncFormatter(hp.bits_to_kb_str))
 
-            axes[0,0].set_ylabel('Feature Penalty')
-            axes[1,0].set_ylabel('Feature Penalty')
-            axes[0,7].yaxis.set_label_position("right")
-            axes[1,7].yaxis.set_label_position("right")
+            axes[0, 0].set_ylabel('Feature Penalty')
+            axes[1, 0].set_ylabel('Feature Penalty')
+            axes[0, 7].yaxis.set_label_position("right")
+            axes[1, 7].yaxis.set_label_position("right")
 
-            axes[0,7].set_ylabel('Memory (KB)', labelpad=70)
-            axes[1,7].set_ylabel('Metric: Accuracy\n R2 (regression))', labelpad=50)
+            axes[0, 7].set_ylabel('Memory (KB)', labelpad=70)
+            axes[1, 7].set_ylabel('Metric: Accuracy\n R2 (regression))', labelpad=50)
             fig.subplots_adjust(bottom=0.15)
-            # fig.tight_layout() simplegrid_goodlayout
+            # fig.tight_layout()
             plt.savefig(images_folder + function + 'grid.png', format='png', dpi=300)
             plt.savefig(images_folder + function + 'grid.pdf', format='pdf')
             plt.show()
 
     if memgrid:
         df = pd.read_csv('../results/results_mem/california_housing/last.csv')
-        df = df[(df['tinygbdt_forestsize'] == 8000) ] # choose from 8000, 16000, 64000 bits
+        df = df[(df['tinygbdt_forestsize'] == 8000)]  # choose from 8000, 16000, 64000 bits
         grid_memory = plot_maxMemGrid(df, title='Penalty Grid Search, California Housing, 1 KB')
         plt.savefig(images_folder + 'memory_grid.png', format='png', dpi=300)
         plt.savefig(images_folder + 'memory_grid.pdf', format='pdf')
@@ -356,9 +370,9 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
             for data in datasets:
                 print(data)
                 df = pd.read_csv(results_folder + data + '/results.csv')
-                df = df[(df['our_bits'] != 0.0) ]
+                df = df[(df['our_bits'] != 0.0)]
                 dfn = df[(df['tinygbdt_penalty_feature'] == 0.0) & (df['tinygbdt_penalty_split'] == 0.0)]
-                dsubset = df[(df['max_trees'] == max_trees) ] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                dsubset = df[(df['max_trees'] == max_trees)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 print(counter_x, counter_y)
                 if (data in binary):
                     axes[counter_x][counter_y].set_title(data + "\n(binary)")
@@ -383,7 +397,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                     plot_memory_acc(df, dfn, axes[counter_x][counter_y], 0.995, fig, big)
             mergedhandles, mergedlabels = axes[0][0].get_legend_handles_labels()
             # fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.15,0.05), ncol=7)
-            fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.5,0.05), ncol=7)
+            fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.5, 0.05), ncol=7)
             plt.savefig(images_folder + function + 'barplot.png', format='png', dpi=300)
             plt.savefig(images_folder + function + 'barplot.pdf', format='pdf')
             plt.show()
@@ -396,46 +410,63 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
             max_depth = 2
             for data in datasets:
                 df = pd.read_csv(results_folder + data + '/results.csv')
-                df = df[(df['our_bits'] != 0) ]
-                data_tree_550_depth_3 = df[(df['max_trees'] == max_trees) & (df['max_depth'] == max_depth)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                df = df[(df['our_bits'] != 0)]
+                data_tree_550_depth_3 = df[(df['max_trees'] == max_trees) & (
+                        df['max_depth'] == max_depth)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 # data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)  & (df['max_depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-                data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == max_trees) & (df['max_depth'] == max_depth)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == max_trees) & (
+                        df['max_depth'] == max_depth)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 if (data in binary):
-                    acc_good_subset = data_tree_550_depth_3[data_tree_550_depth_3['accuracy'] > 0.85] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                    acc_good_subset = data_tree_550_depth_3[
+                        data_tree_550_depth_3['accuracy'] > 0.85]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
 
                 if (data in regression):
-                    acc_good_subset = data_tree_550_depth_3[data_tree_550_depth_3['accuracy'] > 0.4] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                    acc_good_subset = data_tree_550_depth_3[
+                        data_tree_550_depth_3['accuracy'] > 0.4]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
 
                 acc_good_subset = acc_good_subset.sort_values(by='our_bits')
-                data_tree_550_depth_3['tinygbdt_penalty_feature'] = pd.to_numeric(data_tree_550_depth_3['tinygbdt_penalty_feature'], errors='coerce')
+                data_tree_550_depth_3['tinygbdt_penalty_feature'] = pd.to_numeric(
+                    data_tree_550_depth_3['tinygbdt_penalty_feature'], errors='coerce')
                 # data_tree_550_depth_3_fptp_1000_fptp_1 = data_tree_550_depth_3_fptp_1000[(data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_feature'] > 0.001)& (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_split'] > 0.001)]
-                data_criteria_split_0 = data_tree_550_depth_3_fptp_1000[(data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_split'] == 0.0) & (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_feature'] > 0.0)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-                data_criteria_feature_0 = data_tree_550_depth_3_fptp_1000[(data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_feature'] == 0.0) & (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_split'] > 0.0)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                data_criteria_split_0 = data_tree_550_depth_3_fptp_1000[
+                    (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_split'] == 0.0) & (
+                            data_tree_550_depth_3_fptp_1000[
+                                'tinygbdt_penalty_feature'] > 0.0)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                data_criteria_feature_0 = data_tree_550_depth_3_fptp_1000[
+                    (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_feature'] == 0.0) & (
+                            data_tree_550_depth_3_fptp_1000[
+                                'tinygbdt_penalty_split'] > 0.0)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 data_criteria_split_0 = data_criteria_split_0.sort_values(by='tinygbdt_penalty_feature')
                 data_criteria_feature_0 = data_criteria_feature_0.sort_values(by='tinygbdt_penalty_split')
-                #graphs
+                # graphs
                 if (data in binary):
-                    axe=axes[0, counter].set_title(data + "\n(binary)")
+                    axe = axes[0, counter].set_title(data + "\n(binary)")
                 if (data in regression):
-                    axe=axes[0, counter].set_title(data + "\n(regression)")
+                    axe = axes[0, counter].set_title(data + "\n(regression)")
                 if (data in multiclass):
-                    axe=axes[0, counter].set_title(data + "\n(multiclass)")
+                    axe = axes[0, counter].set_title(data + "\n(multiclass)")
                 if data in regression:
-                    handles, labels = plotAccuracyByPenalty(data_criteria_split_0, axes[0,counter], 'tinygbdt_penalty_feature', binary=False, mem=False)
-                    handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_0, axes[1, counter], keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty', binary=False, mem=False)
+                    handles, labels = plotAccuracyByPenalty(data_criteria_split_0, axes[0, counter],
+                                                            'tinygbdt_penalty_feature', binary=False, mem=False)
+                    handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_0, axes[1, counter],
+                                                              keyword='tinygbdt_penalty_split',
+                                                              xlabel='Threshold Penalty', binary=False, mem=False)
 
-                handles, labels = plotAccuracyByPenalty(data_criteria_split_0, axes[0,counter], 'tinygbdt_penalty_feature', mem=False)
-                handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_0, axes[1, counter], keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty', mem=False)
+                handles, labels = plotAccuracyByPenalty(data_criteria_split_0, axes[0, counter],
+                                                        'tinygbdt_penalty_feature', mem=False)
+                handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_0, axes[1, counter],
+                                                          keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty',
+                                                          mem=False)
                 counter = counter + 1
             mergedhandles = handles + handles2
             mergedlabels = labels + labels2
-            #fig.legend(handles, labels, loc='upper left', bbox_to_anchor=(0.05,0.985), ncol=5)
+            # fig.legend(handles, labels, loc='upper left', bbox_to_anchor=(0.05,0.985), ncol=5)
             # fig.legend(mergedhandles, mergedlabels, loc='lower left', bbox_to_anchor=(0.05,0.015), ncol=7)
-            fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.5,0.05), ncol=7)
-            axes[0,4].yaxis.set_label_position("right")
-            axes[1,4].yaxis.set_label_position("right")
-            axes[1,0].set_ylabel('Metric: Accuracy\n R2 (regression))')
-            axes[0,0].set_ylabel('Metric: Accuracy\n R2 (regression))')
+            fig.legend(mergedhandles, mergedlabels, loc='center', bbox_to_anchor=(0.5, 0.05), ncol=7)
+            axes[0, 4].yaxis.set_label_position("right")
+            axes[1, 4].yaxis.set_label_position("right")
+            axes[1, 0].set_ylabel('Metric: Accuracy\n R2 (regression))')
+            axes[0, 0].set_ylabel('Metric: Accuracy\n R2 (regression))')
 
             fig.tight_layout()
             plt.savefig(images_folder + function + 'lines.png', format='png', dpi=300)
@@ -446,19 +477,24 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
         baseline_results = pd.read_csv(baseline_folder + "/baseline_results.csv")
 
         # add column for memory usage calculated by 64 * nodes if model is lgbm_quant, otherwise 128 * nodes
-        baseline_results['memory_usage'] = baseline_results.apply(lambda row: 64 * row['nodes'] if row['model'] in ['lgbm_quant'] else 128 * row['nodes'], axis=1)
+        baseline_results['memory_usage'] = baseline_results.apply(
+            lambda row: 64 * row['nodes'] if row['model'] in ['lgbm_quant'] else 128 * row['nodes'], axis=1)
         classification_datasets = binary + multiclass
         regression_datasets = regression
         datasets = classification_datasets + regression_datasets
         # define memory limits in KB
-        memory_limit_kb = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]#, 4096, 8192, 16384]
+        memory_limit_kb = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]  # , 4096, 8192, 16384]
         memory_limits = [int(x * 8000) for x in memory_limit_kb]
         # create empty pandas dataframe to store results
         df_baseline_res = pd.DataFrame()
         # for each type of model find the best result for each dataset based on the highest test score that is below a memory usage of 100000
         for memory in memory_limits:
-            best_classification_results_ids = baseline_results[(baseline_results['memory_usage'] <= memory) & (baseline_results['dataset'].isin(classification_datasets))].groupby(['model', 'dataset'])['test_accuracy'].idxmax()
-            best_regression_results_ids = baseline_results[(baseline_results['memory_usage'] <= memory) & (baseline_results['dataset'].isin(regression_datasets))].groupby(['model', 'dataset'])['test_accuracy'].idxmin()
+            best_classification_results_ids = baseline_results[(baseline_results['memory_usage'] <= memory) & (
+                baseline_results['dataset'].isin(classification_datasets))].groupby(['model', 'dataset'])[
+                'test_accuracy'].idxmax()
+            best_regression_results_ids = baseline_results[(baseline_results['memory_usage'] <= memory) & (
+                baseline_results['dataset'].isin(regression_datasets))].groupby(['model', 'dataset'])[
+                'test_accuracy'].idxmin()
             best_results_ids = pd.concat([best_classification_results_ids, best_regression_results_ids])
             best_results = baseline_results.loc[best_results_ids]
             best_results['max_memory'] = memory
@@ -467,34 +503,33 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
         # for regression datasets convert rmse to R2 score
         # calculate variance of target column for each regression dataset
         for data in regression:
-            d = load_svmlight_file(f"{data_folder}{data}.test")
+            d = load_svmlight_file(f"{data_folder}/{data}.test")
             y_true = d[1]
             var = np.var(y_true, ddof=0)
             # where results_all is in regression_datasets and dataset == data convert rmse to R2 score
-            results_all.loc[(results_all['dataset'] == data), 'test_accuracy'] = 1 - (results_all.loc[(results_all['dataset'] == data), 'test_accuracy'] / var)
-
+            results_all.loc[(results_all['dataset'] == data), 'test_accuracy'] = 1 - (
+                    results_all.loc[(results_all['dataset'] == data), 'test_accuracy'] / var)
 
         for data in datasets:
-            df = pd.DataFrame()
-            for sed in [1,2,3,4,5,6,7,10,11,12]:
-                path = os.path.join(f'{results_folder}{data}/{sed}/results.csv')
-                if not os.path.exists(path):
-                    continue
-                df_int = pd.read_csv(path)
-                df = pd.concat([df, df_int])
+            path = os.path.join(results_folder, data, 'results.csv')
+            if not os.path.exists(path):
+                continue
+            df = pd.read_csv(path)
             for memory in memory_limits:
                 # our_bits != 0 because of some weird results with 0 memory
                 # TODO: evaluate/train again (covtype_multi)
-                subset_pen = df[(df['our_bits'] <= memory) & (df['our_bits'] != 0) & (df['tinygbdt_penalty_feature'] != 0) & (df['tinygbdt_penalty_split'] != 0)]
+                subset_pen = df[
+                    (df['our_bits'] <= memory) & (df['our_bits'] != 0) & (df['tinygbdt_penalty_feature'] != 0) & (
+                            df['tinygbdt_penalty_split'] != 0)]
                 if subset_pen.empty:
                     print(f"No ToaD with penalty for {data} and memory {memory}")
-                else: # not subset_pen.empty:
+                else:  # not subset_pen.empty:
                     if data in regression_datasets:
                         best_row = subset_pen.loc[subset_pen['accuracy'].idxmax()]
                     else:
                         best_row = subset_pen.loc[subset_pen['accuracy'].idxmax()]
                         print(memory)
-                        print(best_row) 
+                        print(best_row)
                     filled = {
                         "model": "toad_pen",
                         "dataset": data,
@@ -504,21 +539,22 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                         "alpha": 0,
                         "train_loss": 1e+34,
                         "test_accuracy": best_row.accuracy,
-                        "nodes": best_row.no_leaves*2-1,
+                        "nodes": best_row.no_leaves * 2 - 1,
                         "memory_usage": best_row.our_bits,
                         "max_memory": memory
                     }
                     # print(filled)
                     # add filled as new row to df_baseline_res
                     results_all = pd.concat([results_all, pd.DataFrame([filled])], ignore_index=True)
-                subset_nopen = df[(df['our_bits'] <= memory) & (df['tinygbdt_penalty_feature'] == 0) & (df['tinygbdt_penalty_split'] == 0)]
+                subset_nopen = df[(df['our_bits'] <= memory) & (df['tinygbdt_penalty_feature'] == 0) & (
+                        df['tinygbdt_penalty_split'] == 0)]
                 if subset_nopen.empty:
                     print(f"No ToaD without penalty for {data} and memory {memory}")
-                else: # not subset_nopen.empty:
+                else:  # not subset_nopen.empty:
                     if data in regression_datasets:
                         best_row = subset_nopen.loc[subset_nopen['accuracy'].idxmax()]
                     else:
-                        best_row = subset_nopen.loc[subset_nopen['accuracy'].idxmax()] 
+                        best_row = subset_nopen.loc[subset_nopen['accuracy'].idxmax()]
                     filled = {
                         "model": "toad_nopen",
                         "dataset": data,
@@ -528,7 +564,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                         "alpha": 0,
                         "train_loss": 1e+34,
                         "test_accuracy": best_row.accuracy,
-                        "nodes": best_row.no_leaves*2-1,
+                        "nodes": best_row.no_leaves * 2 - 1,
                         "memory_usage": best_row.our_bits,
                         "max_memory": memory
                     }
@@ -539,12 +575,12 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
         df = results_all
         n_datasets = len(datasets)
 
-        fig, axes = plt.subplots(2, int(n_datasets/2), figsize=(15, 5.5))
+        fig, axes = plt.subplots(2, int(n_datasets / 2), figsize=(15, 5.5))
         for ax, dataset in zip(axes.flatten(), datasets):
             data = df[df['dataset'] == dataset].copy()
             # Convert max_memory to string for categorical x-axis
-            data['max_memory'] = (data['max_memory']/8000).astype(str)
-            markers = ['o', 's', 'D', '^', 'v', 'X']#, '*', 'P', '<', '>']
+            data['max_memory'] = (data['max_memory'] / 8000).astype(str)
+            markers = ['o', 's', 'D', '^', 'v', 'X']  # , '*', 'P', '<', '>']
 
             l = sns.lineplot(
                 data=data,
@@ -556,7 +592,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                 # marker='o',
                 markers=markers,
                 # mec=None, # marker edge color
-                mew=0.2, # marker edge width
+                mew=0.2,  # marker edge width
                 ax=ax,
                 linewidth=1,
                 dashes=False,
@@ -621,21 +657,24 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot results from experiments')
-    parser.add_argument('--results_folder', type=str, default='./results/', help='Directory where ToaD results are stored')
-    parser.add_argument('--baseline_results_folder', type=str, default='./baselines', help='Directory where baseline results are stored')
-    parser.add_argument('--images_folder', type=str, default='./results/images/', help='Directory where images are saved')
-    parser.add_argument('--data_folder', type=str, default='./results/data/', help='Directory where datasets are stored')
+    parser.add_argument('--results_folder', type=str, default='../results/seed42/',
+                        help='Directory where ToaD results are stored')
+    parser.add_argument('--baseline_results_folder', type=str, default='../results/seed42/baselines',
+                        help='Directory where baseline results are stored')
+    parser.add_argument('--images_folder', type=str, default='../results/images/',
+                        help='Directory where images are saved')
+    parser.add_argument('--data_folder', type=str, default='../data/', help='Directory where datasets are stored')
     args = parser.parse_args()
     results_folder = args.results_folder
     images_folder = args.images_folder
     baseline_folder = args.baseline_results_folder
     data_folder = args.data_folder
 
-    univariate = False
-    multivariate = False
+    univariate = True
+    multivariate = True
     baselines = True
-    plot_dots = True # whether to plot orange dots on grid
-    memgrid = False
+    plot_dots = True  # whether to plot orange dots on grid
+    memgrid = True
     log_base = 2
     barplot_check = False
 
@@ -643,7 +682,8 @@ if __name__ == "__main__":
         os.makedirs(results_folder)
     if not os.path.exists(images_folder):
         os.makedirs(images_folder)
-    datasets = ['california_housing','kin8nm', 'covtype', 'breastcancer', 'kr-vs-kp', 'mushroom', 'wine', 'covtype_multi']
+    datasets = ['california_housing', 'kin8nm', 'covtype', 'breastcancer', 'kr-vs-kp', 'mushroom', 'wine',
+                'covtype_multi']
     binary = ['breastcancer', 'kr-vs-kp', 'mushroom', 'covtype']
     regression = ['california_housing', 'kin8nm']
     multiclass = ['covtype_multi', 'wine']
@@ -651,4 +691,6 @@ if __name__ == "__main__":
     max_trees = 256
     max_depth = 4
 
-    plot_figures(datasets, results_folder, images_folder, baseline_folder, data_folder, max_trees, max_depth, functions, multiclass, binary, regression, multivariate=multivariate, univariate=univariate, plot_dots=plot_dots, memgrid=memgrid, baselines=baselines)
+    plot_figures(datasets, results_folder, images_folder, baseline_folder, data_folder, max_trees, max_depth, functions,
+                 multiclass, binary, regression, multivariate=multivariate, univariate=univariate, plot_dots=plot_dots,
+                 memgrid=memgrid, baselines=baselines)

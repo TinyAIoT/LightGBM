@@ -1,15 +1,14 @@
 import lightgbm as lgb
-from tqdm import tqdm
-# import matplotlib.pyplot as plt
 from sklearn.datasets import load_svmlight_file
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, RandomForestClassifier
-from sklearn.metrics import accuracy_score, mean_squared_error
 from PyPruning.RankPruningClassifier import RankPruningClassifier, individual_margin_diversity
+from sklearn.metrics import accuracy_score, mean_squared_error
 import numpy as np
-import pandas as pd
+import sys
 import argparse
 import os
 import math
+
 
 # in nested ensemble count all predictions not None or null
 def count_leaves(ensemble):
@@ -62,12 +61,15 @@ def evaluate_model(model, X_test, y_test, task):
         raise ValueError(f"Unknown task: {task}")
     return test_acc
 
-def load_data(dir,dataset_name):
+def load_data(dir,dataset_name, val=False):
     """
     Load dataset by name. Supported names:.
     Returns (X_train, y_train), (X_test, y_test)"""
     # TODO: adapt to other paths
-    return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name)),load_svmlight_file('{}/{}.val'.format(dir,dataset_name))
+    if val:
+        return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)),load_svmlight_file('{}/{}.val'.format(dir,dataset_name))
+    else:
+        return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name))
 
 def quantize(in_path, out_path, data_type="float16"):
     """
@@ -122,7 +124,7 @@ def quantize(in_path, out_path, data_type="float16"):
     with open(out_path, "w") as f:
         f.writelines(new_lines)
 
-def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed=1, result_dir="./"):
+def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_dir="./", val=False, mean=0.0, kfold=0):
     datasets={
         "breastcancer": ("breastcancer", "binary", 1),
         "kr-vs-kp": ("kr-vs-kp", "binary", 1),
@@ -137,12 +139,21 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
         d, task, num_classes = datasets[dataset]
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
+    result_dir = result_dir+f'{seed}'
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
-            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes\n")
+            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes, mean\n")
+    if kfold == 1:
+        if val:
+            (X_train, y_train), (X_val, y_val)= load_data(data_dir, dataset, val)
+        else:
+            (X_train, y_train), (X_test, y_test) = load_data(data_dir, dataset, val)
+    else:
+        (X_train, y_train), (X_test, y_test), (X_val, y_val)= load_data(data_dir, dataset)
 
-    (X_train, y_train), (X_test, y_test), (X_val, y_val)= load_data(data_dir, dataset)
     if model_type == "lgbm_quant":
         if alpha != 0.0:
             return
@@ -152,38 +163,22 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
         train_score = evaluate_model(model, X_train, y_train, task)
         nodes = count_nodes(model)
         # already save results to enable quantization step
-        test_acc = evaluate_model(model, X_test, y_test, task)
-        val_accuracy = evaluate_model(model, X_val, y_val, task)
+        test_acc = 0.0
+        val_accuracy = 0.0
+        if val:
+            val_accuracy = evaluate_model(model, X_val, y_val, task)
+        else:
+            test_acc = evaluate_model(model, X_test, y_test, task)
 
         with open(result_file, "a") as f:
             name = "lgbm_base"
-            f.write(f"{name},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes}\n")
+            f.write(f"{name},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes},{mean}\n")
 
         # quantize
         model.save_model('model.txt')
         quantize('model.txt', 'model_quantized.txt', data_type="float16")
         model.model_from_string(open('model_quantized.txt').read())
         train_score = evaluate_model(model, X_train, y_train, task)
-
-    elif model_type == "cegb":
-        data = lgb.Dataset(X_train, label=y_train)
-        # TODO: think about evaluating further parameters like cegb_tradeoff and different costs for features, e.g. binary vs. continuous
-        model = lgb.train({'objective': task, 'max_depth': max_depth, 'num_trees': max_trees, 'num_classes': num_classes, 'cegb_penalty_feature_coupled': np.ones(X_train.shape[1]), 'cegb_tradeoff': 1.0, 'cegb_penalty_split': alpha}, data)
-        estimators = model.num_trees()
-        train_score = evaluate_model(model, X_train, y_train, task)
-        nodes = count_nodes(model)
-        test_acc = evaluate_model(model, X_test, y_test, task)
-        val_accuracy = evaluate_model(model, X_val, y_val, task)
-
-    elif model_type == "ccp":
-        if task == "regression":
-            model = GradientBoostingRegressor(n_estimators=max_trees, max_depth=max_depth, ccp_alpha=alpha)
-        else:
-            model = GradientBoostingClassifier(n_estimators=max_trees, max_depth=max_depth, ccp_alpha=alpha)
-        model.fit(X_train, y_train)
-        nodes = count_nodes(model)
-        train_score = model.train_score_[-1]
-        estimators = len(model.estimators_)
 
     elif model_type == "rf":
         if task == "regression":
@@ -203,39 +198,62 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
         n_prune = int(math.ceil(max_trees*alpha))
         n_prune = max(1, n_prune)
         guo_pruner = RankPruningClassifier(metric = individual_margin_diversity, n_estimators = n_prune)
-        y_train = y_train.astype(np.int64)
         guo_pruner.prune(X_train, y_train, model.estimators_)
         estimators = len(guo_pruner.estimators_)
         nodes = count_nodes(guo_pruner)
         train_score = evaluate_model(guo_pruner, X_train, y_train, task)
         model_type = "rf_guo"
+
+    elif model_type == "cegb":
+        data = lgb.Dataset(X_train, label=y_train)
+        # TODO: think about evaluating further parameters like cegb_tradeoff and different costs for features, e.g. binary vs. continuous
+        model = lgb.train({'objective': task, 'max_depth': max_depth, 'num_trees': max_trees, 'num_classes': num_classes, 'cegb_penalty_feature_coupled': np.ones(X_train.shape[1]), 'cegb_tradeoff': 1.0, 'cegb_penalty_split': alpha}, data)
+        estimators = model.num_trees()
+        train_score = evaluate_model(model, X_train, y_train, task)
+        nodes = count_nodes(model)
+
+    elif model_type == "ccp":
+        if task == "regression":
+            model = GradientBoostingRegressor(n_estimators=max_trees, max_depth=max_depth, ccp_alpha=alpha)
+        else:
+            model = GradientBoostingClassifier(n_estimators=max_trees, max_depth=max_depth, ccp_alpha=alpha)
+        model.fit(X_train, y_train)
+        nodes = count_nodes(model)
+        train_score = model.train_score_[-1]
+        estimators = len(model.estimators_)
     else:
-        # TODO: implement other models
+        sys.exit(f"Please select one fo the following models: {['lgbm_quant', 'rf', 'rf_guo', 'ccp', 'cegb']}")
         return
 
-    test_acc = evaluate_model(model, X_test, y_test, task)
-    val_accuracy = evaluate_model(model, X_val, y_val, task)
+    test_acc = 0.0
+    val_accuracy = 0.0
+    if val:
+        val_accuracy = evaluate_model(model, X_val, y_val, task)
+    else:
+        test_acc = evaluate_model(model, X_test, y_test, task)
 
     # write in new line of csv file
     with open(result_file, "a") as f:
-        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes}\n")
-
-
+        f.write(f"{model_type},{dataset},{max_trees},{estimators},{max_depth},{alpha},{train_score},{test_acc},{val_accuracy},{nodes},{mean}\n")
 
 
 def main():
     parser = argparse.ArgumentParser(description='Benchmark different tree models on datasets.')
-    parser.add_argument('--datasets_dir', required=True, help='Directory to datasets.')
+    parser.add_argument('--data_dir', required=True, help='Directory to datasets.')
     parser.add_argument('--model', default="ccp", help='Model to train.')
     parser.add_argument('--dataset', default="breastcancer", help='Dataset to use.')
     parser.add_argument('--max_trees', type=int, default=10, help='Maximum number of trees.')
     parser.add_argument('--max_depth', type=int, default=5, help='Maximum depth of trees.')
     parser.add_argument('--alpha', type=float, default=0.0, help='Complexity parameter for pruning (ccp).')
     parser.add_argument('--result_dir', default="", help='File where results should be written to.')
+    parser.add_argument('--mean', type=float, default=0.0, help='mean accuracy')
+    parser.add_argument('--val', action=argparse.BooleanOptionalAction)
     parser.add_argument('--randomseed', type=int, default=1, help='randomseedtouse')
+    parser.add_argument('--kfold', type=int, default=0, help='Is this a smaller dataset with kfold?')
     args = parser.parse_args()
 
-    train_model(args.datasets_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha, seed=args.randomseed, result_dir=args.result_dir)
+    train_model(args.data_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha,
+                result_dir=args.result_dir, val=args.val, mean=args.mean, kfold=args.kfold)
 
 if __name__=="__main__":
     main()
