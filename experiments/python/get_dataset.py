@@ -6,6 +6,10 @@ import wget, bz2
 import os
 from ucimlrepo import fetch_ucirepo
 from sklearn.preprocessing import LabelEncoder
+from pathlib import Path
+import warnings
+import argparse
+
 
 def fetch_data(data, target, name, random, flatten=False):
     X_trainpre, X_val, y_trainpre, y_val = train_test_split(data, target, test_size=0.2, random_state=random)
@@ -21,12 +25,17 @@ def fetch_data(data, target, name, random, flatten=False):
         datasets.dump_svmlight_file(X_val, y_val, os.path.join(directory, name + '.val'), zero_based=False)
 # main function:
 if __name__ == "__main__":
-    import argparse
+    cwd = Path.cwd()
+    if cwd.name != "experiments":
+        warnings.warn(f"Note: you are running the script from a different than the 'experiments' directory. Current: {cwd}")
+
+    seedsdefault = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     parser = argparse.ArgumentParser(description='Get datasets for experiments')
-    parser.add_argument('--directory', type=str, default='../data', help='Directory to save datasets')
+    parser.add_argument('--directory', type=str, default='./data/', help='Directory to save datasets')
+    parser.add_argument('--seeds', type=int, nargs="+", default=seedsdefault, metavar="N", help='Seeds (default: {seeds})')
     args = parser.parse_args()
     base_dir = args.directory
-    seeds = [1, 2, 5, 6, 7]
+    seeds = args.seeds
     for seed in seeds:
         directory = base_dir+f"{seed}"
         if not os.path.exists(directory):

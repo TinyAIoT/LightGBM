@@ -184,7 +184,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
         nodes = count_nodes(model)
         train_score = model.train_score_[-1]
         estimators = len(model.estimators_)
-    
+
     elif model_type == "rf":
         if task == "regression":
             raise ValueError("only classification supported.")
@@ -212,7 +212,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, seed
     else:
         # TODO: implement other models
         return
-    
+
     test_acc = evaluate_model(model, X_test, y_test, task)
     val_accuracy = evaluate_model(model, X_val, y_val, task)
 
