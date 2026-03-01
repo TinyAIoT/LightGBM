@@ -5,7 +5,7 @@ import itertools
 # max_trees,max_depth, tinygbdt_penalty_feature,tinygbdt_penalty_split
 
 def write_joblist(data, sed, remaining):
-    out_path = f'./results/valtest/{data}-{sed}-joblist.txt'
+    out_path = f'./results/valtest/jobstoad/{data}-{sed}-joblist.txt'
     with open(out_path, "w") as f:
         for max_tree, max_depth, pen_feat, pen_split in remaining:
             line = f"{data} {max_tree} {max_depth} {pen_feat} {pen_split} {sed}\n"

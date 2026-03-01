@@ -38,6 +38,9 @@ def count_nodes(model):
         for estimator in model.estimators_:
             for tree in estimator:
                     count += tree.tree_.node_count
+    if isinstance(model, (RandomForestClassifier, RankPruningClassifier)):
+        for estimator in model.estimators_:
+            count += estimator.tree_.node_count
     if isinstance(model, lgb.Booster):
         model_json = model.dump_model()
         for tree in model_json['tree_info']:
@@ -61,7 +64,7 @@ def evaluate_model(model, X_test, y_test, task):
         raise ValueError(f"Unknown task: {task}")
     return test_acc
 
-def load_data(dir,dataset_name, val=False):
+def load_data(dir, dataset_name, val=False):
     """
     Load dataset by name. Supported names:.
     Returns (X_train, y_train), (X_test, y_test)"""
@@ -70,6 +73,12 @@ def load_data(dir,dataset_name, val=False):
         return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)),load_svmlight_file('{}/{}.val'.format(dir,dataset_name))
     else:
         return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name))
+
+def load_all_data(dir,dataset_name, val=False):
+    """
+    Load dataset by name. Supported names:.
+    Returns (X_train, y_train), (X_test, y_test)"""
+    return load_svmlight_file('{}/{}.train'.format(dir,dataset_name)), load_svmlight_file('{}/{}.test'.format(dir,dataset_name)), load_svmlight_file('{}/{}.val'.format(dir,dataset_name))
 
 def quantize(in_path, out_path, data_type="float16"):
     """
@@ -139,7 +148,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         d, task, num_classes = datasets[dataset]
     else:
         raise ValueError(f"Dataset {dataset} not implemented.")
-    result_dir = result_dir+f'{seed}'
+    result_dir = result_dir
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
     result_file = os.path.join(result_dir, 'results.csv')
@@ -152,7 +161,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         else:
             (X_train, y_train), (X_test, y_test) = load_data(data_dir, dataset, val)
     else:
-        (X_train, y_train), (X_test, y_test), (X_val, y_val)= load_data(data_dir, dataset)
+        (X_train, y_train), (X_test, y_test), (X_val, y_val) = load_all_data(data_dir, dataset, val)
 
     if model_type == "lgbm_quant":
         if alpha != 0.0:
@@ -165,10 +174,14 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         # already save results to enable quantization step
         test_acc = 0.0
         val_accuracy = 0.0
-        if val:
-            val_accuracy = evaluate_model(model, X_val, y_val, task)
+        if kfold == 1:
+            if val:
+                val_accuracy = evaluate_model(model, X_val, y_val, task)
+            else:
+                test_acc = evaluate_model(model, X_test, y_test, task)
         else:
             test_acc = evaluate_model(model, X_test, y_test, task)
+            val_accuracy = evaluate_model(model, X_val, y_val, task)
 
         with open(result_file, "a") as f:
             name = "lgbm_base"
@@ -227,10 +240,14 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
 
     test_acc = 0.0
     val_accuracy = 0.0
-    if val:
-        val_accuracy = evaluate_model(model, X_val, y_val, task)
+    if kfold == 1:
+        if val:
+            val_accuracy = evaluate_model(model, X_val, y_val, task)
+        else:
+            test_acc = evaluate_model(model, X_test, y_test, task)
     else:
         test_acc = evaluate_model(model, X_test, y_test, task)
+        val_accuracy = evaluate_model(model, X_val, y_val, task)
 
     # write in new line of csv file
     with open(result_file, "a") as f:
