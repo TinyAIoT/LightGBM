@@ -77,7 +77,6 @@ for seed in seeds:
                 if len(subset_mem_seed_model) == 0:
                     continue
                 if subset_mem_seed_model.shape[0] > 0:
-                    print(f'{model},{data},{memory}')
 
                     idx = subset_mem_seed_model[column].idxmax()
 
@@ -88,7 +87,7 @@ for seed in seeds:
                     best_row = subset_mem_seed_model.loc[idx]
                     betmem = best_row["memory_usage"]
                 else:
-                    #print(f'could not find data for Model {model} \t {seed} \t {memory} \t {data}')
+                    print(f'could not find data for Model {model} \t {seed} \t {memory} \t {data}')
                     continue
                 filled = {
                     "model": model,
@@ -157,10 +156,10 @@ for seed in seeds:
                     column = 'meankfold'
                 if showmemrange:
                     subset_nopen = df[(df['our_bits'] <= memory) & (df['our_bits'] > prev_mem) & (
-                        df['tinygbdt_penalty_feature'] == 0) & (df['tinygbdt_penalty_split'] == 0)]
+                        df['toad_penalty_feature'] == 0) & (df['toad_penalty_threshold'] == 0)]
                 else:
                     subset_nopen = df[(df['our_bits'] <= memory) & (
-                        df['tinygbdt_penalty_feature'] == 0) & (df['tinygbdt_penalty_split'] == 0)]
+                        df['toad_penalty_feature'] == 0) & (df['toad_penalty_threshold'] == 0)]
                 if subset_nopen.empty:
                     print(f"No ToaD without penalty for {data} and memory {memory}")
                 else:
@@ -184,3 +183,6 @@ for seed in seeds:
 
 
 results_all.to_csv(f"./plotting/plottingdata/plotdata.csv", index=False)
+results_all_small = results_all[results_all['max_trees'] != 1024]
+results_all_small = results_all_small[results_all_small['max_trees'] != 512]
+results_all.to_csv(f"./plotting/plottingdata/plotdata_small.csv", index=False)

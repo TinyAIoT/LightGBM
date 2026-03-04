@@ -26,12 +26,24 @@ mkdir -p "$result_dir"
 
 # Optional debug print (to stderr)
 # printf 'DEBUG: lgbm=%q dataset=%q ms=%q fp=%q tp=%q tree=%q depth=%q data_dir=%q model_dir=%q\n' "$lgbm" "$dataset" "$ms" "$fp" "$tp" "$tree" "$depth" "$data_dir" "$model_dir"
-
-python ./experiments/baselines/kfoldsbaselines.py \
-    --data_dir $data_dir \
-    --model $model \
-    --dataset $dataset \
-    --max_trees $tree \
-    --max_depth $depth \
-    --alpha $al \
-    --result_dir $result_dir  \
+if [ "$dataset" = "breastcancer" ] || [ "$dataset" = "kr-vs-kp" ]; then
+    python ./experiments/python/baseline/baselinekfold.py \
+    --data_dir="${data_dir}/" \
+    --model="${model}" \
+    --dataset="${dataset}" \
+    --max_trees="${tree}" \
+    --max_depth="${depth}" \
+    --alpha="${al}" \
+    --result_dir="${result_dir}/"
+else
+    python ./experiments/python/baseline/baselinetrainandeval.py \
+    --data_dir="${data_dir}/" \
+    --model="${model}" \
+    --dataset="${dataset}" \
+    --max_trees="${tree}" \
+    --max_depth="${depth}" \
+    --alpha="${al}" \
+    --result_dir="${result_dir}/" \
+    --val \
+    --mean=0
+fi

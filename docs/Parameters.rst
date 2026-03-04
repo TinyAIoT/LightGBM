@@ -582,15 +582,15 @@ Learning Control Parameters
 
    -  used only in ``refit`` task in CLI version or as argument in ``refit`` function in language-specific package
 
--  ``tinygbdt_penalty_feature`` :raw-html:`<a id="tinygbdt_penalty_feature" title="Permalink to this parameter" href="#tinygbdt_penalty_feature">&#x1F517;&#xFE0E;</a>`, default = ``0.0``, type = double, constraints: ``tinygbdt_penalty_feature >= 0.0``
+-  ``toad_penalty_feature`` :raw-html:`<a id="toad_penalty_feature" title="Permalink to this parameter" href="#toad_penalty_feature">&#x1F517;&#xFE0E;</a>`, default = ``0.0``, type = double, constraints: ``toad_penalty_feature >= 0.0``
 
    -  [tinygbdt] penalty for using a new feature
 
--  ``tinygbdt_penalty_split`` :raw-html:`<a id="tinygbdt_penalty_split" title="Permalink to this parameter" href="#tinygbdt_penalty_split">&#x1F517;&#xFE0E;</a>`, default = ``0.0``, type = double, constraints: ``tinygbdt_penalty_split >= 0.0``
+-  ``toad_penalty_threshold`` :raw-html:`<a id="toad_penalty_threshold" title="Permalink to this parameter" href="#toad_penalty_threshold">&#x1F517;&#xFE0E;</a>`, default = ``0.0``, type = double, constraints: ``toad_penalty_threshold >= 0.0``
 
    -  [tinygbdt] penalty for using a new split value
 
--  ``tinygbdt_forestsize`` :raw-html:`<a id="tinygbdt_forestsize" title="Permalink to this parameter" href="#tinygbdt_forestsize">&#x1F517;&#xFE0E;</a>`, default = ``0``, type = int, constraints: ``tinygbdt_forestsize >= 0.0``
+-  ``toad_forestsize`` :raw-html:`<a id="toad_forestsize" title="Permalink to this parameter" href="#toad_forestsize">&#x1F517;&#xFE0E;</a>`, default = ``0``, type = int, constraints: ``toad_forestsize >= 0.0``
 
    -  [tinygbdt] size of the boosted tree
 

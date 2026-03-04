@@ -548,15 +548,15 @@ struct Config {
 
   // check = >=0.0
   // desc = [tinygbdt] penalty for using a new feature
-  double tinygbdt_penalty_feature = 0.0;
+  double toad_penalty_feature = 0.0;
 
   // check = >=0.0
   // desc = [tinygbdt] penalty for using a new split value
-  double tinygbdt_penalty_split = 0.0;
+  double toad_penalty_threshold = 0.0;
 
   // check = >=0.0
   // desc = [tinygbdt] size of the boosted tree
-  int tinygbdt_forestsize = 0;
+  int toad_forestsize = 0;
 
   // check = >=0.0
   // desc = cost-effective gradient boosting multiplier for all penalties

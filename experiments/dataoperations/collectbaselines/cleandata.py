@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from sklearn.datasets import load_svmlight_file
 import itertools
-# max_trees,max_depth, tinygbdt_penalty_feature,tinygbdt_penalty_split
 datasets = ["breastcancer", "california_housing", "mushroom", "kin8nm", "kr-vs-kp", "covtype", "wine", "covtype_multi"]
 def r2_from_mse(mse, var_y, n):
     """
@@ -47,6 +46,7 @@ classification_datasetskfold = {'breastcancer', 'kr-vs-kp'}
 models = ['rf', 'rf_guo', 'lgbm_quant', 'lgbm_base', 'ccp', 'cegb']
 datapath = f'./results/valtest/baselines/'
 root = Path(f'./results/valtest/baselines/largeredo/')
+root = Path(f'./data/result/')
 all_datasets = ["kin8nm", "california_housing", 'breastcancer', 'kr-vs-kp', 'mushroom', 'covtype', 'wine', 'covtype_multi']
 for csv_path in root.rglob("*.csv"):
     seed = csv_path.parent.name

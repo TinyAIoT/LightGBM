@@ -39,33 +39,33 @@ def write_joblist_allmodels(data, sed, remaining, remaining2, listcreateallmodel
     if out_path not in listcreateallmodels:
         listcreateallmodels.append(out_path)
 
-# max_trees,max_depth, tinygbdt_penalty_feature,tinygbdt_penalty_split
 datasets = ['covtype', 'wine', 'covtype_multi', 'california_housing', 'kin8nm', 'mushroom', 'breastcancer', 'kr-vs-kp'] # breastcancer and kr-vs-kp are i.d.R. in a reasonable
 seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 trees   = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
 depths  = [1, 2, 4, 8]
 alpha = [0.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625, 0.0078125]
-models = ["lgbm_quant", "lgbm_base", "ccp", "cegb", 'rf', 'rf_guo']
+models = ["lgbm_base", "ccp", "cegb", 'rf', 'rf_guo']
 alphamodels = ['cegb', 'ccp', 'rf_guo']
-nonalphamodels = ["lgbm_quant", 'rf', "lgbm_base"]
+nonalphamodels = ['rf', "lgbm_base"]
+
 all_without_models = list(itertools.product(
-            trees,  # max_trees
-            depths,  # max_depth
-            alpha,  # tinygbdt_penalty_feature
+            trees,
+            depths,
+            alpha,
         ))
 all_without_models_walpha = list(itertools.product(
-            trees,  # max_trees
-            depths,  # max_depth sbatch --job-name="rest_rfguobase" hpc/baselines/zen2-128C-496G_remaining.sh reversed_shor_guo.txt
+            trees,
+            depths,
         ))
 all_without_models_m = list(itertools.product(
-            trees,  # max_trees
-            depths,  # max_depth
-            alpha,  # tinygbdt_penalty_feature
+            trees,
+            depths,
+            alpha,
             alphamodels,
         ))
 all_without_models_walpha_m = list(itertools.product(
-            trees,  # max_trees
-            depths,  # max_depth
+            trees,
+            depths,
             nonalphamodels,
         ))
 listcreate = []
@@ -93,7 +93,6 @@ for seed in seeds:
     if len(df) == 0:
         print(f'No data found for {seed}')
         continue
-    # lgbm_quant,covtype_multi,1024,7168,8,0.0,0.3660190090072861,0.3683440545599277,0.3652315344698502,410318,0.0
     for data in datasets:
         dfdata = modeldf = df[df['dataset'] == data]
         for model in models:

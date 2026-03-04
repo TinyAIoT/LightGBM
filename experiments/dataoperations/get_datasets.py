@@ -20,7 +20,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 def fetch_data_small(data, target, name, seeds, flatten=False):
     for seed in seeds:
         directory = base_dir + f"{seed}"
-        X_trainpre, X_val, y_trainpre, y_val = train_test_split(data, target, test_size=0.2, random_state=seed)
+        X_trainpre, X_test, y_trainpre, y_test = train_test_split(data, target, test_size=0.2, random_state=seed)
         kf = KFold(n_splits=5)
         kf.get_n_splits(X_trainpre)
         if isinstance(X_trainpre, pd.DataFrame):
@@ -34,24 +34,24 @@ def fetch_data_small(data, target, name, seeds, flatten=False):
             if flatten:
                 datasets.dump_svmlight_file(X_trainpre[train_index,:], y_trainpre[train_index].flatten(), os.path.join(finaldir, name + '.train'),
                                             zero_based=False)
-                datasets.dump_svmlight_file(X_trainpre[test_index,:], y_trainpre[test_index].flatten(), os.path.join(finaldir, name + '.test'),
+                datasets.dump_svmlight_file(X_trainpre[test_index,:], y_trainpre[test_index].flatten(), os.path.join(finaldir, name + '.val'),
                                             zero_based=False)
             else:
                 datasets.dump_svmlight_file(X_trainpre[train_index,:], y_trainpre[train_index], os.path.join(finaldir, name + '.train'), zero_based=False)
-                datasets.dump_svmlight_file(X_trainpre[test_index,:], y_trainpre[test_index], os.path.join(finaldir, name + '.test'), zero_based=False)
+                datasets.dump_svmlight_file(X_trainpre[test_index,:], y_trainpre[test_index], os.path.join(finaldir, name + '.val'), zero_based=False)
 
         if flatten:
             datasets.dump_svmlight_file(X_trainpre, y_trainpre.flatten(), os.path.join(seeddir, name + '.train'), zero_based=False)
-            datasets.dump_svmlight_file(X_val, y_val.flatten(), os.path.join(seeddir, name + '.val'), zero_based=False)
+            datasets.dump_svmlight_file(X_test, y_test.flatten(), os.path.join(seeddir, name + '.test'), zero_based=False)
         else:
             datasets.dump_svmlight_file(X_trainpre, y_trainpre, os.path.join(seeddir, name + '.train'), zero_based=False)
-            datasets.dump_svmlight_file(X_val, y_val, os.path.join(seeddir, name + '.val'), zero_based=False)
+            datasets.dump_svmlight_file(X_test, y_test, os.path.join(seeddir, name + '.val'), zero_based=False)
 
 def fetch_data(data, target, name, seeds, flatten=False):
     for seed in seeds:
         directory = base_dir + f"{seed}"
-        X_trainpre, X_val, y_trainpre, y_val = train_test_split(data, target, test_size=0.2, random_state=seed)
-        X_train, X_test, y_train, y_test = train_test_split(X_trainpre, y_trainpre, test_size=0.1, random_state=seed)
+        X_trainpre, X_test, y_trainpre, y_test = train_test_split(data, target, test_size=0.2, random_state=seed)
+        X_train, X_val, y_train, y_val = train_test_split(X_trainpre, y_trainpre, test_size=0.1, random_state=seed)
 
         if flatten:
             datasets.dump_svmlight_file(X_train, y_train.flatten(), os.path.join(directory, name + '.train'), zero_based=False)

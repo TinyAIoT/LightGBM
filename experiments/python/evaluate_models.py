@@ -114,7 +114,7 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
     keyword : str
         The keyword to identify the model files.
     df_key : str, optional
-        The key to plot on the x-axis; mostly either 'tinygbdt_penalty_split' or 'tinygbdt_penalty_feature'.
+        The key to plot on the x-axis; mostly either 'toad_penalty_threshold' or 'toad_penalty_feature'.
     log_scale : bool, optional
         Whether to use a logarithmic scale for the plots (default is False).
     dataset : str, optional
@@ -140,11 +140,11 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
     no_trees = []
     our_bits = []
     lgb_bits = []
-    tinygbdt_penalty_feature = []
-    tinygbdt_penalty_split = []
+    toad_penalty_feature = []
+    toad_penalty_threshold = []
     num_iterations = []
     max_depth = []
-    tinygbdt_forestsize = []
+    toad_forestsize = []
     num_classes = 0
     objective = ""
     data = ""
@@ -167,9 +167,9 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
             lgb_bits.append(GetValueFromTXT(filepath, 'model_size', sum_up=True))
             num_iterations.append(GetValueFromTXT(filepath, 'num_iterations'))
             max_depth.append(GetValueFromTXT(filepath, 'max_depth'))
-            tinygbdt_penalty_feature.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_feature'))
-            tinygbdt_penalty_split.append(GetValueFromTXT(filepath, 'tinygbdt_penalty_split'))
-            tinygbdt_forestsize.append(GetValueFromTXT(filepath, 'tinygbdt_forestsize'))
+            toad_penalty_feature.append(GetValueFromTXT(filepath, 'toad_penalty_feature'))
+            toad_penalty_threshold.append(GetValueFromTXT(filepath, 'toad_penalty_threshold'))
+            toad_forestsize.append(GetValueFromTXT(filepath, 'toad_forestsize'))
             num_classes =  GetValueFromTXT(filepath, 'num_class')
             valid_data = GetValueFromTXT(filepath, 'valid')
             label_column = GetValueFromTXT(filepath, 'label_column')
@@ -198,19 +198,19 @@ def plotMetrics(keyword, df_key='', log_scale=False, dataset=None, dont_plot=Tru
         'our_bits': our_bits,
         'lgb_bits': lgb_bits,
         'accuracy': accuracies,
-        'tinygbdt_penalty_feature': tinygbdt_penalty_feature,
-        'tinygbdt_penalty_split': tinygbdt_penalty_split,
-	'tinygbdt_forestsize': tinygbdt_forestsize
+        'toad_penalty_feature': toad_penalty_feature,
+        'toad_penalty_threshold': toad_penalty_threshold,
+	'toad_forestsize': toad_forestsize
     })
 
     df_filename = (keyword
                    +'_'+str(objective)
                    +'_'+str(data[5:])
-                    +'_penF'+str(tinygbdt_penalty_feature[-1])
-                    +'_penT'+str(tinygbdt_penalty_split[-1])
+                    +'_penF'+str(toad_penalty_feature[-1])
+                    +'_penT'+str(toad_penalty_threshold[-1])
                    +'_maxtrees'+str(num_iterations[-1])
                    +'_maxdepth'+str(max_depth[-1])
-                   + '_maxsize'+str(tinygbdt_forestsize)
+                   + '_maxsize'+str(toad_forestsize)
                    +'_logscale'+str(log_scale)
                    +'.csv')
     
@@ -231,4 +231,4 @@ args = parser.parse_args()
 # You can access the arguments using args.string_arg and args.directory
 # print(f"String argument: {args}")
 
-df_path = plotMetrics('grid', df_key='tinygbdt_penalty_split', log_scale = True, directory=args.dataset, model_dir=args.model_dir, result_dir=args.result_dir, project_dir=args.project_dir)
+df_path = plotMetrics('grid', df_key='toad_penalty_threshold', log_scale = True, directory=args.dataset, model_dir=args.model_dir, result_dir=args.result_dir, project_dir=args.project_dir)

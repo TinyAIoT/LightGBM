@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import os
 import itertools
-# max_trees,max_depth, tinygbdt_penalty_feature,tinygbdt_penalty_split
 
 def write_joblist(data, sed, remaining):
     out_path = f'./results/valtest/jobstoad/{data}-{sed}-joblist.txt'
@@ -32,13 +31,13 @@ for data in datasets:
 
         df_done = pd.read_csv(path, usecols=[
         "max_trees", "max_depth",
-        "tinygbdt_penalty_feature", "tinygbdt_penalty_split"])
+        "toad_penalty_feature", "toad_penalty_threshold"])
 
         all_combos = list(itertools.product(
-            trees,  # max_trees
-            depths,  # max_depth
-            penalties,  # tinygbdt_penalty_feature
-            penalties  # tinygbdt_penalty_split
+            trees,
+            depths,
+            penalties,
+            penalties
         ))
         done_set = set(
             df_done.itertuples(index=False, name=None)

@@ -2,7 +2,7 @@ import lightgbm as lgb
 from sklearn.datasets import load_svmlight_file
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, RandomForestClassifier
 from PyPruning.RankPruningClassifier import RankPruningClassifier, individual_margin_diversity
-from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.metrics import accuracy_score, r2_score
 import numpy as np
 import sys
 import argparse
@@ -57,7 +57,7 @@ def evaluate_model(model, X_test, y_test, task):
     if task in "binary":
         test_acc = accuracy_score(y_test, np.where(y_pred > 0.5, 1, 0))
     elif task == "regression":
-        test_acc = mean_squared_error(y_test, y_pred)
+        test_acc = r2_score(y_test, y_pred)
     elif task == "multiclass":
         test_acc = accuracy_score(y_test, y_pred)
     else:
@@ -133,7 +133,7 @@ def quantize(in_path, out_path, data_type="float16"):
     with open(out_path, "w") as f:
         f.writelines(new_lines)
 
-def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_dir="./", val=False, mean=0.0, kfold=0):
+def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, result_dir="./", val=False, mean=0.0, kfold=False):
     datasets={
         "breastcancer": ("breastcancer", "binary", 1),
         "kr-vs-kp": ("kr-vs-kp", "binary", 1),
@@ -154,8 +154,8 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
     result_file = os.path.join(result_dir, 'results.csv')
     if not os.path.exists(result_file):
         with open(result_file, "w") as f:
-            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_accuracy,val_acc,nodes, mean\n")
-    if kfold == 1:
+            f.write("model,dataset,max_trees,no_trees,depth,alpha,train_loss,test_acc,val_acc,nodes,meankfold\n")
+    if kfold:
         if val:
             (X_train, y_train), (X_val, y_val)= load_data(data_dir, dataset, val)
         else:
@@ -174,9 +174,10 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
         # already save results to enable quantization step
         test_acc = 0.0
         val_accuracy = 0.0
-        if kfold == 1:
+        if kfold:
             if val:
                 val_accuracy = evaluate_model(model, X_val, y_val, task)
+                test_acc = mean
             else:
                 test_acc = evaluate_model(model, X_test, y_test, task)
         else:
@@ -240,7 +241,7 @@ def train_model(data_dir, model_type, dataset, max_trees, max_depth, alpha, resu
 
     test_acc = 0.0
     val_accuracy = 0.0
-    if kfold == 1:
+    if kfold:
         if val:
             val_accuracy = evaluate_model(model, X_val, y_val, task)
         else:
@@ -266,7 +267,7 @@ def main():
     parser.add_argument('--mean', type=float, default=0.0, help='mean accuracy')
     parser.add_argument('--val', action=argparse.BooleanOptionalAction)
     parser.add_argument('--randomseed', type=int, default=1, help='randomseedtouse')
-    parser.add_argument('--kfold', type=int, default=0, help='Is this a smaller dataset with kfold?')
+    parser.add_argument('--kfold', action=argparse.BooleanOptionalAction, help='Is this a smaller dataset with kfold?')
     args = parser.parse_args()
 
     train_model(args.data_dir, args.model, args.dataset, args.max_trees, args.max_depth, args.alpha,

@@ -268,7 +268,7 @@ namespace LightGBM {
     }
 
     static bool IsEnable(const Config *config) {
-      if (config->tinygbdt_forestsize == 0) {
+      if (config->toad_forestsize == 0) {
         Log::Info("MemoryRestrictedForest disabled");
         return false;
       }

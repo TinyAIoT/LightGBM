@@ -52,14 +52,14 @@ def preprocess_baselineresults(input_file, output_file):
 
 
 def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
-    scm = axe.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], cmap='viridis',
+    scm = axe.scatter(df['toad_penalty_threshold'], df['toad_penalty_feature'], c=df[column], cmap='viridis',
                       label=column, norm=norm)
     # TODO find some metric to go beyond manually selecting points accuracy/memory?
     if column == 'accuracy':
         df['ratio'] = df['accuracy'] / df['our_bits']
         #max_row = df.loc[df['ratio'].idxmax()]
-        #pcm = axe.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
-    #plt.annotate('Max Accuracy', (df_max_accuracy['tinygbdt_penalty_split'], df_max_accuracy['tinygbdt_penalty_feature']))
+        #pcm = axe.scatter(max_row['toad_penalty_threshold'], max_row['toad_penalty_feature'], c="#FFA500", label='Max Accuracy', alpha=0.5)
+    #plt.annotate('Max Accuracy', (df_max_accuracy['toad_penalty_threshold'], df_max_accuracy['toad_penalty_feature']))
     axe.set_xscale('log', base=log_base)
     axe.set_yscale('log', base=log_base)  # Correct method for setting y scale
     return scm
@@ -67,13 +67,13 @@ def plot_grid(df, axe, fig, norm, data, column='accuracy', title=''):
 def plot_maxMemGrid(df, column='accuracy', title=''):
     norm = mcolors.Normalize(vmin=df['accuracy'].min(), vmax=df['accuracy'].max())
     fig, ax = plt.subplots(figsize=(5, 4))
-    scm = ax.scatter(df['tinygbdt_penalty_split'], df['tinygbdt_penalty_feature'], c=df[column], norm=norm, cmap='viridis')
+    scm = ax.scatter(df['toad_penalty_threshold'], df['toad_penalty_feature'], c=df[column], norm=norm, cmap='viridis')
     # TODO find some metric to go beyond manually selecting points accuracy/memory?
     if column == 'accuracy':
         # df['ratio'] = df['accuracy'] / df['our_bits']
         max_row = df.loc[df['accuracy'].idxmax()]
-        ax.scatter(max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature'], c="#FF0000", label='Max Accuracy')
-    ax.annotate('Best Model', (max_row['tinygbdt_penalty_split'], max_row['tinygbdt_penalty_feature']))
+        ax.scatter(max_row['toad_penalty_threshold'], max_row['toad_penalty_feature'], c="#FF0000", label='Max Accuracy')
+    ax.annotate('Best Model', (max_row['toad_penalty_threshold'], max_row['toad_penalty_feature']))
     ax.set_title(title)
     ax.set_xlabel('Threshold Penalty')
     ax.set_ylabel('Feature Penalty')
@@ -91,9 +91,9 @@ def plotAccuracyByPenalty(df, axe, keyword, fp=0, tp=0, plot_accuracy=True, xlog
     colors = [viridis(norm(i)) for i in range(len(keywords))]
 
     if xlabel == 'Feature Penalty' or xlabel == 'Both penalties':
-        keyword = 'tinygbdt_penalty_feature'
+        keyword = 'toad_penalty_feature'
     if xlabel == 'Threshold Penalty':
-        keyword = 'tinygbdt_penalty_split'
+        keyword = 'toad_penalty_threshold'
     axe.set_xlabel(xlabel)
     if xlog:
         axe.set_xscale('log', base=log_base)
@@ -153,9 +153,9 @@ def plotAccuracyMemByPenalty(df, axe, keyword, plot_accuracy=True, xlog=True, xl
     colors = [viridis(norm(i)) for i in range(len(keywords))]
 
     if xlabel == 'Feature Penalty' or xlabel == 'Both penalties':
-        keyword = 'tinygbdt_penalty_feature'
+        keyword = 'toad_penalty_feature'
     if xlabel == 'Threshold Penalty':
-        keyword = 'tinygbdt_penalty_split'
+        keyword = 'toad_penalty_threshold'
     axe.set_xlabel(xlabel)
     if xlog:
         axe.set_xscale('log', base=log_base)
@@ -198,16 +198,16 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False, ylim_top=1):
     # Create a new DataFrame to store the best accuracy rows
     best_rows_toad = pd.DataFrame(
         columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
-                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
+                 'accuracy', 'toad_penalty_feature', 'toad_penalty_threshold', 'max_trees', 'depth'])
     best_rows_naive = pd.DataFrame(
         columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
-                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
+                 'accuracy', 'toad_penalty_feature', 'toad_penalty_threshold', 'max_trees', 'depth'])
     best_rows_naive_fp = pd.DataFrame(
         columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
-                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
+                 'accuracy', 'toad_penalty_feature', 'toad_penalty_threshold', 'max_trees', 'depth'])
     test = pd.DataFrame(
         columns=['no_trees', 'no_features', 'no_thresholds', 'no_leaves', 'our_bits', 'lgb_bits', 'logloss', 'rmse',
-                 'accuracy', 'tinygbdt_penalty_feature', 'tinygbdt_penalty_split', 'max_trees', 'depth'])
+                 'accuracy', 'toad_penalty_feature', 'toad_penalty_threshold', 'max_trees', 'depth'])
 
     zero_row = [0] * 13
     for target in memory_values:
@@ -227,7 +227,7 @@ def plot_memory_acc(df, dfn, axe, ylim, fig, big=False, ylim_top=1):
     for target in memory_values:
         # TODO: in my understanding, here we should check for our bits with penalties==0, i.e. dfn[(dfn['our_bits'] <= target)]
         subset = dfn[(dfn['our_bits'] <= target)]
-        # subset = df[(df['our_bits'] <= target) & (df['tinygbdt_penalty_feature'] <= fp) & (df['tinygbdt_penalty_split'] <= tp)]
+        # subset = df[(df['our_bits'] <= target) & (df['toad_penalty_feature'] <= fp) & (df['toad_penalty_threshold'] <= tp)]
         if not subset.empty:
             best_row_n = subset.loc[subset['accuracy'].idxmax()]  # Select the entire row
             best_rows_naive_fp = pd.concat([best_rows_naive_fp, best_row_n.to_frame().T],
@@ -298,7 +298,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
             counter = 0
             for data in datasets:
                 df = pd.read_csv(results_folder + data + '/results.csv')
-                df = df[(df['tinygbdt_penalty_feature'] != 0) ]
+                df = df[(df['toad_penalty_feature'] != 0) ]
                 # TODO !: also filter for depth when its varied in the experiments
                 # data_tree_550_depth_3 = df[(df['max_trees'] == 100) ]
                 if data in multiclass:
@@ -306,7 +306,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                         (df['max_trees'] == max_trees) & (df['max_depth'] == max_depth)]
                 else:
                     data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == max_trees) & (df[
-                                                                                               'max_depth'] == max_depth)]  # & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)]
+                                                                                               'max_depth'] == max_depth)]  # & (df['toad_penalty_feature'] < 4000) & (df['toad_penalty_threshold'] < 4000)]
                 # graphs
                 if (data in binary):
                     axe = axes[0, counter].set_title(data + "\n(binary)")
@@ -354,7 +354,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
 
     if memgrid:
         df = pd.read_csv('../results/results_mem/california_housing/last.csv')
-        df = df[(df['tinygbdt_forestsize'] == 8000)]  # choose from 8000, 16000, 64000 bits
+        df = df[(df['toad_forestsize'] == 8000)]  # choose from 8000, 16000, 64000 bits
         grid_memory = plot_maxMemGrid(df, title='Penalty Grid Search, California Housing, 1 KB')
         plt.savefig(images_folder + 'memory_grid.png', format='png', dpi=300)
         plt.savefig(images_folder + 'memory_grid.pdf', format='pdf')
@@ -371,7 +371,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                 print(data)
                 df = pd.read_csv(results_folder + data + '/results.csv')
                 df = df[(df['our_bits'] != 0.0)]
-                dfn = df[(df['tinygbdt_penalty_feature'] == 0.0) & (df['tinygbdt_penalty_split'] == 0.0)]
+                dfn = df[(df['toad_penalty_feature'] == 0.0) & (df['toad_penalty_threshold'] == 0.0)]
                 dsubset = df[(df['max_trees'] == max_trees)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 print(counter_x, counter_y)
                 if (data in binary):
@@ -413,7 +413,7 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                 df = df[(df['our_bits'] != 0)]
                 data_tree_550_depth_3 = df[(df['max_trees'] == max_trees) & (
                         df['max_depth'] == max_depth)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-                # data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['tinygbdt_penalty_feature'] < 4000) & (df['tinygbdt_penalty_split'] < 4000)  & (df['max_depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                # data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == 100) & (df['toad_penalty_feature'] < 4000) & (df['toad_penalty_threshold'] < 4000)  & (df['max_depth'] == 3)] # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 data_tree_550_depth_3_fptp_1000 = df[(df['max_trees'] == max_trees) & (
                         df['max_depth'] == max_depth)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 if (data in binary):
@@ -425,19 +425,19 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                         data_tree_550_depth_3['accuracy'] > 0.4]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
 
                 acc_good_subset = acc_good_subset.sort_values(by='our_bits')
-                data_tree_550_depth_3['tinygbdt_penalty_feature'] = pd.to_numeric(
-                    data_tree_550_depth_3['tinygbdt_penalty_feature'], errors='coerce')
-                # data_tree_550_depth_3_fptp_1000_fptp_1 = data_tree_550_depth_3_fptp_1000[(data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_feature'] > 0.001)& (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_split'] > 0.001)]
+                data_tree_550_depth_3['toad_penalty_feature'] = pd.to_numeric(
+                    data_tree_550_depth_3['toad_penalty_feature'], errors='coerce')
+                # data_tree_550_depth_3_fptp_1000_fptp_1 = data_tree_550_depth_3_fptp_1000[(data_tree_550_depth_3_fptp_1000['toad_penalty_feature'] > 0.001)& (data_tree_550_depth_3_fptp_1000['toad_penalty_threshold'] > 0.001)]
                 data_criteria_split_0 = data_tree_550_depth_3_fptp_1000[
-                    (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_split'] == 0.0) & (
+                    (data_tree_550_depth_3_fptp_1000['toad_penalty_threshold'] == 0.0) & (
                             data_tree_550_depth_3_fptp_1000[
-                                'tinygbdt_penalty_feature'] > 0.0)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                                'toad_penalty_feature'] > 0.0)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
                 data_criteria_feature_0 = data_tree_550_depth_3_fptp_1000[
-                    (data_tree_550_depth_3_fptp_1000['tinygbdt_penalty_feature'] == 0.0) & (
+                    (data_tree_550_depth_3_fptp_1000['toad_penalty_feature'] == 0.0) & (
                             data_tree_550_depth_3_fptp_1000[
-                                'tinygbdt_penalty_split'] > 0.0)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
-                data_criteria_split_0 = data_criteria_split_0.sort_values(by='tinygbdt_penalty_feature')
-                data_criteria_feature_0 = data_criteria_feature_0.sort_values(by='tinygbdt_penalty_split')
+                                'toad_penalty_threshold'] > 0.0)]  # & (df['no_trees'] > 15) & (df['no_trees'] < 20)]
+                data_criteria_split_0 = data_criteria_split_0.sort_values(by='toad_penalty_feature')
+                data_criteria_feature_0 = data_criteria_feature_0.sort_values(by='toad_penalty_threshold')
                 # graphs
                 if (data in binary):
                     axe = axes[0, counter].set_title(data + "\n(binary)")
@@ -447,15 +447,15 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                     axe = axes[0, counter].set_title(data + "\n(multiclass)")
                 if data in regression:
                     handles, labels = plotAccuracyByPenalty(data_criteria_split_0, axes[0, counter],
-                                                            'tinygbdt_penalty_feature', binary=False, mem=False)
+                                                            'toad_penalty_feature', binary=False, mem=False)
                     handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_0, axes[1, counter],
-                                                              keyword='tinygbdt_penalty_split',
+                                                              keyword='toad_penalty_threshold',
                                                               xlabel='Threshold Penalty', binary=False, mem=False)
 
                 handles, labels = plotAccuracyByPenalty(data_criteria_split_0, axes[0, counter],
-                                                        'tinygbdt_penalty_feature', mem=False)
+                                                        'toad_penalty_feature', mem=False)
                 handles2, labels2 = plotAccuracyByPenalty(data_criteria_feature_0, axes[1, counter],
-                                                          keyword='tinygbdt_penalty_split', xlabel='Threshold Penalty',
+                                                          keyword='toad_penalty_threshold', xlabel='Threshold Penalty',
                                                           mem=False)
                 counter = counter + 1
             mergedhandles = handles + handles2
@@ -519,8 +519,8 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                 # our_bits != 0 because of some weird results with 0 memory
                 # TODO: evaluate/train again (covtype_multi)
                 subset_pen = df[
-                    (df['our_bits'] <= memory) & (df['our_bits'] != 0) & (df['tinygbdt_penalty_feature'] != 0) & (
-                            df['tinygbdt_penalty_split'] != 0)]
+                    (df['our_bits'] <= memory) & (df['our_bits'] != 0) & (df['toad_penalty_feature'] != 0) & (
+                            df['toad_penalty_threshold'] != 0)]
                 if subset_pen.empty:
                     print(f"No ToaD with penalty for {data} and memory {memory}")
                 else:  # not subset_pen.empty:
@@ -546,8 +546,8 @@ def plot_figures(datasets, results_folder, images_folder, baseline_folder, data_
                     # print(filled)
                     # add filled as new row to df_baseline_res
                     results_all = pd.concat([results_all, pd.DataFrame([filled])], ignore_index=True)
-                subset_nopen = df[(df['our_bits'] <= memory) & (df['tinygbdt_penalty_feature'] == 0) & (
-                        df['tinygbdt_penalty_split'] == 0)]
+                subset_nopen = df[(df['our_bits'] <= memory) & (df['toad_penalty_feature'] == 0) & (
+                        df['toad_penalty_threshold'] == 0)]
                 if subset_nopen.empty:
                     print(f"No ToaD without penalty for {data} and memory {memory}")
                 else:  # not subset_nopen.empty:

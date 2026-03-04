@@ -24,4 +24,4 @@ home="$HOME"/toad
 wd="$WORK"/toad
 
 
-python "$home"/experiments/python/get_dataset.py --directory "$wd"/data
+python "$home"/experiments/dataoperations/get_dataset.py --directory "$wd"/data

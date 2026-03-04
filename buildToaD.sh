@@ -11,6 +11,3 @@ else
     echo "CMake configuration failed"
     exit 1
 fi
-
-sh runExperiments.sh "../lightgbm"
-

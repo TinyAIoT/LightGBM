@@ -9,7 +9,6 @@ import numpy as np
 def plot_variance(datasets, images_folder, models, showmemrange=False):
 
     df = pd.read_csv(f"./plotting/plottingdata/plotdata.csv")
-
     n_datasets = len(datasets)
     plt.rcParams.update({'font.size': 12})
     plt.rcParams.update({
@@ -17,6 +16,8 @@ def plot_variance(datasets, images_folder, models, showmemrange=False):
         "xtick.labelsize": 11,  # tick labels
         "ytick.labelsize": 11,
     })
+
+
     # Plotting starts no further need for data processing
     fig, axes = plt.subplots(2, int(n_datasets / 2), figsize=(15, 5.5))
     for ax, dataset in zip(axes.flatten(), datasets):
@@ -29,14 +30,9 @@ def plot_variance(datasets, images_folder, models, showmemrange=False):
         ordermem = ['0.25', '0.5', '1.0', '2.0', '4.0', '8.0', '16.0', '32.0', '64.0', '128.0', '256.0', '512.0', '1024.0', '2048.0']
         data['max_memory'] = pd.Categorical(data['max_memory'], categories=ordermem, ordered=True)
         data = data.sort_values('max_memory')
-# sbatch --job-name="ccpbase" hpc/baselines/zen2-128C-496G_remaining.sh ccp-joblist.txt
-        if dataset == 'kin8nm':
-            check = data[data['model'] == 'lgbm_quant']
-            print(check)
         cmap = plt.get_cmap("tab20")
 
-        # choose indices to shape groups: 3 similar, then 2, then 2
-        # 4
+        # choose indices to shape groups: 3 similar, then 2, then 2 change to 6 for red
         colors = [cmap(i) for i in [0, 1, 18, 2, 3, 5, 4]]
         # tab20
 

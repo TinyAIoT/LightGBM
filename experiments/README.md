@@ -12,16 +12,17 @@ The steps are split to allow short runtimes.
 The `buildToaD.sh` script (or `buildToaD-windows.sh` for Windows) builds LightGBM with the ToaD extension and automatically starts the experiments.
 (Running `.sh` scripts on Windows might require additional steps or a specific shell, such as Git Bash.)
 Prerequisites to build the project can be found in the [LightGBM documentation](https://lightgbm.readthedocs.io/en/latest/Installation-Guide.html).
-Depending on your system, training and evaluating the different model configurations might take several hours to days! 
-We recommend to use some high performance computing resources if available to optimize the grid search for reproduction of the results presented in the paper. Respective Slurm scripts can be found in the `hpc` folder.  
+Depending on your system, training and evaluating the different model configurations might take several hours to days!
+We recommend to use some high performance computing resources if available to optimize the grid search for reproduction of the results presented in the paper. Respective Slurm scripts can be found in the `hpc` folder.
 
 ### Getting Datasets
 
 _For now, we assume you install python packages yourself, requirements.txt will be added later_
 
-`python/get_datasets.py`  downloads the datasets. The files are stored in `experiments/data` having a 80/20 training/testing split.
+`python/dataoperations/get_datasets.py`  downloads the datasets. The files are stored in `experiments/data` having a 80/20 training/testing split.
 
-### Running `ToaD`
+
+### [TODO Adapt or recreate] Running `ToaD`
 
 `./runExperiments.sh` checks for datasets in the data folder with the scheme _name_`.train`.
 It is assumed that the corresponding file with test data is called _name_`.test`.

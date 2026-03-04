@@ -9,8 +9,8 @@ from sklearn.datasets import load_svmlight_file
 
 
 def plot_variance(results_folder, datasets, images_folder, showmemrange=False):
-    df = pd.read_csv(f"./plotting/plottingdata/plotdata.csv")
-
+    df = pd.read_csv(f"./plotting/plottingdata/plotdata_small.csv")
+    #df = df[df['randomseed'] == 1]
     n_datasets = len(datasets)
     plt.rcParams.update({'font.size': 12})
     plt.rcParams.update({
@@ -18,8 +18,18 @@ def plot_variance(results_folder, datasets, images_folder, showmemrange=False):
         "xtick.labelsize": 11,  # tick labels
         "ytick.labelsize": 11,
     })
+    dup_mask = df.duplicated(subset=["model", "dataset", "max_memory", "randomseed", "val_acc"], keep="first")
+    print("duplicates to drop:", dup_mask.sum())
+
+    df = df[~dup_mask]
+    testsingle = False
+    all = False
+    if testsingle:
+        figsize =(15, 6.5)
+    else:
+        figsize = (15, 6.5)
     # Plotting starts no further need for data processing
-    fig, axes = plt.subplots(2, int(n_datasets / 2), figsize=(15, 5.5))
+    fig, axes = plt.subplots(2, int(n_datasets / 2), figsize=figsize)
     for ax, dataset in zip(axes.flatten(), datasets):
         data = df[df['dataset'] == dataset].copy()
         data = data[data["val_acc"].between(0, 1)]
@@ -27,9 +37,18 @@ def plot_variance(results_folder, datasets, images_folder, showmemrange=False):
         markers =['^', ">", '<', 'd', 'h', 'X', '*']
         cmap = plt.get_cmap("tab20")
 
-        colors = [cmap(i) for i in [0, 1, 18, 2, 3, 5, 6]]
+        colors = [cmap(i) for i in [0, 1, 18, 2, 3, 5, 4]]
+        if testsingle:
+            if dataset == 'covtype_multi' or dataset == 'covtype':
+                ordermem = ['0.25', '0.5', '1.0', '2.0', '4.0', '8.0', '16.0', '32.0', '64.0', '128.0', '256.0']
+            else:
+                ordermem = ['0.25', '0.5', '1.0', '2.0', '4.0', '8.0', '16.0', '32.0', '64.0', '128.0', '256.0', '512.0', '1024.0', '2048.0']
+        else:
+            ordermem = ['0.25', '0.5', '1.0', '2.0', '4.0', '8.0', '16.0', '32.0', '64.0', '128.0', '256.0']
 
-        ordermem = ['0.25', '0.5', '1.0', '2.0', '4.0', '8.0', '16.0', '32.0', '64.0', '128.0', '256.0', '512.0', '1024.0', '2048.0']
+        if all:
+            ordermem = ['0.25', '0.5', '1.0', '2.0', '4.0', '8.0', '16.0', '32.0', '64.0', '128.0', '256.0', '512.0',
+                        '1024.0', '2048.0']
         data['max_memory'] = pd.Categorical(data['max_memory'], categories=ordermem, ordered=True)
         data = data.sort_values('max_memory')
         order = ['lgbm_base', 'lgbm_quant', 'lgbm_array', 'rf', 'rf_guo', 'toad_nopen', 'toad_bpen']
@@ -88,6 +107,7 @@ def plot_variance(results_folder, datasets, images_folder, showmemrange=False):
             ax.legend().remove()
         ax.tick_params(axis='x', rotation=65)
         # remove ytick labels in first row
+
         if dataset in datasets[:3]:
             ax.set_xticklabels([])
             ax.set_xlabel("")
@@ -95,8 +115,13 @@ def plot_variance(results_folder, datasets, images_folder, showmemrange=False):
         # ax.grid()
 
     plt.tight_layout()
-    plt.savefig(f'{images_folder}pdf/rf_variance_comparison_{str(showmemrange)}_red.pdf', format='pdf')
-    plt.savefig(f'{images_folder}png/rf_variance_comparison_{str(showmemrange)}_red.png', format='png')
+    addname = ""
+    if testsingle:
+        addname = "_testsingle"
+    if all:
+        addname = "all"
+    plt.savefig(f'{images_folder}pdf/rf_variance_comparison_{str(showmemrange)}{addname}.pdf', format='pdf')
+    plt.savefig(f'{images_folder}png/rf_variance_comparison_{str(showmemrange)}{addname}.png', format='png')
     plt.show()
 
 if __name__ == "__main__":
@@ -116,7 +141,7 @@ if __name__ == "__main__":
         os.makedirs(results_folder)
     if not os.path.exists(images_folder):
         os.makedirs(images_folder)
-    not_reg = ['mushroom', 'covtype', 'breastcancer', 'kr-vs-kp', 'wine', 'covtype_multi']
+    not_reg = ['mushroom', 'breastcancer', 'covtype', 'kr-vs-kp', 'wine', 'covtype_multi']
 
     functions = ['simple']
     max_trees = 256

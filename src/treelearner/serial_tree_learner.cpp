@@ -81,7 +81,7 @@ void SerialTreeLearner::Init(const Dataset* train_data, bool is_constant_hessian
   /*[tinygbdt] BEGIN: Initializing global variables */
   if (MemoryRestrictedForest::IsEnable(config_)) {
     mrf_.reset(new MemoryRestrictedForest(this));
-    mrf_->Init(config_->tinygbdt_forestsize, config_->max_depth);
+    mrf_->Init(config_->toad_forestsize, config_->max_depth);
   }
   /*[tinygbdt] END */
 }
@@ -148,7 +148,7 @@ void SerialTreeLearner::ResetTrainingDataInner(const Dataset* train_data,
     cegb_->Init();
   }
   if (mrf_ != nullptr) {
-    mrf_->Init(config_->tinygbdt_forestsize, config_->max_depth);
+    mrf_->Init(config_->toad_forestsize, config_->max_depth);
   }
 }
 
@@ -192,7 +192,7 @@ void SerialTreeLearner::ResetConfig(const Config* config) {
     if (mrf_ == nullptr) {
       mrf_.reset(new MemoryRestrictedForest(this));
     }
-    mrf_->Init(config_->tinygbdt_forestsize, config_->max_depth);
+    mrf_->Init(config_->toad_forestsize, config_->max_depth);
   }
   constraints_.reset(LeafConstraintsBase::Create(config_, config_->num_leaves, train_data_->num_features()));
 }
@@ -1022,11 +1022,11 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
 
     if (split_inf.new_feature) {
       printf("new feature %i; ", real_fidx);
-      new_split.gain -= (config_->tinygbdt_penalty_feature);
+      new_split.gain -= (config_->toad_penalty_feature);
     }
     if (split_inf.new_threshold) {
       printf("new threshold %f; ", threshold);
-      new_split.gain -= (config_->tinygbdt_penalty_split);
+      new_split.gain -= (config_->toad_penalty_threshold);
     }
 
     // In case the memory that is left can only store the number of leaves that have to be inserted abort the calc.
