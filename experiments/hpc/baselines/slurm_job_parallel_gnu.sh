@@ -46,10 +46,18 @@ mkdir -p "$result_dir"
 # mkdir -p "$result_dir"
 
 data_dir=$WORK/toad/data/{$1}
-random="$1"
-dataset="$2"
+random=1
+dataset=breastcancer
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --dataset) dataset="$2"; shift ;;
+    --randomseed) random="$2"; shift ;;
+    *) echo "Unknown parameter passed: $1"; exit 1 ;;
+  esac
+  shift
+done
 # Arrays
-models=("lgbm_quant" "ccp" "cegb")
+models=("lgbm_quant" "ccp" "cegb" "rf" "rf_guo")
 datasets=($dataset)
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)

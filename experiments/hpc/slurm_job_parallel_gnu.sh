@@ -1,47 +1,50 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=190
-#SBATCH --partition=[Your Partition]
-#SBATCH --time=[Time Limit]
-#SBATCH --mem=[Mem Limit]
+#SBATCH --cpus-per-task=128
+#SBATCH --partition=zen2-128C-496G
+#SBATCH --time=24:00:00
+#SBATCH --mem=400G
 
-#SBATCH --job-name=[Job Name]
+#SBATCH --job-name=testsubtoad
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=[Your Mail]
-#SBATCH --output=/scratch/tmp/%u/toad/report/%j.out / [Or a different Scratch Output]
-#SBATCH --error=/scratch/tmp/%u/toad/report/%j.error / [Or a different Scratch Output]
+#SBATCH --mail-user=n_herr03@uni-muenster.de
+#SBATCH --output=/scratch/tmp/%u/toad/report/%j.out 
+#SBATCH --error=/scratch/tmp/%u/toad/report/%j.error 
 # Load modules
 
 # TODO: load relevant software stack from your HPC environment
 # Below are packages we used that are necessary, however a clust might require more...
 # E.g. we have module load palma/2024a
+module load palma/2024a
 module load GCCcore/13.3.0
 module load CMake/3.29.3
 module load parallel/20240722
 NUMBER_OF_CPUS_PER_JOB=1
-# Make sure any threaded libraries don't spawn extra threads
-export OMP_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 export OPENBLAS_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 export MKL_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
-
-# Build application (use available CPUs)
-
-cmake -B build -S . -DUSE_CUDA=0 -DUSE_DEBUG=ON
-cmake --build build -j "$SLURM_CPUS_ON_NODE"
-
+export OMP_NUM_THREADS=$NUMBER_OF_CPUS_PER_JOB
 # TODO: Or your folders
 home="$HOME"/toad
 wd="$WORK"/toad
-code="$HOME"/toad
 
-log_path="$WORK"/toadkfolds/report/sublogs/toad_"$SLURM_JOB_ID"
+cd $home
+git submodule init
+git submodule update
+# Build application (use available CPUs)
+cmake -B build -S . -DUSE_CUDA=0 -DUSE_DEBUG=ON
+cmake --build build -j "$SLURM_CPUS_ON_NODE"
+
+log_path="$wd"/report/sublogs/toad_"$SLURM_JOB_ID"
+echo $log_path
 mkdir -p "$log_path"
 
 model_dir=$wd/models/$SLURM_JOB_ID
+echo $model_dir
 mkdir -p "$model_dir"
 
-result_dir=$wd/toad/result
+result_dir=$wd/result
+echo $result_dir
 # TODO: Adapt if you want to have a specific forestsize
 ms=6400000
 # point to built lightgbm binary (adjust if different)
@@ -51,6 +54,8 @@ lgbm="./lightgbm"
 
 # fp/tp range is 2^start ... 2^end with step size step in the exponent + the value 0 (always includes 0 independently of start/step/end)
 # Defaults for start/step/end
+dataset="breastcancer"
+randomseed=1
 start=-10
 step=1
 end=15
@@ -60,6 +65,8 @@ while [[ "$#" -gt 0 ]]; do
     --start) start="$2"; shift ;;
     --step) step="$2"; shift ;;
     --end) end="$2"; shift ;;
+    --dataset) dataset="$2"; shift ;;
+    --randomseed) randomseed="$2"; shift ;;
     *) echo "Unknown parameter passed: $1"; exit 1 ;;
   esac
   shift
@@ -67,9 +74,9 @@ done
 echo "Using start=$start step=$step end=$end"
 
 # Arrays
-datasets=($1)
-random=$2
-data_dir=$WORK/toad/data/$2/
+datasets=($dataset)
+random=$randomseed
+data_dir=$WORK/toad/data/$random/
 
 trees=(1 2 4 8 16 32 64 128 256 512 1024)
 depths=(1 2 4 8)
@@ -148,8 +155,8 @@ for dataset in "${datasets[@]}"; do
 done
 total_jobs=$(ls "$chunk_dir"/joblist.chunk.* | wc -l)
 echo "Total chunked job files: $total_jobs"
-
+echo "$PARALLEL_JOBS"
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-  ./experiments/hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
+  $home/experiments/hpc/runBatchOfExperiments.sh {1} "$lgbm" "$ms" "$data_dir" "$model_dir" "$result_dir" ::: "$chunk_dir"/joblist.chunk.*
 # End of script

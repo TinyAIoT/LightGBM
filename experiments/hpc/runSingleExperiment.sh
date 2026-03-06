@@ -1,7 +1,7 @@
 #!/bin/bash
 # Some basic error checking on input parameters
 if [ "$#" -lt 11 ]; then
-    echo "ERROR: runSingleExperiment.sh requires 9 arguments but got $#."
+    echo "ERROR: runSingleExperiment.sh requires 11 arguments but got $#."
     echo "Received args:"
     idx=1
     for a in "$@"; do
@@ -64,7 +64,7 @@ if [ "$dataset" = "breastcancer" ] || [ "$dataset" = "kr-vs-kp" ]; then
         --resdir data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth \
         --outdir $result_dir/$dataset; then
         :  # no-op, do nothing
-        # echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
+        echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
     else
         echo "Training and evaluating model fp=$fp tp=$tp trees=$tree depth=$depth rs=$rs failed / not complete!"
     fi
@@ -84,7 +84,7 @@ else
         output_model="$model_dir/$dataset${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.txt" \
         > "$model_dir/$dataset${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.out"; then
         :  # no-op, do nothing
-        # echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
+        echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
     else
         echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth failed / not complete!"
     fi
