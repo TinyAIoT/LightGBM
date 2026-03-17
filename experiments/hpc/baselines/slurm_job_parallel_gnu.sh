@@ -120,6 +120,6 @@ echo "Total chunked job files: $total_jobs"
 
 # Run chunks in parallel
 parallel -j "$PARALLEL_JOBS" --lb --joblog "$log_path/parallel_chunk_joblog.txt" \
-  ./hpc/baselines/runBatchOfExperiments.sh {1} "$data_dir" "$result_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
+  ./experiments/hpc/baselines/runBatchOfExperiments.sh {1} "$data_dir" "$result_dir" "$log_path" ::: "$chunk_dir"/joblist.chunk.*
 
 # End of script

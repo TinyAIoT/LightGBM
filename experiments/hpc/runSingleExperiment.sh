@@ -81,15 +81,15 @@ else
         toad_forestsize="$ms" \
         toad_penalty_threshold="$tp" \
         toad_penalty_feature="$fp" \
-        output_model="$model_dir/$dataset${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.txt" \
-        > "$model_dir/$dataset${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.out"; then
+        output_model="$model_dir/$dataset/${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.txt" \
+        > "$model_dir/$dataset/${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.out"; then
         :  # no-op, do nothing
         echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth complete"
     else
         echo "Training model fp=$fp tp=$tp trees=$tree depth=$depth failed / not complete!"
     fi
 
-    if python ./experiments/python/toad/toadevaluate.py --filename "$model_dir/$dataset$rs/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth" --resultfile "$WORK/toad/${dataset}/${rs}results.csv" --test --val; then :
+    if python ./experiments/python/toad/toadevaluate.py --filename "$model_dir/$dataset/$rs/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth" --resultfile "$WORK/toad/${dataset}/${rs}results.csv" --test --val; then :
         rm "$model_dir/$dataset${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.out"
         rm "$model_dir/$dataset${rs}/data-$dataset-ms-$ms-fp-$fp-tp-$tp-tree-$tree-depth-$depth.txt"
     else
